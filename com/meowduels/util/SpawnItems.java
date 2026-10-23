@@ -42,12 +42,22 @@ public final class SpawnItems {
                 || (meowDuels.getSpectateManager() != null && meowDuels.getSpectateManager().isSpectating(player.getUniqueId()))) {
             return;
         }
-        boolean handWasEmpty = isEmpty(player.getInventory().getItemInMainHand());
+        boolean handWasEmpty = isEmpty(player.getInventory().getItemInMainHand())
+                || SpawnItems.isManagedItem(meowDuels, player.getInventory().getItemInMainHand());
+        SpawnItems.clearManagedHotbar(meowDuels, player);
         setIfEmpty(player, 3, SpawnItems.windCharge(meowDuels));
         ItemStack[] itemStackArray = player.getInventory().getArmorContents();
-        if (itemStackArray != null && itemStackArray.length > 2 && isEmpty(itemStackArray[2])) {
-            itemStackArray[2] = Items.of(Material.ELYTRA).miniName("<gradient:#FFE27A:#F2A900>\u029f\u1d0f\u0299\u0299\u028f \u1d07\u029f\u028f\u1d1b\u0280\u1d00</gradient>").hideTooltip().tag(meowDuels.keyButton(), LOBBY_ELYTRA).build();
-            player.getInventory().setArmorContents(itemStackArray);
+        if (itemStackArray != null && itemStackArray.length > 2) {
+            ItemStack chestItem = itemStackArray[2];
+            if (SpawnItems.canUseLobbyElytra(player)) {
+                if (isEmpty(chestItem)) {
+                    itemStackArray[2] = Items.of(Material.ELYTRA).miniName("<gradient:#FFE27A:#F2A900>\u029f\u1d0f\u0299\u0299\u028f \u1d07\u029f\u028f\u1d1b\u0280\u1d00</gradient>").hideTooltip().tag(meowDuels.keyButton(), LOBBY_ELYTRA).build();
+                    player.getInventory().setArmorContents(itemStackArray);
+                }
+            } else if (LOBBY_ELYTRA.equals(Items.readTag(chestItem, meowDuels.keyButton()))) {
+                itemStackArray[2] = null;
+                player.getInventory().setArmorContents(itemStackArray);
+            }
         }
         if (meowDuels.getPartyManager() != null && meowDuels.getPartyManager().inParty(player.getUniqueId())) {
             SpawnItems.giveParty(meowDuels, player);
@@ -75,6 +85,29 @@ public final class SpawnItems {
 
     private static boolean isEmpty(ItemStack item) {
         return item == null || item.getType() == Material.AIR;
+    }
+
+    public static boolean isManagedItem(MeowDuels plugin, ItemStack item) {
+        String tag = Items.readTag(item, plugin.keyButton());
+        return QUEUE.equals(tag) || QUICK.equals(tag) || LEAVEQUEUE.equals(tag)
+                || KITEDITOR.equals(tag) || SETTINGS.equals(tag) || REMATCH.equals(tag)
+                || CREATEPARTY.equals(tag) || PARTYMATCH.equals(tag) || PARTYSPECTATE.equals(tag)
+                || PARTYLEAVE.equals(tag) || PARTYSETTINGS.equals(tag) || PARTYINFO.equals(tag)
+                || LOBBY_WIND_CHARGE.equals(tag) || LOBBY_ELYTRA.equals(tag);
+    }
+
+    public static boolean canUseLobbyElytra(Player player) {
+        return player != null && player.hasPermission("starduels.elytra.true")
+                && !player.hasPermission("starduels.elytra.false");
+    }
+
+    private static void clearManagedHotbar(MeowDuels plugin, Player player) {
+        for (int slot = 0; slot < 9; slot++) {
+            ItemStack item = player.getInventory().getItem(slot);
+            if (SpawnItems.isManagedItem(plugin, item)) {
+                player.getInventory().setItem(slot, null);
+            }
+        }
     }
 
     private static void selectFirstItemWhenHandEmpty(Player player, boolean handWasEmpty) {
@@ -135,7 +168,11 @@ public final class SpawnItems {
         if (player == null) {
             return;
         }
-        setIfEmpty(player, 5, bl ? SpawnItems.leaveQueueItem(meowDuels) : null);
+        if (bl) {
+            player.getInventory().setItem(5, SpawnItems.leaveQueueItem(meowDuels));
+        } else if (LEAVEQUEUE.equals(Items.readTag(player.getInventory().getItem(5), meowDuels.keyButton()))) {
+            player.getInventory().setItem(5, null);
+        }
         player.updateInventory();
     }
 

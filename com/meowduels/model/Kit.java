@@ -18,6 +18,8 @@ public class Kit {
     private ItemStack offhand;
     private Material icon = Material.IRON_SWORD;
     private String displayName;
+    private String prefix = "";
+    private boolean guiVisible = true;
     private final Set<StartEffect> startEffects = EnumSet.noneOf(StartEffect.class);
 
     public Kit(String string) {
@@ -57,6 +59,14 @@ public class Kit {
     public void setDisplayName(String string) {
         this.displayName = string;
     }
+
+    public String getPrefix() { return this.prefix; }
+
+    public void setPrefix(String prefix) { this.prefix = prefix == null ? "" : prefix; }
+
+    public boolean isGuiVisible() { return this.guiVisible; }
+
+    public void setGuiVisible(boolean guiVisible) { this.guiVisible = guiVisible; }
 
     public void captureFrom(Player player) {
         PlayerInventory playerInventory = player.getInventory();
@@ -168,6 +178,8 @@ public class Kit {
     public void save(ConfigurationSection configurationSection) {
         configurationSection.set("icon", (Object)this.icon.name());
         configurationSection.set("display-name", (Object)this.displayName);
+        configurationSection.set("prefix", this.prefix);
+        configurationSection.set("gui-visible", this.guiVisible);
         ArrayList<String> arrayList = new ArrayList<String>();
         for (StartEffect startEffect : this.startEffects) {
             arrayList.add(startEffect.name());
@@ -185,6 +197,8 @@ public class Kit {
         Material material = Material.matchMaterial((String)string2);
         kit.icon = material == null ? Material.IRON_SWORD : material;
         kit.displayName = configurationSection.getString("display-name");
+        kit.prefix = configurationSection.getString("prefix", "");
+        kit.guiVisible = configurationSection.getBoolean("gui-visible", false);
         for (String string3 : configurationSection.getStringList("start-effects")) {
             try {
                 kit.startEffects.add(StartEffect.valueOf(string3));

@@ -453,7 +453,7 @@ public class MessageManager {
         DEFAULTS.put("notice.arena.regenerated-block-s", "&7Regenerated {written} block(s).");
         DEFAULTS.put("notice.arena.no-snapshot-saved-yet", "&7No snapshot saved yet - click Snapshot Now first.");
         DEFAULTS.put("notice.kit.kit-now-inventory-everyone", "&7The {kit} kit is now your inventory - for everyone.");
-        DEFAULTS.put("notice.kit.shift-click-replace-kit", "&7Shift-click to replace the {kit} kit with your inventory - for everyone.");
+        DEFAULTS.put("notice.kit.shift-click-replace-kit", "&7Shift-click to copy inventory, armor, and offhand into the editor. Press Save there to apply the {kit} kit.");
         DEFAULTS.put("notice.kit.saved-s-items-everyone", "&7Saved {kit}'s items - for everyone.");
         DEFAULTS.put("notice.kit.saved-own-layout", "&7Saved your own {kit} layout.");
         DEFAULTS.put("notice.kit.isn-t-same-set", "&7That isn't the same set of items. You can rearrange the kit, but not change what's in it.");

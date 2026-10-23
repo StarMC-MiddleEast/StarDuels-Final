@@ -253,15 +253,15 @@ public class ScoreboardService {
         boolean bl6 = this.plugin.getEventManager().isInvolved(uUID);
         Party party = this.plugin.getPartyManager().partyOf(uUID);
         if (this.masterEnabled && bl5) {
-            if (bl3 && !this.duel.lines.isEmpty()) {
+            if (bl3 && this.duel.enabled && !this.duel.lines.isEmpty()) {
                 object2 = this.duel;
-            } else if (party != null && party.isFighting() && party.getMode() == PartyMode.FFA && !this.partyFfa.lines.isEmpty()) {
+            } else if (party != null && party.isFighting() && party.getMode() == PartyMode.FFA && this.partyFfa.enabled && !this.partyFfa.lines.isEmpty()) {
                 object2 = this.partyFfa;
             } else if (bl6 && this.ffa.enabled && !this.ffa.lines.isEmpty()) {
                 object2 = this.ffa;
-            } else if (party != null && !this.party.lines.isEmpty()) {
+            } else if (party != null && this.party.enabled && !this.party.lines.isEmpty()) {
                 object2 = this.party;
-            } else if (!this.global.lines.isEmpty()) {
+            } else if (this.global.enabled && !this.global.lines.isEmpty()) {
                 object2 = this.global;
             }
         }

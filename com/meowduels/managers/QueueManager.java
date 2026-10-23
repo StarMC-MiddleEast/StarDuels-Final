@@ -4,6 +4,8 @@ import com.meowduels.MeowDuels;
 import com.meowduels.model.Kit;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
+import com.meowduels.util.KitCatalog;
+import com.meowduels.util.MiniMessageUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,9 +43,10 @@ public class QueueManager {
         }
         UUID uUID = player.getUniqueId();
         ArrayList<Kit> arrayList = new ArrayList<Kit>();
-        for (Kit object : this.plugin.getKitManager().all()) {
-            if (!this.plugin.getDuelManager().hasUsableArena(object.getName()) || this.isQueuedFor(uUID, object.getName())) continue;
-            arrayList.add(object);
+        for (KitCatalog.Entry entry : KitCatalog.available(this.plugin)) {
+            Kit kit = this.plugin.getKitManager().get(entry.kit());
+            if (kit == null || !this.plugin.getDuelManager().hasUsableArena(kit.getName()) || this.isQueuedFor(uUID, kit.getName())) continue;
+            arrayList.add(kit);
         }
         if (arrayList.isEmpty()) {
             Sounds.deny(player);
@@ -224,16 +227,18 @@ public class QueueManager {
     }
 
     private Component queuedLine(String string, String string2) {
-        String string3 = this.plugin.messages().raw(string);
-        return MiniMessage.miniMessage().deserialize(("<gray>" + string3 + "</gray>" + this.kitMini(string2) + "<gray>.</gray>"));
+        String string3 = this.plugin.messages().raw(string).replace("{prefix}", "");
+        String serverPrefix = MiniMessageUtil.toMiniMessage(this.plugin.messages().raw("prefix"));
+        return MiniMessage.miniMessage().deserialize(serverPrefix + "<gray>" + string3 + "</gray>" + this.kitMini(string2) + "<gray>.</gray>");
     }
 
     private String kitMini(String string) {
         Kit kit = this.plugin.getKitManager().get(string);
+        String prefix = kit == null ? "" : MiniMessageUtil.toMiniMessage(kit.getPrefix());
         if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return kit.getDisplayName();
+            return prefix + kit.getDisplayName();
         }
-        return "<gray>" + string + "</gray>";
+        return prefix + "<gray>" + string + "</gray>";
     }
 
     private static String key(String string) {

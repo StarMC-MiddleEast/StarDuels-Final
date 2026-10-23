@@ -542,10 +542,10 @@ public class DuelManager {
         String string = player2 != null ? player2.getName() : "A player";
         String string2 = player != null ? player.getName() : "A player";
         int n = 1 + ThreadLocalRandom.current().nextInt(5);
-        this.broadcast(this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
+        this.sendResultToParticipants(activeDuel, this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
         if (bl) {
             object = activeDuel.getKit() == null ? "Unknown" : activeDuel.getKit();
-            this.broadcast(this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(object), "score", activeDuel.getScoreFor(uUID2) + " - " + activeDuel.getScoreFor(uUID)}));
+            this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(object), "score", activeDuel.getScoreFor(uUID2) + " - " + activeDuel.getScoreFor(uUID)}));
         }
         if (player != null && location != null) {
             GameModeGuard.pin(player, GameMode.SPECTATOR);
@@ -731,14 +731,18 @@ public class DuelManager {
                 if (player != null) {
                     player.sendMessage(string3);
                 }
-                if (player2 == null) break;
-                player2.sendMessage(string3);
+                if (player2 != null) {
+                    player2.sendMessage(string3);
+                }
+                this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(activeDuel.getKit()), "score", activeDuel.getScoreFor(uUID) + " - " + activeDuel.getScoreAgainst(uUID)}));
                 break;
             }
             case 2: {
-                if (player == null) break;
-                player.sendMessage(this.msg("duel.victory-opponent-disconnected", new String[0]));
-                Sounds.victory(player);
+                if (player != null) {
+                    player.sendMessage(this.msg("duel.victory-opponent-disconnected", new String[0]));
+                    Sounds.victory(player);
+                }
+                this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(activeDuel.getKit()), "score", activeDuel.getScoreFor(uUID) + " - " + activeDuel.getScoreAgainst(uUID)}));
                 break;
             }
             default: {
@@ -750,7 +754,7 @@ public class DuelManager {
                 }
                 String string4 = player2 != null ? player2.getName() : "A player";
                 int n = 1 + ThreadLocalRandom.current().nextInt(10);
-                this.broadcast(this.msg("match.toxic." + n, "winner", string, "loser", string4, "winner_score", String.valueOf(activeDuel.getScoreFor(uUID)), "loser_score", String.valueOf(activeDuel.getScoreAgainst(uUID))));
+                this.sendResultToParticipants(activeDuel, this.msg("match.toxic." + n, "winner", string, "loser", string4, "winner_score", String.valueOf(activeDuel.getScoreFor(uUID)), "loser_score", String.valueOf(activeDuel.getScoreAgainst(uUID))));
             }
         }
     }
@@ -770,9 +774,14 @@ public class DuelManager {
         player.setFallDistance(0.0f);
     }
 
-    private void broadcast(String string) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(string);
+    private void sendResultToParticipants(ActiveDuel duel, String message) {
+        Player first = Bukkit.getPlayer(duel.getPlayer1());
+        Player second = Bukkit.getPlayer(duel.getPlayer2());
+        if (first != null) {
+            first.sendMessage(message);
+        }
+        if (second != null && second != first) {
+            second.sendMessage(message);
         }
     }
 

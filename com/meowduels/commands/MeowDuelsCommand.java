@@ -8,9 +8,10 @@ import com.meowduels.gui.EditKitListMenu;
 import com.meowduels.gui.EventMapMenu;
 import com.meowduels.gui.GuiEditorMenu;
 import com.meowduels.gui.KitEditorMenu;
+import com.meowduels.gui.KitItemsEditMenu;
 import com.meowduels.gui.KitPickMenu;
 import com.meowduels.gui.PartyMenu;
-import com.meowduels.gui.QueueCategoriesMenu;
+import com.meowduels.gui.QueuePickMenu;
 import com.meowduels.gui.TrimKitMenu;
 import com.meowduels.gui.TrimMenu;
 import com.meowduels.managers.ArenaManager;
@@ -140,6 +141,9 @@ TabCompleter {
                 this.scoreboardIp(commandSender, stringArray);
                 break;
             }
+            case "starduels":
+            case "sd":
+            case "md":
             case "meowduels": {
                 this.root(commandSender, stringArray);
                 break;
@@ -371,6 +375,16 @@ TabCompleter {
             return;
         }
         Kit kit = new Kit(string);
+        kit.setGuiVisible(true);
+        if (stringArray.length >= 2) {
+            if (stringArray[1].equalsIgnoreCase("hidden") || stringArray[1].equalsIgnoreCase("false")) kit.setGuiVisible(false);
+            else if (stringArray[1].equalsIgnoreCase("gui") || stringArray[1].equalsIgnoreCase("true")) kit.setGuiVisible(true);
+        }
+        if (stringArray.length >= 3 && stringArray[1].equalsIgnoreCase("prefix")) {
+            kit.setPrefix(this.joinFrom(stringArray, 2));
+        } else if (stringArray.length >= 4 && stringArray[2].equalsIgnoreCase("prefix")) {
+            kit.setPrefix(this.joinFrom(stringArray, 3));
+        }
         kit.captureFrom((Player)commandSender);
         this.plugin.getKitManager().put(kit);
         commandSender.sendMessage(this.plugin.messages().get("notice.admin.kit-saved-from-current", "name", string));
@@ -731,7 +745,7 @@ TabCompleter {
                 arrayList = new ArrayList<String>();
                 if (stringArray.length <= 1) {
                     String string2 = stringArray.length == 0 ? "" : stringArray[0];
-                    for (String string3 : new String[]{"create", "invite", "join", "decline", "duel", "spectate", "force_end", "leave", "disband"}) {
+                    for (String string3 : new String[]{"create", "invite", "join", "decline", "duel", "spectate", "force_end", "leave", "disband", "public", "promote"}) {
                         if (!this.startsWith(string3, string2)) continue;
                         arrayList.add(string3);
                     }
@@ -767,7 +781,14 @@ TabCompleter {
                 break block14;
             }
             if (!string.equals("join") && !string.equals("decline")) break block14;
-            for (String string6 : this.plugin.getPartyManager().invitersOf(player.getUniqueId())) {
+            ArrayList<String> partyTargets = new ArrayList<String>(this.plugin.getPartyManager().invitersOf(player.getUniqueId()));
+            if (string.equals("join")) {
+                for (String leader : this.plugin.getPartyManager().publicPartyLeaders()) {
+                    if (partyTargets.stream().anyMatch(name -> name.equalsIgnoreCase(leader))) continue;
+                    partyTargets.add(leader);
+                }
+            }
+            for (String string6 : partyTargets) {
                 if (!this.startsWith(string6, stringArray[1])) continue;
                 arrayList.add(string6);
             }
@@ -784,6 +805,14 @@ TabCompleter {
         String string2 = string = stringArray.length > 0 ? stringArray[0].toLowerCase(Locale.ROOT) : "";
         if (string.equals("create")) {
             this.plugin.getPartyManager().create(player);
+            return;
+        }
+        if (string.equals("public")) {
+            this.plugin.getPartyManager().togglePublic(player);
+            return;
+        }
+        if (string.equals("promote")) {
+            this.plugin.getPartyManager().promote(player);
             return;
         }
         if (string.equals("leave") || string.equals("disband")) {
@@ -811,6 +840,23 @@ TabCompleter {
         }
         if (string.equals("force_end") || string.equals("forceend")) {
             this.plugin.getPartyManager().forceEnd(player);
+            return;
+        }
+        if (string.equals("join") && stringArray.length < 2) {
+            List<String> publicParties = this.plugin.getPartyManager().publicPartyLeaders();
+            if (publicParties.size() == 1) {
+                Player leader = this.plugin.getServer().getPlayerExact(publicParties.get(0));
+                if (leader != null) {
+                    this.plugin.getPartyManager().accept(player, leader);
+                    return;
+                }
+            }
+            if (publicParties.isEmpty()) {
+                player.sendMessage(Text.color("&eThere are no public parties available to join."));
+            } else {
+                player.sendMessage(Text.color("&ePublic parties: &f" + String.join("&7, &f", publicParties)));
+                player.sendMessage(Text.color("&7Use &f/party join <leader> &7to choose one."));
+            }
             return;
         }
         if (string.equals("invite") || string.equals("join") || string.equals("accept") || string.equals("decline")) {
@@ -891,7 +937,56 @@ TabCompleter {
                 commandSender.sendMessage(this.plugin.messages().get("notice.admin.no-kit-named-2", "name", stringArray[0]));
                 return;
             }
-            new EditKitEffectsMenu(this.plugin, kit).open(player);
+            if (stringArray.length >= 2) {
+                String option = stringArray[1].toLowerCase(Locale.ROOT);
+                if (option.equals("gui") || option.equals("visible")) {
+                    if (stringArray.length < 3 || !(stringArray[2].equalsIgnoreCase("true") || stringArray[2].equalsIgnoreCase("false") || stringArray[2].equalsIgnoreCase("on") || stringArray[2].equalsIgnoreCase("off"))) {
+                        player.sendMessage(Text.color("&cUsage: /starduels editkit <kit> gui <true|false>"));
+                        return;
+                    }
+                    kit.setGuiVisible(stringArray[2].equalsIgnoreCase("true") || stringArray[2].equalsIgnoreCase("on"));
+                    this.plugin.getKitManager().save();
+                    player.sendMessage(Text.color("&a" + kit.getName() + " is now " + (kit.isGuiVisible() ? "visible" : "hidden") + " in kit GUIs."));
+                    return;
+                }
+                if (option.equals("prefix")) {
+                    if (stringArray.length < 3) {
+                        player.sendMessage(Text.color("&cUsage: /starduels editkit <kit> prefix <text|clear>"));
+                        return;
+                    }
+                    String prefix = this.joinFrom(stringArray, 2);
+                    kit.setPrefix(prefix.equalsIgnoreCase("clear") ? "" : prefix);
+                    this.plugin.getKitManager().save();
+                    player.sendMessage(Text.color("&aUpdated the queue prefix for " + kit.getName() + "."));
+                    return;
+                }
+                if (option.equals("name") || option.equals("displayname")) {
+                    if (stringArray.length < 3) {
+                        player.sendMessage(Text.color("&cUsage: /starduels editkit <kit> name <text>"));
+                        return;
+                    }
+                    kit.setDisplayName(this.joinFrom(stringArray, 2));
+                    this.plugin.getKitManager().save();
+                    player.sendMessage(Text.color("&aUpdated the display name for " + kit.getName() + "."));
+                    return;
+                }
+                if (option.equals("icon")) {
+                    if (stringArray.length < 3) {
+                        player.sendMessage(Text.color("&cUsage: /starduels editkit <kit> icon <material>"));
+                        return;
+                    }
+                    Material icon = Material.matchMaterial(stringArray[2]);
+                    if (icon == null || !icon.isItem()) {
+                        player.sendMessage(Text.color("&cUnknown item material: " + stringArray[2]));
+                        return;
+                    }
+                    kit.setIcon(icon);
+                    this.plugin.getKitManager().save();
+                    player.sendMessage(Text.color("&aUpdated the GUI icon for " + kit.getName() + " to " + icon.name() + "."));
+                    return;
+                }
+            }
+            new KitItemsEditMenu(this.plugin, kit).open(player);
             return;
         }
         if (this.plugin.getKitManager().isEmpty()) {
@@ -950,7 +1045,7 @@ TabCompleter {
             commandSender.sendMessage(this.msg("duel.no-kits", new String[0]));
             return;
         }
-        new QueueCategoriesMenu(this.plugin).open(player);
+        new QueuePickMenu(this.plugin).open(player);
     }
 
     private void handleAccept(Player player, String[] stringArray) {
@@ -1105,6 +1200,25 @@ TabCompleter {
             this.scoreboardIp(commandSender, Arrays.copyOfRange(stringArray, 1, stringArray.length));
             return;
         }
+        if (stringArray.length >= 1 && stringArray[0].equalsIgnoreCase("createkit")) {
+            this.createKit(commandSender, Arrays.copyOfRange(stringArray, 1, stringArray.length));
+            return;
+        }
+        if (stringArray.length >= 1 && stringArray[0].equalsIgnoreCase("editkit")) {
+            this.editKit(commandSender, Arrays.copyOfRange(stringArray, 1, stringArray.length));
+            return;
+        }
+        if (stringArray.length >= 1 && stringArray[0].equalsIgnoreCase("viewkits")) {
+            if (!this.requireAdmin(commandSender)) return;
+            commandSender.sendMessage(Text.color("&6&lStarDuels kits &7(GUI-visible kits are listed in duel and queue menus)"));
+            for (Kit kit : this.plugin.getKitManager().all()) {
+                String label = kit.getDisplayName() == null ? kit.getName() : kit.getDisplayName();
+                commandSender.sendMessage(Text.color((kit.isGuiVisible() ? "&a[GUI] " : "&8[HIDDEN] ") + "&f" + kit.getName() + " &7- " + label + " &8| prefix: " + (kit.getPrefix().isEmpty() ? "(none)" : kit.getPrefix())));
+            }
+            commandSender.sendMessage(Text.color("&7Create: /starduels createkit <name> [gui|hidden] [prefix <text>]"));
+            commandSender.sendMessage(Text.color("&7Edit: /starduels editkit <name> [gui <true|false>|prefix <text>|name <text>|icon <material>]"));
+            return;
+        }
         if (stringArray.length >= 2 && (stringArray[1].equalsIgnoreCase("copy") || stringArray[1].equalsIgnoreCase("paste"))) {
             this.arenaClone(commandSender, stringArray[0], stringArray[1]);
             return;
@@ -1118,7 +1232,10 @@ TabCompleter {
         commandSender.sendMessage(Text.color("&e/duel <player> &f- challenge a player"));
         commandSender.sendMessage(Text.color("&e/leave &f- forfeit your current duel"));
         commandSender.sendMessage(Text.color("&e/queue &f- open the 1v1 queue menu"));
+        commandSender.sendMessage(Text.color("&e/starduels viewkits &f- list kits and their GUI visibility"));
         if (commandSender.hasPermission("meowduels.admin")) {
+            commandSender.sendMessage(Text.color("&e/starduels createkit <name> [gui|hidden] &f- create a kit from your inventory"));
+            commandSender.sendMessage(Text.color("&e/starduels editkit <name> &f- edit kit contents/effects, GUI visibility, prefix, name, or icon"));
             commandSender.sendMessage(Text.color("&e/createarena <name> &f- create an arena"));
             commandSender.sendMessage(Text.color("&e/arena <name> &f- setup / settings GUI"));
             commandSender.sendMessage(Text.color("&e/arena <name> copy|paste &f- clone the arena; the copy"));
@@ -1158,6 +1275,27 @@ TabCompleter {
     }
 
     public List<String> onTabComplete(CommandSender commandSender, Command command, String string, String[] stringArray) {
+        String rootCommand = command.getName().toLowerCase(Locale.ROOT);
+        if ((rootCommand.equals("starduels") || rootCommand.equals("sd") || rootCommand.equals("md") || rootCommand.equals("meowduels")) && stringArray.length == 1) {
+            ArrayList<String> choices = new ArrayList<String>();
+            for (String option : List.of("createkit", "editkit", "viewkits", "reload", "scoreboardip", "help")) if (this.startsWith(option, stringArray[0])) choices.add(option);
+            return choices;
+        }
+        if ((rootCommand.equals("starduels") || rootCommand.equals("sd") || rootCommand.equals("md") || rootCommand.equals("meowduels")) && stringArray.length >= 2) {
+            ArrayList<String> choices = new ArrayList<String>();
+            if (stringArray[0].equalsIgnoreCase("editkit") && stringArray.length == 2) {
+                for (Kit kit : this.plugin.getKitManager().all()) if (this.startsWith(kit.getName(), stringArray[1])) choices.add(kit.getName());
+                return choices;
+            }
+            if (stringArray[0].equalsIgnoreCase("editkit") && stringArray.length == 3) {
+                for (String option : List.of("gui", "prefix", "name", "icon")) if (this.startsWith(option, stringArray[2])) choices.add(option);
+                return choices;
+            }
+            if (stringArray[0].equalsIgnoreCase("editkit") && stringArray.length == 4 && stringArray[2].equalsIgnoreCase("gui")) {
+                for (String option : List.of("true", "false")) if (this.startsWith(option, stringArray[3])) choices.add(option);
+                return choices;
+            }
+        }
         ArrayList<String> arrayList;
         block40: {
             String string2;

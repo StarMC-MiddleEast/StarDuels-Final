@@ -104,6 +104,69 @@ public class PartyManager {
         return arrayList;
     }
 
+    public List<String> publicPartyLeaders() {
+        java.util.TreeSet<String> names = new java.util.TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        for (Party party : new HashSet<Party>(this.byPlayer.values())) {
+            if (!party.isOpenToAll() || party.isFighting() || party.isFinished()) {
+                continue;
+            }
+            Player leader = Bukkit.getPlayer(party.getLeader());
+            if (leader == null || party.size() >= this.maxPartySize(leader)) {
+                continue;
+            }
+            names.add(leader.getName());
+        }
+        return new ArrayList<String>(names);
+    }
+
+    public boolean togglePublic(Player player) {
+        Party party = this.partyOf(player.getUniqueId());
+        if (party == null) {
+            player.sendMessage(this.plugin.messages().get("notice.party.re-not-party", new String[0]));
+            return false;
+        }
+        if (!party.isLeader(player.getUniqueId())) {
+            player.sendMessage(this.plugin.messages().get("notice.party.only-party-leader-change", new String[0]));
+            return false;
+        }
+        if (party.isFighting()) {
+            player.sendMessage(this.plugin.messages().get("notice.party.t-invite-during-party", new String[0]));
+            return false;
+        }
+        party.setOpenToAll(!party.isOpenToAll());
+        this.broadcast(party, party.isOpenToAll()
+            ? "&aThis party is now public. Use &f/party join " + player.getName() + "&a to join."
+            : "&eThis party is now private.");
+        return true;
+    }
+
+    public boolean promote(Player player) {
+        Party party = this.partyOf(player.getUniqueId());
+        if (party == null) {
+            player.sendMessage(this.plugin.messages().get("notice.party.re-not-party", new String[0]));
+            return false;
+        }
+        if (!party.isLeader(player.getUniqueId())) {
+            player.sendMessage(this.plugin.messages().get("notice.party.only-party-leader-change", new String[0]));
+            return false;
+        }
+        if (party.isFighting()) {
+            player.sendMessage(this.plugin.messages().get("notice.party.t-invite-during-party", new String[0]));
+            return false;
+        }
+        party.setOpenToAll(true);
+        TextComponent announcement = new TextComponent("✦ " + Text.smallCaps(player.getName()) + " IS HOSTING A PARTY  •  CLICK TO JOIN ✦");
+        announcement.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+        announcement.setBold(true);
+        announcement.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/party join " + player.getName()));
+        announcement.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            new ComponentBuilder(Text.smallCaps("JOIN " + player.getName() + "'S PARTY")).color(net.md_5.bungee.api.ChatColor.YELLOW).create()));
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            online.spigot().sendMessage(announcement);
+        }
+        return true;
+    }
+
     public void decline(Player player, Player player2) {
         Party party = this.partyOf(player2.getUniqueId());
         if (party == null || !party.getInvited().remove(player.getUniqueId())) {
@@ -939,10 +1002,15 @@ public class PartyManager {
         if (playerSnapshot != null) {
             playerSnapshot.restore(player);
         }
-        if ((location = this.plugin.getDuelSpawn()) != null) {
+        location = this.plugin.getDuelSpawn();
+        if (location == null && !Bukkit.getWorlds().isEmpty()) {
+            location = Bukkit.getWorlds().get(0).getSpawnLocation();
+        }
+        if (location != null) {
             player.teleport(location);
         }
         this.refreshItems(player);
+        this.plugin.giveSpawnItems(player);
     }
 
     private void checkWin(Party party) {
@@ -1244,7 +1312,8 @@ public class PartyManager {
         }
         int n = 2;
         for (int i = 3; i <= 100; ++i) {
-            if (!player.hasPermission("starduels.party.size." + i)) continue;
+            if (!player.hasPermission("starduels.party.size." + i)
+                && !player.hasPermission("meowduels.party.size." + i)) continue;
             n = i;
         }
         return n;

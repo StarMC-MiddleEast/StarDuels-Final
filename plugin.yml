@@ -1,5 +1,5 @@
 name: StarDuels
-version: 5.1.8
+version: 5.1.9
 main: com.meowduels.MeowDuels
 api-version: '1.21.11'
 author: nafehawan
@@ -11,8 +11,8 @@ softdepend:
 
 commands:
   starduels:
-    description: StarDuels root command (copy/paste, help).
-    usage: /starduels <arena> <copy|paste> | /starduels help
+    description: StarDuels admin commands for kits, arenas, and configuration.
+    usage: /starduels <createkit|editkit|viewkits|reload|scoreboardip|arena>
     aliases: [sd, md, meowduels]
   createarena:
     description: Create a new arena.
@@ -74,7 +74,7 @@ commands:
     usage: /duel <player> [kit] [rounds]
   party:
     description: Create or manage a party, and start a private party match.
-    usage: /party | create | invite <player> | join <player> | decline <player> | duel <accept|decline> <leader> | spectate | force_end | leave
+    usage: /party | create | invite <player> | join [leader] | decline <player> | duel <accept|decline> <leader> | spectate | force_end | leave
     aliases: [p]
   leave:
     description: Leave your current duel, spectate session, or queues.
@@ -144,6 +144,12 @@ permissions:
     default: op
     children:
       meowduels.event.host: true
+  starduels.elytra.true:
+    description: Allow the StarDuels lobby elytra.
+    default: true
+  starduels.elytra.false:
+    description: Deny the StarDuels lobby elytra, even when the allow node is inherited.
+    default: false
   starduels.party.size.2:
     description: Maximum party size of 2.
     default: true

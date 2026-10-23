@@ -517,7 +517,6 @@ public class ArenaManager {
                         String string;
                         if ((string = this.data[n5++]) == null) continue;
                         Block block = world.getBlockAt(n + j, n2 + i, n3 + k);
-                        if (!bl && string.equals(block.getBlockData().getAsString())) continue;
                         BlockData blockData = (BlockData)hashMap.get(string);
                         if (blockData == null) {
                             try {
@@ -528,6 +527,7 @@ public class ArenaManager {
                             }
                             hashMap.put(string, blockData);
                         }
+                        if (!bl && blockData.equals(block.getBlockData())) continue;
                         block.setBlockData(blockData, false);
                         ++n4;
                     }
