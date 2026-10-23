@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.meowduels</groupId>
   <artifactId>starduels</artifactId>
-  <version>5.1.7</version>
+  <version>5.1.8</version>
   <packaging>jar</packaging>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
@@ -62,7 +62,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.4.2</version>
-        <configuration><finalName>StarDuels-5.1.6</finalName></configuration>
+        <configuration><finalName>StarDuels-5.1.8</finalName></configuration>
       </plugin>
     </plugins>
   </build>

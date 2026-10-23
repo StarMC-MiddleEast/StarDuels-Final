@@ -36,7 +36,7 @@ public class Arena {
     private int wallMargin = 0;
     private boolean allowExplosions = false;
     private boolean allowFireSpread = false;
-    private boolean allowLiquidFlow = false;
+    private boolean allowLiquidFlow = true;
     private boolean allowMobSpawns = false;
     private boolean allowFallDamage = true;
     private boolean allowHungerLoss = false;
@@ -667,7 +667,7 @@ public class Arena {
         arena.wallMargin = configurationSection.getInt("settings.wall-margin", 0);
         arena.allowExplosions = configurationSection.getBoolean("settings.allow-explosions", false);
         arena.allowFireSpread = configurationSection.getBoolean("settings.allow-fire-spread", false);
-        arena.allowLiquidFlow = configurationSection.getBoolean("settings.allow-liquid-flow", false);
+        arena.allowLiquidFlow = configurationSection.getBoolean("settings.allow-liquid-flow", true);
         arena.allowMobSpawns = configurationSection.getBoolean("settings.allow-mob-spawns", false);
         arena.allowFallDamage = configurationSection.getBoolean("settings.allow-fall-damage", true);
         arena.allowHungerLoss = configurationSection.getBoolean("settings.allow-hunger-loss", false);

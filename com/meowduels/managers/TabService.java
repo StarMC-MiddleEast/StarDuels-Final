@@ -2,16 +2,12 @@ package com.meowduels.managers;
 
 import com.meowduels.MeowDuels;
 import com.meowduels.model.ActiveDuel;
-import com.meowduels.model.Kit;
 import com.meowduels.model.Party;
 import com.meowduels.util.Marks;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -45,15 +41,12 @@ public class TabService {
         this.memberGroup.put(activeDuel.getPlayer2(), activeDuel);
         this.applyTeams(player, activeDuel);
         this.applyTeams(player2, activeDuel);
-        this.sendHeaderFooter(player);
-        this.sendHeaderFooter(player2);
         this.reconcileAll();
     }
 
     public void attachSpectator(Player player, ActiveDuel activeDuel) {
         this.memberGroup.put(player.getUniqueId(), activeDuel);
         this.applyTeams(player, activeDuel);
-        this.sendHeaderFooter(player);
         this.reconcileAll();
     }
 
@@ -62,7 +55,6 @@ public class TabService {
             return;
         }
         this.memberGroup.put(player.getUniqueId(), this.hostOf(party));
-        this.sendHeaderFooter(player);
         this.reconcileAll();
     }
 
@@ -108,16 +100,6 @@ public class TabService {
                 this.memberGroup.put(uUID, party);
             }
         }
-        for (UUID uUID : party.getMembers()) {
-            Player player = Bukkit.getPlayer((UUID)uUID);
-            if (player == null) continue;
-            this.sendHeaderFooter(player);
-        }
-        for (UUID uUID : party2.getMembers()) {
-            Player player = Bukkit.getPlayer((UUID)uUID);
-            if (player == null) continue;
-            this.sendHeaderFooter(player);
-        }
         this.reconcileAll();
     }
 
@@ -159,11 +141,6 @@ public class TabService {
             this.setVisible(player, player2, true, false);
             this.setVisible(player, player2, true, true);
         }
-    }
-
-    public void onPlayerJoin(Player player) {
-        this.sendHeaderFooter(player);
-        this.reconcileAll();
     }
 
     private void reconcileAll() {
@@ -241,133 +218,6 @@ public class TabService {
         return team;
     }
 
-    public String layoutLine(UUID uUID, String string, int n) {
-        String string2 = this.layoutContext(uUID);
-        List list = this.plugin.getConfig().getStringList("tab." + string2 + "." + string);
-        if (list == null || n < 1 || n > list.size()) {
-            return "";
-        }
-        return this.fillTokens((String)list.get(n - 1), uUID);
-    }
-
-    private String layoutContext(UUID uUID) {
-        if (uUID == null) {
-            return "global";
-        }
-        if (this.plugin.getDuelManager().isInDuel(uUID) || this.plugin.getSpectateManager().isSpectating(uUID)) {
-            return "duel";
-        }
-        if (this.plugin.getPartyManager().inParty(uUID)) {
-            return "party";
-        }
-        return "global";
-    }
-
-    private String fillTokens(String string, UUID uUID) {
-        if (string == null || string.indexOf(123) < 0) {
-            return string == null ? "" : string;
-        }
-        String string2 = string;
-        int n = Bukkit.getOnlinePlayers().size();
-        int n2 = this.plugin.getDuelManager().playersInDuels();
-        string2 = string2.replace("{online}", String.valueOf(n));
-        string2 = string2.replace("{practice}", String.valueOf(Math.max(0, n - n2)));
-        string2 = string2.replace("{fighting}", String.valueOf(n2));
-        string2 = string2.replace("{in_duels}", String.valueOf(this.plugin.getDuelManager().duelsInProgress()));
-        string2 = string2.replace("{server_ip}", this.plugin.getScoreboardIp());
-        string2 = string2.replace("{server_name}", this.plugin.getServerName());
-        string2 = string2.replace("{discord}", this.plugin.getTabDiscord());
-        string2 = string2.replace("{store}", this.plugin.getTabStore());
-        if (uUID == null) {
-            return string2;
-        }
-        Player player = Bukkit.getPlayer((UUID)uUID);
-        string2 = string2.replace("{player}", player == null ? "" : player.getName());
-        string2 = string2.replace("{ping}", player == null ? "0" : String.valueOf(player.getPing()));
-        string2 = string2.replace("{rank}", "");
-        string2 = string2.replace("{elo}", "");
-        string2 = this.fillDuelTokens(string2, uUID);
-        string2 = this.fillPartyTokens(string2, uUID);
-        return string2;
-    }
-
-    private String fillDuelTokens(String string, UUID uUID) {
-        Object object;
-        Object object2 = uUID;
-        if (this.plugin.getSpectateManager().isSpectating(uUID) && (object = this.plugin.getSpectateManager().getWatchedTarget(uUID)) != null) {
-            object2 = object;
-        }
-        if ((object = this.plugin.getDuelManager().getDuel((UUID)object2)) == null) {
-            return string.replace("{opponent}", "").replace("{score}", "").replace("{opponent_score}", "").replace("{kit}", "").replace("{arena}", "").replace("{round}", "").replace("{rounds_to_win}", "").replace("{time}", "").replace("{team_color}", "<gray>");
-        }
-        long l = Math.max(0L, (System.currentTimeMillis() - ((ActiveDuel)object).getStartedAt()) / 1000L);
-        return string.replace("{opponent}", this.nameOf(((ActiveDuel)object).getOpponent((UUID)object2))).replace("{score}", String.valueOf(((ActiveDuel)object).getScoreFor((UUID)object2))).replace("{opponent_score}", String.valueOf(((ActiveDuel)object).getScoreAgainst((UUID)object2))).replace("{kit}", this.kitLabel(((ActiveDuel)object).getKit())).replace("{arena}", ((ActiveDuel)object).getArena() == null ? "" : ((ActiveDuel)object).getArena().getName()).replace("{round}", String.valueOf(((ActiveDuel)object).getCurrentRound())).replace("{rounds_to_win}", String.valueOf(((ActiveDuel)object).getRoundsToWin())).replace("{time}", String.format("%02d:%02d", l / 60L, l % 60L)).replace("{team_color}", ((ActiveDuel)object).isAqua((UUID)object2) ? "<aqua>" : "<red>");
-    }
-
-    private String fillPartyTokens(String string, UUID uUID) {
-        Party party = this.plugin.getPartyManager().partyOf(uUID);
-        if (party == null) {
-            return string.replace("{party_leader}", "").replace("{party_size}", "0").replace("{party_kit}", "").replace("{party_status}", "").replace("{party_alive}", "0").replace("{party_role}", "");
-        }
-        return string.replace("{party_leader}", this.nameOf(party.getLeader())).replace("{party_size}", String.valueOf(party.size())).replace("{party_kit}", party.getKit() == null ? "" : this.kitLabel(party.getKit())).replace("{party_status}", party.isFighting() ? "Fighting" : "Waiting").replace("{party_alive}", String.valueOf(party.getAlive().size())).replace("{party_role}", party.isLeader(uUID) ? "Leader" : "Member");
-    }
-
-    private String nameOf(UUID uUID) {
-        if (uUID == null) {
-            return "";
-        }
-        Player player = Bukkit.getPlayer((UUID)uUID);
-        if (player != null) {
-            return player.getName();
-        }
-        String string = Bukkit.getOfflinePlayer((UUID)uUID).getName();
-        return string == null ? "" : string;
-    }
-
-    private String kitLabel(String string) {
-        if (string == null || string.isEmpty()) {
-            return "";
-        }
-        Kit kit = this.plugin.getKitManager().get(string);
-        if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return kit.getDisplayName().replaceAll("<[^>]*>", "");
-        }
-        return string;
-    }
-
-    private void sendHeaderFooter(Player player) {
-        if (this.external) {
-            return;
-        }
-        UUID uUID = player.getUniqueId();
-        player.sendPlayerListHeaderAndFooter(TabService.mm(this.joinLayout(uUID, "header")), TabService.mm(this.joinLayout(uUID, "footer")));
-    }
-
-    private String joinLayout(UUID uUID, String string) {
-        List list = this.plugin.getConfig().getStringList("tab." + this.layoutContext(uUID) + "." + string);
-        if (list == null || list.isEmpty()) {
-            return "";
-        }
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < list.size(); ++i) {
-            String string2;
-            if (i > 0) {
-                stringBuilder.append('\n');
-            }
-            stringBuilder.append((string2 = this.fillTokens((String)list.get(i), uUID)).isEmpty() ? " " : string2);
-        }
-        return stringBuilder.toString();
-    }
-
-    public void tick() {
-        if (this.external) {
-            return;
-        }
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            this.sendHeaderFooter(player);
-        }
-    }
-
     public void reassertBubbles() {
         if (this.memberGroup.isEmpty()) {
             return;
@@ -409,8 +259,5 @@ public class TabService {
         return this.plugin.getConfig().getBoolean("tab.debug", false);
     }
 
-    private static Component mm(String string) {
-        return MiniMessage.miniMessage().deserialize(string);
-    }
 }
 

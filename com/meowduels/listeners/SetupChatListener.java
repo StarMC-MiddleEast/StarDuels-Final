@@ -28,11 +28,6 @@ implements Listener {
             Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> this.plugin.getSpectateManager().stop(player));
             return;
         }
-        if (this.plugin.getTabEditManager().isEditing(player.getUniqueId())) {
-            asyncPlayerChatEvent.setCancelled(true);
-            Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> this.plugin.getTabEditManager().handleInput(player, string));
-            return;
-        }
         if (this.plugin.getSetupManager().inEventSpawn(player.getUniqueId())) {
             asyncPlayerChatEvent.setCancelled(true);
             Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> {

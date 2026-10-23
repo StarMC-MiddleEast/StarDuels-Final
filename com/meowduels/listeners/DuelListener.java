@@ -463,7 +463,6 @@ implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent playerJoinEvent) {
         Player player = playerJoinEvent.getPlayer();
-        this.plugin.getTabService().onPlayerJoin(player);
         this.plugin.getScoreboardService().handleJoin(player);
         if (this.plugin.getConfig().getBoolean("on-join-reset", true)) {
             for (PotionEffect potionEffect : player.getActivePotionEffects()) {

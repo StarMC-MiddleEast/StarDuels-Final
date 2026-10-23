@@ -1,5 +1,5 @@
 name: StarDuels
-version: 5.1.7
+version: 5.1.8
 main: com.meowduels.MeowDuels
 api-version: '1.21.11'
 author: nafehawan
@@ -97,11 +97,6 @@ commands:
   queue:
     description: Join a kit queue directly, open the queue menu, or /queue leave.
     usage: /queue [kit|leave]
-  meowduelstab:
-    description: Configure the per-fight tab (title, discord, store).
-    usage: /meowduelstab
-    permission: meowduels.admin
-    aliases: [mdtab]
   editkit:
     description: Admin kit editor - start effects, items, and Change Kit.
     usage: /editkit [kit]

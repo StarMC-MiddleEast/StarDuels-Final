@@ -47,12 +47,6 @@ implements Relational {
         if (string == null) {
             return "";
         }
-        if (string.regionMatches(true, 0, "tab_header_", 0, 11)) {
-            return this.tabLine(offlinePlayer, "header", string.substring(11));
-        }
-        if (string.regionMatches(true, 0, "tab_footer_", 0, 11)) {
-            return this.tabLine(offlinePlayer, "footer", string.substring(11));
-        }
         String string2 = string.toLowerCase();
         switch (string2) {
             case "players_in_duels": {
@@ -63,15 +57,6 @@ implements Relational {
             }
             case "server_ip": {
                 return this.plugin.getScoreboardIp();
-            }
-            case "tab_title": {
-                return this.plugin.getTabTitle();
-            }
-            case "tab_discord": {
-                return this.plugin.getTabDiscord();
-            }
-            case "tab_store": {
-                return this.plugin.getTabStore();
             }
         }
         if (offlinePlayer == null) {
@@ -245,18 +230,6 @@ implements Relational {
             }
         }
         return "";
-    }
-
-    private String tabLine(OfflinePlayer offlinePlayer, String string, String string2) {
-        int n;
-        try {
-            n = Integer.parseInt(string2.trim());
-        }
-        catch (NumberFormatException numberFormatException) {
-            return "";
-        }
-        UUID uUID = offlinePlayer == null ? null : offlinePlayer.getUniqueId();
-        return Colors.toSection(this.plugin.getTabService().layoutLine(uUID, string, n));
     }
 
     private boolean inAFight(UUID uUID) {

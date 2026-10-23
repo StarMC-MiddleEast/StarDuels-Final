@@ -11,7 +11,6 @@ import com.meowduels.gui.KitEditorMenu;
 import com.meowduels.gui.KitPickMenu;
 import com.meowduels.gui.PartyMenu;
 import com.meowduels.gui.QueueCategoriesMenu;
-import com.meowduels.gui.TabConfigMenu;
 import com.meowduels.gui.TrimKitMenu;
 import com.meowduels.gui.TrimMenu;
 import com.meowduels.managers.ArenaManager;
@@ -94,10 +93,6 @@ TabCompleter {
             }
             case "queue": {
                 this.queue(commandSender, stringArray);
-                break;
-            }
-            case "meowduelstab": {
-                this.vduelsTab(commandSender);
                 break;
             }
             case "editkit": {
@@ -883,13 +878,6 @@ TabCompleter {
             return;
         }
         player.sendMessage(this.plugin.messages().get("notice.admin.aren-t-event-duel", new String[0]));
-    }
-
-    private void vduelsTab(CommandSender commandSender) {
-        if (!this.requireAdmin(commandSender) || !this.requirePlayer(commandSender)) {
-            return;
-        }
-        new TabConfigMenu(this.plugin).open((Player)commandSender);
     }
 
     private void editKit(CommandSender commandSender, String[] stringArray) {
