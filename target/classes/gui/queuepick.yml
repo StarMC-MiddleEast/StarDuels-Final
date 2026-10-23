@@ -1,0 +1,88 @@
+# -------------------------------------------------------------------------
+# /queue - the kits you can queue for. Each tile's stack size is how
+# many fights are running in that kit, so a busy kit reads as a tall
+# stack.
+#
+# Every value here is the one the plugin uses when the key is missing, so you
+# can delete any line, any item, or this whole file: the menu goes back to
+# looking exactly as it ships. There is no reset command because deleting IS
+# the reset.
+#
+# Each item takes:
+#   slot      0-based, counting left to right then down (row 1 is 0-8)
+#   material  any Minecraft item id, e.g. CLOCK, PAPER, LIME_DYE
+#   amount    stack size shown on the icon, 1-64
+#   name      the item's title
+#   lore      the lines under it; "" is a blank spacer line
+#   glow      true to force the enchanted shimmer, false to force it off
+#
+# An item with lore-on and lore-off has two faces - one for when the thing
+# it controls is on, one for when it is off. name-on/name-off and
+# material-on/material-off work the same way, and a plain name:/material:
+# covers both states.
+#
+# Theme placeholders, usable in any name or lore in any menu. These follow
+# theme: in config.yml, so one edit there restyles every screen:
+#   {value} {label} {muted} {good} {bad} {warn}   colours
+#   {tick} {cross} {sep} {hint}                   the house symbols
+# Write a colour out instead if you want one line to ignore the theme.
+#
+# Colours: <yellow>, <gold>, <#FF2E55> for a custom colour, or
+# <gradient:#7CFF6B:#1FA32F>text</gradient>. Legacy &e codes work too.
+#
+# Placeholders usable in any name or lore on this screen:
+#   {kit}       the kit's id
+#   {queued}    how many are waiting
+#   {fights}    how many duels are running
+#   {category}  the category shown
+#
+# The text below is written in small capitals (ᴛʜɪꜱ ꜱᴛʏʟᴇ). That is just what
+# the characters are - type ordinary letters if you would rather have them.
+# -------------------------------------------------------------------------
+
+title-category: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ᴍᴏᴅᴇꜱ</bold></gradient> <dark_gray>·</dark_gray> {category}"
+title-plain: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ǫᴜᴇᴜᴇ</bold></gradient>"
+rows: 4
+
+# Uncomment to give this one screen a different frame from the rest of the
+# plugin. Leave it out and it follows theme.filler in config.yml.
+#filler: "GRAY_STAINED_GLASS_PANE"
+#filler-name: " "
+
+items:
+
+  # Pages to the next category.
+  next-category:
+    slot: 35
+    material: ARROW
+    name: "&eɴᴇxᴛ ᴄᴀᴛᴇɢᴏʀʏ"
+    lore:
+      - "&f→ ᴀɴᴏᴛʜᴇʀ ᴄᴀᴛᴇɢᴏʀʏ"
+
+  # Kit-list paging appears only when a category has more than 14 modes.
+  prev-page:
+    slot: 27
+    material: ARROW
+    name: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ᴘʀᴇᴠɪᴏᴜꜱ ᴘᴀɢᴇ</bold></gradient>"
+    lore: ["<white>← ᴘᴀɢᴇ {page}"]
+  next-page:
+    slot: 28
+    material: ARROW
+    name: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ɴᴇxᴛ ᴘᴀɢᴇ</bold></gradient>"
+    lore: ["<white>➜ ᴘᴀɢᴇ {page}"]
+
+  # One tile per kit. Its on face is a kit you are queued for.
+  kit:
+    # material: STONE   # each row uses its own icon unless you set this
+    name: "{kit}"
+    glow-on: false
+    lore-on:
+      - "<yellow>✦</yellow> <white>ᴅᴜᴇʟɪɴɢ <yellow>{fights}</yellow>"
+      - "<yellow>✦</yellow> <white>ɪɴ ǫᴜᴇᴜᴇ <yellow>{queued}</yellow>"
+      - ""
+      - "<yellow>➜ <underlined>ʟᴇᴀᴠᴇ ǫᴜᴇᴜᴇ</underlined></yellow>"
+    lore-off:
+      - "<yellow>✦</yellow> <white>ᴅᴜᴇʟɪɴɢ <yellow>{fights}</yellow>"
+      - "<yellow>✦</yellow> <white>ɪɴ ǫᴜᴇᴜᴇ <yellow>{queued}</yellow>"
+      - ""
+      - "<yellow>➜ <underlined>ᴄʟɪᴄᴋ ᴛᴏ ǫᴜᴇᴜᴇ</underlined></yellow>"

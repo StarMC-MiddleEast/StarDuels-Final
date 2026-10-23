@@ -1,0 +1,549 @@
+# ============================================================================
+#  MeowDuels  -  config.yml   (ONE file for everything)
+#  New options are auto-added on startup - your values are never overwritten.
+# ============================================================================
+
+# ---- Duel requests ----
+duel:
+  request-expiry-seconds: 60
+  # Seconds between one player's duel challenges. A challenge is a message in
+  # somebody else's chat that they did not ask for; this is the floor on how
+  # often anyone can put one there. A request already pending on the same target
+  # is refused outright, however long ago it was sent.
+  request-cooldown-seconds: 5.0
+  default-rounds: 1
+
+# ---- Rounds / pacing (seconds, decimals allowed) ----
+rounds:
+  match-found-seconds: 4.0
+  # Pre-fight ready-up countdown: players may move (but not fight); both sneaking
+  # to "ready" ends it early.
+  countdown-seconds: 5
+  transition-seconds: 3.5
+  end-seconds: 3.5
+  # After you die, how long you spectate the spot you died before the next round
+  # teleports you into the arena.
+  death-spectate-seconds: 2.0
+  # Seconds the match lingers (winner in arena / loser spectating) before everyone
+  # is teleported to spawn when the match ends.
+  win-teleport-seconds: 2.0
+
+# ---- Party ----
+party:
+  # Seconds between everyone landing in the arena and the fighting opening.
+  # Nobody can be hurt until it reaches zero.
+  countdown-seconds: 5
+  # Seconds between one leader's party invites, for the same reason as
+  # duel.request-cooldown-seconds. Re-inviting someone who already has your
+  # invite is refused outright.
+  invite-cooldown-seconds: 5.0
+  # How long a Party Duels challenge stays on the table before it expires.
+  # The kit and rounds are frozen when it is sent, so what the other leader
+  # accepts is what they were shown.
+  duel-request-seconds: 60.0
+  # Party Duels is played to a number of rounds. This is the pause between one
+  # side being wiped and everyone being put back on their spawns for the next.
+  round-seconds: 2.5
+  # Seconds everyone stays standing in the arena AFTER the match is decided,
+  # the way a duel does it, so the victory title lands somewhere that still
+  # looks like the fight. Nobody can be hurt during it either.
+  end-seconds: 3.0
+  # true  - a party gets its own tab list, the way a duel does. The party sees
+  #         the party; the rest of the server still sees them, with their real
+  #         rank, because the hiding is one-directional.
+  # false - no separate list. Everyone stays in the shared tab list and the
+  #         party is just a group of people in it.
+  # Takes effect on the next membership change, or /meowduels reload.
+  separate-tab: true
+
+# ---- Golden Head (modern-UHC healing head) ----
+golden-head:
+  # What a bite is worth. Seconds and levels, so "regen-level: 2" is Regen II
+  # exactly as the potion is named. Set a duration to 0 to drop that effect.
+  regen-seconds: 10
+  regen-level: 2
+  absorption-seconds: 120
+  absorption-level: 1
+  hunger-restore: 4
+  saturation-restore: 9.6
+  # Seconds a player must wait between eating Golden Heads. 0 = no cooldown.
+  cooldown-seconds: 5.0
+  # Head skin. Paste the base64 "Value" string from minecraft-heads.com (search
+  # "Golden Head") between the quotes to give it a golden skin. Leave empty for a
+  # plain head. Applies to heads given after you set it (re-give with /givegoldenhead).
+  texture: ""
+
+# ---- Event world border (FFA events shrink the border over time) ----
+event:
+  border:
+    enabled: true
+    # Size, floor, shrink interval and step are set PER ARENA, in /arena
+    # <name>, not here - different arenas want different borders. Four keys
+    # used to sit here pretending otherwise; nothing ever read them.
+    # How long each shrink animation takes (the border glows red while moving).
+    shrink-seconds: 8
+    # Damage for standing outside the border, applied once a second.
+    # It ramps: the first second costs `base`, and every further second you stay
+    # out adds `per-second`, up to `max`. Stepping back inside resets it, so the
+    # penalty is for being out rather than for having been out. 2.0 = one heart.
+    # `base` matches what a single second outside used to cost, so nothing got
+    # gentler - it just no longer stays that cheap. Armour still reduces it.
+    damage:
+      base: 2.0
+      per-second: 1.0
+      max: 20.0
+
+# Shown in dark grey after a fighter's name in the tab list. Crossed swords
+# U+2694, which is in Minecraft's own font and needs no resource pack. The old
+# default was a dagger emoji that rendered as a box without one; a config still
+# carrying that exact value is migrated to this on startup. Set to '' to show
+# nothing.
+duel-marker: "\u2694"
+
+# Shown in dark grey after a party fighter's name in the tab list - the same
+# place and the same shape as duel-marker above, so a duel and a party read the
+# same way in the list. Only while the party is actually in a match; idle in the
+# lobby a party member's row is ordinary. Crossed swords U+2694 by default,
+# which is in Minecraft's own font and needs no resource pack. '' shows nothing.
+party-marker: "\u2694"
+
+# ============================================================================
+#  Commands during a match
+# ============================================================================
+# Chat inside a match stays inside the match: the people fighting and anyone
+# watching them, nobody else, in both directions.
+#
+# Messages are not rewritten - viewers are removed - so a fighter keeps the
+# rank, prefix and colour your permissions or chat plugin gives them. Console
+# still receives everything, so the chat log has no holes in it.
+#
+# This is the server-wide switch: it decides whether the feature exists at
+# all. Each player then has their own toggle in /settings, and that one starts
+# OFF - isolation takes something away, and a player who has never opened
+# /settings should not silently stop seeing half the server. The tips tell
+# them it is there.
+chat:
+  isolated: true
+
+# ---- Theme ----
+# The palette every menu, button and header is drawn from. Change these and
+# the whole plugin retints at once - you should not have to edit a GUI to
+# rebrand it.
+#
+# MiniMessage, so <#RRGGBB>, <red>, <gradient:..> all work. Every key is
+# optional: delete one and it falls back to the value shown here.
+theme:
+  value: "<#E6E8EB>"        # content - names, numbers, kit titles
+  label: "<white>"          # the words around the content
+  muted: "<#6B7079>"        # hints, and "not chosen yet"
+  good: "<#7CFF6B>"         # a toggle that is on
+  bad: "<#FF6B6B>"          # a toggle that is off
+  warn: "<#FFD65C>"
+  separator: "<dark_gray>\u203a "
+  hint: "<dark_gray>\u25b8 <#8E959D>"
+  tick: "\u2714 "
+  cross: "\u2716 "
+  # The confirm button's gradient, and the cancel button's.
+  confirm-from: "#7CFF6B"
+  confirm-to: "#1FA32F"
+  cancel-from: "#FF8A8A"
+  cancel-to: "#C0392B"
+  # The house accent: window titles, the leaderboard header, the queue and
+  # event action bars. This is the one most worth changing to make the plugin
+  # look like yours.
+  accent-from: "#FFF1B3"
+  accent-to: "#E6A700"
+  # The pane every menu is floored with. One edit here retints all 27 screens;
+  # a single menu that needs its own can override it with `filler:` in its own
+  # file under gui/. Keep filler-name a space - an item with no name shows its
+  # material instead, so blank panes would read "Gray Stained Glass Pane" on
+  # every hover.
+  filler: "GRAY_STAINED_GLASS_PANE"
+  filler-name: " "
+
+# ---- Sounds ----
+# Every cue the plugin plays. `key` is any Minecraft sound name, so a resource
+# pack's custom sounds work here too. Clear a key to "" to silence that one cue
+# without silencing the rest.
+#
+# Delete this whole section and every cue falls back to the value below, so
+# nothing here can break the defaults - it can only change them.
+#
+# Players can turn all of it off for themselves in /settings.
+sounds:
+  # a button in a menu
+  click: { key: "ui.button.click", volume: 0.5, pitch: 1.3 }
+  # the rematch kit and round-selection screens
+  duelMenuClick: { key: "block.amethyst_block.chime", volume: 0.8, pitch: 1.7 }
+  queueClick: { key: "block.amethyst_block.chime", volume: 0.7, pitch: 1.25 }
+  # a quick-queue ticket is waiting for an opponent
+    queueJoin: { key: "block.note_block.chime", volume: 0.9, pitch: 1.5 }
+  # a player leaves a quick-queue mode
+    queueLeave: { key: "block.note_block.harp", volume: 0.8, pitch: 1.2 }
+  # a duel request arriving
+  request: { key: "entity.experience_orb.pickup", volume: 1.0, pitch: 1.4 }
+  # a request accepted
+  accept: { key: "block.note_block.chime", volume: 1.0, pitch: 1.2 }
+  # sneaking to ready up
+    ready: { key: "block.note_block.banjo", volume: 0.9, pitch: 1.2 }
+  # the queue found you a match
+    matchFound: { key: "entity.player.levelup", volume: 0.9, pitch: 1.0 }
+  # one countdown number
+    countdown: { key: "block.note_block.xylophone", volume: 0.9, pitch: 0.9, pitch-to: 1.7 }
+  # the go signal
+    fight: { key: "block.note_block.bell", volume: 0.9, pitch: 1.7 }
+  # you took a round
+  roundWon: { key: "block.note_block.pling", volume: 1.0, pitch: 1.6 }
+  # you lost a round
+  roundLost: { key: "block.note_block.bass", volume: 1.0, pitch: 0.8 }
+  # you won the match
+  victory: { key: "ui.toast.challenge_complete", volume: 1.0, pitch: 1.0 }
+  # you lost the match
+  defeat: { key: "entity.villager.no", volume: 1.0, pitch: 1.0 }
+  # a menu opening
+  open: { key: "block.barrel.open", volume: 0.35, pitch: 1.6 }
+  # a menu closing
+  close: { key: "block.barrel.close", volume: 0.35, pitch: 1.6 }
+  # a click that was refused
+  deny: { key: "block.note_block.bass", volume: 0.7, pitch: 0.6 }
+  # picking something in a menu
+  select: { key: "block.note_block.hat", volume: 0.7, pitch: 1.5 }
+  # a party was created
+  partyCreate: { key: "item.goat_horn.sound.0", volume: 0.7, pitch: 1.0 }
+  # a party invite arriving
+  invite: { key: "block.note_block.chime", volume: 1.0, pitch: 1.6 }
+  # somebody joined your party
+  join: { key: "entity.experience_orb.pickup", volume: 0.8, pitch: 1.6 }
+  # somebody left your party
+  leave: { key: "block.note_block.bass", volume: 0.8, pitch: 1.0 }
+  # you killed somebody
+  kill: { key: "entity.player.attack.crit", volume: 1.0, pitch: 1.2 }
+  # you died
+  death: { key: "entity.wither.spawn", volume: 0.4, pitch: 1.8 }
+  # somebody else went out
+  eliminated: { key: "block.note_block.bass", volume: 0.8, pitch: 0.7 }
+  # an item still on cooldown
+  cooling: { key: "block.note_block.bass", volume: 0.6, pitch: 1.2 }
+  # a cooldown finishing
+  refreshed: { key: "block.note_block.bell", volume: 0.5, pitch: 1.9 }
+  # biting a golden head
+  eat: { key: "entity.player.burp", volume: 0.7, pitch: 1.0 }
+  # The countdown pip. It climbs from `pitch` to `pitch-to` as the count runs
+  # down, so you can hear how far through it is without reading the number.
+  # Set them equal for a flat repeated note.
+  tick: { key: "block.note_block.pling", volume: 1.0, pitch: 0.9, pitch-to: 1.6 }
+  # Standing outside the event border, once a second, sharpening as the
+  # damage ramps over the first ten seconds.
+  border: { key: "block.note_block.didgeridoo", volume: 0.7, pitch: 0.8, pitch-to: 1.4 }
+# ---- Tips ----
+# The occasional line in chat explaining how something works. Two lists,
+# because the useful thing to say depends on where you are standing: somebody
+# in the lobby wants the commands, somebody mid-fight wants to know why the
+# lobby went quiet. Each list is walked in order, one line per interval.
+#
+# MiniMessage, so <gray>, <#8E959D> and <gradient:..> all work. Anything else
+# in angle brackets is read as a tag and dropped, so write a placeholder as
+# [player], never <player>. Empty either list to say nothing to that audience;
+# set enabled to false for silence.
+tips:
+  enabled: true
+  # Seconds between tips. Floored at 30.
+  interval-seconds: 180
+  # Shown to everyone NOT in a duel or a party match.
+  global:
+    - "<dark_gray>\u25b8 <#8E959D>Turn on <#E6E8EB>isolated chat<#8E959D> in <#E6E8EB>/settings<#8E959D> to keep the lobby out of your fights."
+    - "<dark_gray>\u25b8 <#8E959D>Challenge somebody with <#E6E8EB>/duel [player]<#8E959D>."
+    - "<dark_gray>\u25b8 <#8E959D>Duel requests, party invites, spectators and sounds are all yours to set in <#E6E8EB>/settings<#8E959D>."
+    - "<dark_gray>\u25b8 <#8E959D>Start a party with <#E6E8EB>/party create<#8E959D>, then <#E6E8EB>/party invite [player]<#8E959D>."
+    - "<dark_gray>\u25b8 <#8E959D>Watch a fight with <#E6E8EB>/spectate [player]<#8E959D> - duels and party matches both."
+    - "<dark_gray>\u25b8 <#8E959D>See the top duel winners with <#E6E8EB>/leaderboard<#8E959D>."
+  # Shown to everyone IN a duel or a party match, and to their spectators.
+  match:
+    - "<dark_gray>\u25b8 <#8E959D>With <#E6E8EB>isolated chat<#8E959D> on, only this match reads what you type here."
+    - "<dark_gray>\u25b8 <#8E959D>Isolated and still need somebody outside? Type their <#E6E8EB>full name<#8E959D> and the line reaches them."
+    - "<dark_gray>\u25b8 <#8E959D>Use <#E6E8EB>/msg [player]<#8E959D> for a conversation that reaches out of the arena."
+    - "<dark_gray>\u25b8 <#8E959D>Sneak during the countdown to ready up early."
+    - "<dark_gray>\u25b8 <#8E959D>Give the match up with <#E6E8EB>/ff<#8E959D>, or leave it with <#E6E8EB>/leave<#8E959D>."
+
+# ---- Anticheat handshake ----
+# Some anticheats flag normal PvP as cheating. These exempt a player for as
+# long as they are in a match and put them back afterwards.
+#
+# bypass-nodes are permission nodes granted for the duration of a fight;
+# world-bypass-nodes the same, for anticheats that gate per world. Both are
+# empty by default, because granting permissions nobody asked for is not a
+# sane default - fill them in with whatever your anticheat documents.
+anticheat:
+  bypass-nodes: []
+  world-bypass-nodes: []
+  # Run instead of, or as well as, the permission nodes. {player} is the name.
+  commands-on-start: []
+  commands-on-end: []
+
+commands:
+  # Block commands while in a duel, a party match or an FFA event. A command
+  # mid-fight is either an escape hatch or an exploit - /home, /tp and /kit all
+  # end the fight in a way the plugin never sees, leaving an arena booked and an
+  # opponent standing in it. Spectators are never blocked; they are not in the
+  # fight and /spectate is how they stop.
+  block-in-match: true
+  # The exceptions. Everything not listed here is blocked, because the dangerous
+  # list is open-ended and this one is not.
+  #
+  # An entry is a root command ("leave") or a root plus a subcommand
+  # ("party leave"), matched on whole words, longest entry first - so "party"
+  # would permit the whole command while "party leave" permits only that one.
+  # Namespaced forms are resolved, so /meowduels:leave is not a way round it.
+  #
+  # Permission meowduels.bypass.commands skips all of this.
+  allowed-in-match:
+  - leave
+  - party leave
+  - party force_end
+  - ff
+  - eventleave
+# Health, hunger and potion effects are reset on join. The teleport to spawn and
+# the spawn hotbar are NOT part of this - they happen on every join regardless,
+# because a player who lands somewhere random with an empty hotbar has no way in.
+on-join-reset: true
+
+# Dying outside a duel or an event puts you back at spawn holding the spawn
+# items. Duel deaths still respawn on your side of the arena. Turn this off if
+# another plugin owns respawns on this server.
+on-death-spawn: true
+
+# ---- Tab list handoff (TAB draws the tab list; MeowDuels draws the sidebar) ----
+external-tab: true
+
+# Server IP shown by {server_ip} / {server_ip_sc} (small-caps version).
+# Set in-game with: /scoreboardip <ip> [color]
+scoreboard-ip: "play.starmc.fun"
+scoreboard-ip-color: "<gradient:#FFF1B3:#E6A700>"
+
+# Server name shown as the duel scoreboard title ({server_name}).
+# Set in-game with: /meowduelsserver <name...>
+server-name: "server"
+
+# ============================================================================
+#  TAB LIST
+# ----------------------------------------------------------------------------
+#  TAB draws the tab list; these are the header and footer lines it asks for,
+#  one placeholder per line:  %meowduels_tab_header_1% .. %meowduels_tab_footer_4%
+#  See tab/config.yml in the plugin folder for the TAB side.
+#
+#  Three layouts, chosen per viewer:
+#    global - not fighting, not in a party
+#    duel   - fighting a duel, or spectating one
+#    party  - in a party (whether or not it is mid-match)
+#
+#  MiniMessage. "" is a blank line; delete a line to shorten a layout.
+#  Tokens: {player} {ping} {online} {in_duels}
+#  ({rank} and {elo} are gone with ELO; they still resolve, to nothing, so an
+#   older layout renders a gap rather than the literal braces.)
+#          {server_ip} {server_name} {discord} {store}
+#    duel:  {opponent} {score} {opponent_score} {kit} {arena} {round}
+#           {rounds_to_win} {time} {team_color}
+#    party: {party_leader} {party_size} {party_kit} {party_status}
+#           {party_alive} {party_role}
+# ============================================================================
+tab:
+  # How a duel or party bubble hides the people you are not with.
+  #
+  # A DUEL hides them from the world as well as the tab list, and that is what
+  # makes the hiding stick. The tab-list-only call (unlistPlayer) is a request
+  # the client can be talked out of: TAB sends its own player-info updates for
+  # everyone it manages, and an update for a row the client has dropped makes
+  # the client recreate it. hidePlayer is not a request - the server stops
+  # sending them at all and nothing can put them back. Fighters and their
+  # spectators are alone in an arena, so there is nothing to lose by it.
+  #
+  # A PARTY does NOT hide the world: a party stands in the lobby with everyone
+  # else, and hiding there empties the lobby. Parties are tab-list-only and
+  # rely on the re-assert, which runs four times a second.
+  duel-hides-world: true
+  party-hides-world: false
+
+  # Logs what each bubble did, once per rebuild. Turn this on if tab hiding
+  # looks wrong and you want to know whether the plugin thinks it applied it.
+  debug: false
+
+
+  # Branding, used by the duel/party layouts below and by the built-in tab when
+  # external-tab is false.
+  title: "<gold><bold>ServerName</bold></gold>"
+  discord: "<white>Ask staff for invite</white>"
+  store: "<yellow>store.example.net</yellow>"
+
+  global:
+    header:
+    - ""
+    - "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>ꜱᴛᴀʀ ᴅᴜᴇʟꜱ</gradient></bold>"
+    - "<bold><yellow>✦ ᴛᴏᴛᴀʟ ᴘʟᴀʏᴇʀꜱ: <white>{online}</white></yellow></bold>"
+    - "<bold><yellow>⚔ ᴘʀᴀᴄᴛɪᴄᴇ: <white>{practice}</white> <dark_gray>│</dark_gray> ⚔ ꜰɪɢʜᴛɪɴɢ: <white>{fighting}</white></yellow></bold>"
+    - ""
+    footer:
+    - ""
+    - "<bold><yellow>ᴅɪꜱᴄᴏʀᴅ</yellow> <dark_gray>»</dark_gray> <white>{discord}</white></bold>"
+    - "<bold><yellow>ᴡᴇʙꜱɪᴛᴇ</yellow> <dark_gray>»</dark_gray> <white>{store}</white></bold>"
+  # Fighters and the people watching them. Their tab list is only the match, so
+  # the header carries the match: who, what, where and the score.
+  duel:
+    header:
+    - ""
+    - "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>\u1d05\u1d1c\u1d07\u029f</gradient></bold>"
+    - "{team_color}{player} <dark_gray>\u00bb <white>{score} <dark_gray>-</dark_gray> <white>{opponent_score} <dark_gray>\u00ab <red>{opponent}"
+    - ""
+    - "<#8E959D>\u1d0b\u026a\u1d1b <dark_gray>\u00bb <white>{kit}  <dark_gray>\u2022  <#8E959D>\u0280\u1d0f\u1d1c\u0274\u1d05 <dark_gray>\u00bb <white>{round}<dark_gray>/<gray>{rounds_to_win}"
+    - ""
+    footer:
+    - ""
+    - "<#8E959D>\u1d00\u0280\u1d07\u0274\u1d00 <dark_gray>\u00bb <white>{arena}  <dark_gray>\u2022  <#8E959D>\u1d1b\u026a\u1d0d\u1d07 <dark_gray>\u00bb <white>{time}"
+    - "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>{server_ip}</gradient></bold>"
+
+  # A party sees only the party. Idle it shows who runs it; mid-match the header
+  # switches to how many are left, because that is what anyone is looking at.
+  party:
+    header:
+    - ""
+    - "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>\u1d18\u1d00\u0280\u1d1b\u028f</gradient></bold>"
+    - "<#8E959D>\u029f\u1d07\u1d00\u1d05\u1d07\u0280 <dark_gray>\u00bb <white>{party_leader}  <dark_gray>\u2022  <#8E959D>\u1d0d\u1d07\u1d0d\u0299\u1d07\u0280\ua731 <dark_gray>\u00bb <white>{party_size}"
+    - "<#8E959D>\u1d0b\u026a\u1d1b <dark_gray>\u00bb <white>{party_kit}  <dark_gray>\u2022  <#8E959D>\ua731\u1d1b\u1d00\u1d1b\u1d1c\ua731 <dark_gray>\u00bb <white>{party_status}"
+    - ""
+    footer:
+    - ""
+    - "<#8E959D>\u028f\u1d0f\u1d1c <dark_gray>\u00bb <white>{party_role}  <dark_gray>\u2022  <#8E959D>\u1d00\u029f\u026a\u1d20\u1d07 <dark_gray>\u00bb <white>{party_alive}"
+    - "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>{server_ip}</gradient></bold>"
+
+# ============================================================================
+#  SIDEBAR SCOREBOARD
+# ----------------------------------------------------------------------------
+#  global -> shown when NOT fighting.   duel -> shown while fighting.
+#  MiniMessage text. "" = blank line. Max 15 lines.
+#  Tokens: {player} {online} {in_duels} {server_ip} {server_ip_sc}
+#          {ip_color} {ping} {kills} {deaths} {playtime} {streak}
+#          {date} {server_name}
+#          (duel board also: {score} {opponent_score} {opponent} {kit}
+#           {arena} {wins} {losses} {round} {time} etc.)
+# ============================================================================
+scoreboard:
+  # Leave TRUE while TAB is installed. TAB draws nametags AND sorts the tab list
+  # with the same scoreboard teams; if MeowDuels draws its own, the two fight
+  # over them and fighters lose their place in the sort order. The duel and FFA
+  # nametags come through %rel_meowduels_tagprefix% instead.
+  external-nametags: true
+  # The line UNDER every name: that player's health, in red, like a practice
+  # server. Everywhere - lobby included, not just in a match.
+  #
+  # The NAME above it is what changes: plain white and bare in a duel, a
+  # party match or the event, and their ordinary rank and colours anywhere
+  # else.
+  #
+  # This is a BELOW_NAME scoreboard objective, and a scoreboard can only have
+  # one. If TAB's own "belowname" feature is switched on it will fight this
+  # one and whichever wrote last wins, so turn one of the two off.
+  health-below-name: true
+  # Master switch for the global, duel, party and FFA sidebars below.
+  enabled: true
+  date-format: "dd/MM/yyyy"
+  # Action bar shown while fighting/spectating. {score} is always YOUR side
+  # (or the spectated player's), {opponent_score} the enemy.
+  action-bar: "{score} <gray>-</gray> {opponent_score}"
+  # The lobby sidebar. Duel and party matches use their own layouts below.
+  global:
+    enabled: true
+    title: "<bold><gradient:#FFF1B3:#E6A700>ᴘʀᴀᴄᴛɪᴄᴇ</gradient></bold>"
+    lines:
+    - ""
+    - "<yellow>⚔ <white>ᴋɪʟʟꜱ <dark_gray>» <white>{kills}"
+    - "<yellow>☠ <white>ᴅᴇᴀᴛʜꜱ <dark_gray>» <white>{deaths}"
+    - "<yellow>✦ <white>ꜱᴛʀᴇᴀᴋ <dark_gray>» <white>{streak}"
+    - ""
+    - "<yellow>◆ <white>ᴋᴅʀ <dark_gray>» <white>{kdr}"
+    - "<yellow>★ <white>ᴡɪɴꜱ <dark_gray>» <white>{wins}"
+    - "<yellow>⌁ <white>ᴘɪɴɢ <dark_gray>» <white>{ping}ms"
+    - ""
+    - "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>"
+  # Shown to everyone in an FFA event - fighters and knocked-out spectators
+  # alike. {alive}/{ffa_players} is who is left out of who started; {ffa_kills}
+  # is YOUR kills this event, reset when a new one starts.
+  ffa:
+    enabled: true
+    title: "<bold><gradient:#FFD65C:#FF8A2E>ғғᴀ</gradient></bold>"
+    lines:
+    - "<yellow>⚑ <white>{player}"
+    - ""
+    - "<#FFC53D>☠ <gray>ᴋɪʟʟꜱ <dark_gray>» <white>{ffa_kills}"
+    - "<#FFC53D>♦ <gray>ᴀʟɪᴠᴇ <dark_gray>» <white>{alive}<dark_gray>/<gray>{ffa_players}"
+    - "<#FFC53D>◉ <gray>ᴏᴜᴛ <dark_gray>» <white>{ffa_spectators}"
+    - ""
+    - "<#FFC53D>✦ <gray>ᴋɪᴛ <dark_gray>» <white>{ffa_kit}"
+    - "<#FFC53D>⌚ <gray>ᴛɪᴍᴇ <dark_gray>» <white>{ffa_time}"
+    - ""
+    - "{ip_color}{server_ip}"
+  # Shown to anyone in a duel, and to anyone spectating one (they read the
+  # fight's board, not their own). This is what makes a duellist's sidebar
+  # different from everybody else's.
+  #
+  # NOTE: none of duel/queue/global read an `enabled` flag. Existing config
+  # values are never overwritten on update, so a stale `enabled: false` from an
+  # older build would silently keep the board switched off forever. To turn one
+  # off, empty its `lines` - it then falls through to the next board down.
+  duel:
+    title: "<bold><gradient:#FFF1B3:#E6A700>ᴅᴜᴇʟ</gradient></bold>"
+    lines:
+    - "<gray><strikethrough>                    </strikethrough>"
+    - "{team_color}\u2691 <white>{player}"
+    - "<yellow>★ <white>{score} <dark_gray>-</dark_gray> <white>{opponent_score}  <dark_gray>» <yellow>{opponent}"
+    - ""
+    - "<yellow>⚔ <white>ᴋɪᴛ <dark_gray>» <yellow>{kit}"
+    - "<yellow>◆ <white>ʀᴏᴜɴᴅ <dark_gray>» <yellow>{round}<dark_gray>/<white>{rounds_to_win}"
+    - "<yellow>◇ <white>ᴀʀᴇɴᴀ <dark_gray>» <yellow>{arena}"
+    - "<yellow>⌚ <white>ᴛɪᴍᴇ <dark_gray>» <yellow>{time}"
+    - "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>"
+  # Party lobby and party-match board. The match lines follow the reference:
+  # alive/spectating and personal fight stats, with the party leader above.
+  party:
+    title: "<bold><gradient:#FFF1B3:#E6A700>ᴘᴀʀᴛʏ</gradient></bold>"
+    lines:
+    - "<yellow>✦ <white>{party_leader}"
+    - "<yellow>☻ <white>ᴍᴇᴍʙᴇʀꜱ <dark_gray>» <yellow>{party_size}"
+    - "<yellow>☠ <white>ʟᴏꜱꜱᴇꜱ <dark_gray>» <yellow>{losses}"
+    - "<yellow>★ <white>ᴡɪɴꜱ <dark_gray>» <yellow>{wins}"
+    - "<yellow>⚑ <white>ꜱᴛᴀᴛᴇ <dark_gray>» <yellow>{party_access}"
+    - "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>"
+  # Party FFA is independent of duel, lobby-party and public event boards.
+  # The match counters are live; deaths and streak are the viewing player's.
+  party-ffa:
+    title: "<bold><gradient:#FFF1B3:#E6A700>ᴘᴀʀᴛʏ</gradient></bold>"
+    lines:
+    - "<yellow>✦ <white>{player}"
+    - "<yellow>☻ <white>ᴍᴇᴍʙᴇʀꜱ <dark_gray>» <yellow>{party_size}"
+    - "<yellow>☠ <white>ʟᴏꜱꜱᴇꜱ <dark_gray>» <yellow>{losses}"
+    - "<yellow>★ <white>ᴡɪɴꜱ <dark_gray>» <yellow>{wins}"
+    - "<yellow>⚑ <white>ꜱᴛᴀᴛᴇ <dark_gray>» <yellow>{party_access}"
+    - ""
+    - "<yellow>⚑ <white>ᴀʟɪᴠᴇ <dark_gray>» <yellow>{party_alive}<dark_gray>/<white>{party_size}"
+    - "<yellow>◉ <white>ꜱᴘᴇᴄᴛᴀᴛɪɴɢ <dark_gray>» <yellow>{party_spectators}"
+    - ""
+    - "<yellow>⚔ <white>ᴋɪʟʟꜱ <dark_gray>» <yellow>{party_kills}"
+    - "<yellow>☠ <white>ᴅᴇᴀᴛʜꜱ <dark_gray>» <yellow>{deaths}"
+    - "<yellow>✦ <white>ꜱᴛʀᴇᴀᴋ <dark_gray>» <yellow>{streak}"
+    - "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>"
+
+# There is no queue board. Queueing is waiting, not playing, so the sidebar
+# stays on `global` and the wait is reported on the action bar instead. An
+# older config may still carry a `queue:` block here; nothing reads it.
+
+# PvP inside a match.
+#
+# A duel, a party match or an FFA round can run inside a region belonging to
+# another plugin. If that region denies PvP - including the common case of a
+# region drawn with a low Y ceiling, which silently stops the fight working once
+# anyone climbs above it - MeowDuels takes the hit back: it re-checks its own
+# rules (countdown, Split friendly fire, whether the event is running) and
+# allows the hit if the match allows it. Height is never part of that decision.
+#
+# Turn this off only if you want region flags to win inside arenas too.
+pvp:
+  force-in-match: true
+
