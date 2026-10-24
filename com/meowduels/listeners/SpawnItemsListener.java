@@ -9,9 +9,13 @@ import com.meowduels.gui.PartySettingsMenu;
 import com.meowduels.gui.QueuePickMenu;
 import com.meowduels.gui.SettingsMenu;
 import com.meowduels.model.Party;
+import com.meowduels.model.ActiveDuel;
 import com.meowduels.util.Items;
 import com.meowduels.util.SpawnItems;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,15 +23,21 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Vector;
 
 public class SpawnItemsListener
 implements Listener {
     private final MeowDuels plugin;
+    private final Map<UUID, Long> fallingWindChargeThrows = new ConcurrentHashMap<>();
 
     public SpawnItemsListener(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -57,7 +67,21 @@ implements Listener {
     }
 
     @EventHandler(ignoreCancelled=true)
+    public void onLobbyElytraDamage(PlayerItemDamageEvent event) {
+        if (SpawnItems.LOBBY_ELYTRA.equals(Items.readTag(event.getItem(), this.plugin.keyButton()))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled=true)
     public void onInventoryClick(InventoryClickEvent inventoryClickEvent) {
+        if (inventoryClickEvent.getWhoClicked() instanceof Player player
+                && inventoryClickEvent.getClickedInventory() == player.getInventory()
+                && inventoryClickEvent.getSlot() == 40
+                && SpawnItems.LOBBY_WIND_CHARGE.equals(Items.readTag(player.getInventory().getItemInOffHand(), this.plugin.keyButton()))) {
+            inventoryClickEvent.setCancelled(true);
+            return;
+        }
         if (this.isSpawnItem(inventoryClickEvent.getCurrentItem())) {
             inventoryClickEvent.setCancelled(true);
             return;
@@ -65,6 +89,34 @@ implements Listener {
         if ((inventoryClickEvent.getAction() == InventoryAction.HOTBAR_SWAP || inventoryClickEvent.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD) && inventoryClickEvent.getHotbarButton() == 3 && inventoryClickEvent.getWhoClicked() instanceof Player && this.isSpawnItem(((Player)inventoryClickEvent.getWhoClicked()).getInventory().getItem(3))) {
             inventoryClickEvent.setCancelled(true);
         }
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)
+                || !SpawnItems.LOBBY_WIND_CHARGE.equals(Items.readTag(player.getInventory().getItemInOffHand(), this.plugin.keyButton()))) {
+            return;
+        }
+        int topSize = event.getView().getTopInventory().getSize();
+        if (event.getRawSlots().stream().anyMatch(slot -> slot >= topSize && event.getView().convertSlot(slot) == 40)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onHandSwap(PlayerSwapHandItemsEvent event) {
+        if (this.isSpawnItem(event.getMainHandItem()) || this.isSpawnItem(event.getOffHandItem())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onWindChargeVelocity(PlayerVelocityEvent event) {
+        Long thrownAt = this.fallingWindChargeThrows.remove(event.getPlayer().getUniqueId());
+        if (thrownAt == null || System.currentTimeMillis() - thrownAt > 2_000L) return;
+        Vector velocity = event.getVelocity();
+        event.setVelocity(new Vector(velocity.getX(), 0.0, velocity.getZ()));
+        event.getPlayer().setFallDistance(0.0f);
     }
 
     @EventHandler
@@ -79,16 +131,34 @@ implements Listener {
         if (playerInteractEvent.getItem() == null) {
             return;
         }
+        Player player = playerInteractEvent.getPlayer();
+        if (playerInteractEvent.getItem().getType() == org.bukkit.Material.WIND_CHARGE
+                && bl && playerInteractEvent.getHand() == EquipmentSlot.HAND && this.isMaceMode(player)
+                && !player.isOnGround() && player.getVelocity().getY() < -0.1
+                && player.getLocation().getPitch() >= 75.0f) {
+            UUID playerId = player.getUniqueId();
+            long thrownAt = System.currentTimeMillis();
+            this.fallingWindChargeThrows.put(playerId, thrownAt);
+            this.plugin.getServer().getScheduler().runTaskLater((Plugin)this.plugin, () -> {
+                if (!player.isOnline() || !Long.valueOf(thrownAt).equals(this.fallingWindChargeThrows.remove(playerId))) return;
+                Vector velocity = player.getVelocity();
+                player.setVelocity(new Vector(velocity.getX(), 0.0, velocity.getZ()));
+                player.setFallDistance(0.0f);
+            }, 1L);
+        }
         String string = Items.readTag(playerInteractEvent.getItem(), this.plugin.keyButton());
         if (string == null) {
             return;
         }
-        Player player = playerInteractEvent.getPlayer();
         if ("lobby-wind-charge".equals(string)) {
-            if (bl && playerInteractEvent.getHand() == EquipmentSlot.HAND) {
+            if (bl) {
                 this.plugin.getServer().getScheduler().runTaskLater((Plugin)this.plugin, () -> {
-                    if (player.isOnline() && !this.plugin.getDuelManager().isInDuel(player.getUniqueId()) && !this.plugin.getPartyManager().inPartyMatch(player.getUniqueId())) {
-                        player.getInventory().setItem(3, SpawnItems.windCharge(this.plugin));
+                    UUID playerId = player.getUniqueId();
+                    if (player.isOnline() && !this.plugin.getDuelManager().isInDuel(playerId)
+                            && !this.plugin.getPartyManager().inPartyMatch(playerId)
+                            && (this.plugin.getEventManager() == null || !this.plugin.getEventManager().isInvolved(playerId))
+                            && (this.plugin.getSpectateManager() == null || !this.plugin.getSpectateManager().isSpectating(playerId))) {
+                        player.getInventory().setItemInOffHand(SpawnItems.windCharge(this.plugin));
                     }
                 }, 1L);
             }
@@ -163,6 +233,20 @@ implements Listener {
             }
             this.plugin.getDuelManager().requestRematch(player);
         }
+    }
+
+    private boolean isMaceMode(Player player) {
+        String kit = null;
+        ActiveDuel duel = this.plugin.getDuelManager().getDuel(player.getUniqueId());
+        if (duel != null) {
+            kit = duel.getKit();
+        } else {
+            Party party = this.plugin.getPartyManager().partyOf(player.getUniqueId());
+            if (party != null && this.plugin.getPartyManager().inPartyMatch(player.getUniqueId())) kit = party.getKit();
+        }
+        if (kit == null) return false;
+        String normalized = kit.replaceAll("[^A-Za-z0-9]", "").toLowerCase(java.util.Locale.ROOT);
+        return Set.of("mace", "modernmace", "spearmace").contains(normalized);
     }
 
     private boolean partyLeader(Player player) {

@@ -1,0 +1,53 @@
+# StarDuels titles/subtitles. Edit values and run /starduels reload.
+titles:
+  match-found:
+    title: '&cMATCH FOUND!'
+    subtitle: '&7Preparing your arena...'
+    progress-1: '&c● &8● &8●'
+    progress-2: '&c● &c● &8●'
+    progress-3: '&c● &c● &c●'
+    progress-4: '&8● &c● &c●'
+  countdown:
+    title: <gradient:#FFD65C:#FFB02E>{seconds}</gradient>
+    subtitle: <#6B7079>ɢᴇᴛ ʀᴇᴀᴅʏ</#6B7079>
+  fight:
+    title: <bold><gradient:#FFF500:#FFD000>FIGHT</gradient></bold>
+    subtitle: <white>⚔ <bold><#FFFF00>{yourScore}</#FFFF00></bold> <gray>-</gray>
+      <bold><#FF3030>{theirScore}</#FF3030></bold>
+  round-won:
+    title: '&a&lVICTORY'
+    subtitle: '&7Score &8» &a{yourScore} &7- &c{theirScore}'
+  round-lost:
+    title: '&c&lDEFEAT'
+    subtitle: '&7Score &8» &a{yourScore} &7- &c{theirScore}'
+  victory:
+    title: <bold><#FFFF00>VICTORY</#FFFF00></bold>
+    subtitle: '<white>Score: <bold><#FFFF00>{yourScore}</#FFFF00></bold> <dark_gray>-</dark_gray>
+      <bold><#FF3030>{theirScore}</#FF3030></bold>'
+  defeat:
+    title: <bold><#FF2020>DEFEAT</#FF2020></bold>
+    subtitle: '<white>Score: <bold><#FF3030>{yourScore}</#FF3030></bold> <dark_gray>-</dark_gray>
+      <bold><#FF3030>{theirScore}</#FF3030></bold>'
+party:
+  countdown-title: <gradient:#FFD65C:#FFB02E>{seconds}</gradient>
+  countdown-subtitle: '&7Free-for-all • last one standing'
+  countdown-go: <bold><gradient:#FFF500:#FFD000>FIGHT</gradient></bold>
+  countdown-subtitle-split: <#8E959D>ᴛᴇᴀᴍ ᴠꜱ ᴛᴇᴀᴍ <dark_gray>• <#8E959D>ʏᴏᴜ'ʀᴇ ᴏɴ
+    {team}
+  countdown-subtitle-split-noteam: <#8E959D>ᴛᴇᴀᴍ ᴠꜱ ᴛᴇᴀᴍ <dark_gray>• <#8E959D>ᴡɪᴘᴇ
+    ᴛʜᴇ ᴏᴛʜᴇʀ ꜱɪᴅᴇ
+  round-win-title: <gradient:#7CFF6B:#1FA32F>ʀᴏᴜɴᴅ ᴡᴏɴ</gradient>
+  round-lose-title: <gradient:#FF8A8A:#C0392B>ʀᴏᴜɴᴅ ʟᴏꜱᴛ</gradient>
+  round-subtitle: <#7DE2FF>{aqua} <#6B7079>- <#FF8A8A>{red}
+  win-title: '&6&lVICTORY'
+  win-subtitle: '&7Last one standing'
+  win-subtitle-split: <#8E959D>ʏᴏᴜʀ ᴛᴇᴀᴍ ᴡɪᴘᴇᴅ ᴛʜᴇᴍ ᴏᴜᴛ
+event:
+  countdown-title: <gradient:#FFD65C:#FF8A2E>{seconds}</gradient>
+  countdown-subtitle: <#8E959D>ᴛʜᴇ ᴇᴠᴇɴᴛ ɪꜱ ᴀʙᴏᴜᴛ ᴛᴏ ꜱᴛᴀʀᴛ
+  start-title: <gradient:#7CFF6B:#1FA32F>ꜰɪɢʜᴛ</gradient>
+  start-subtitle: <#8E959D>ʟᴀꜱᴛ ᴏɴᴇ ꜱᴛᴀɴᴅɪɴɢ ᴡɪɴꜱ
+  win-title: <gradient:#FFE9A3:#FFB02E>ᴠɪᴄᴛᴏʀʏ</gradient>
+  win-subtitle: <#8E959D>ʟᴀꜱᴛ ᴏɴᴇ ꜱᴛᴀɴᴅɪɴɢ
+  out-title: <gradient:#FF8A8A:#C0392B>ᴇʟɪᴍɪɴᴀᴛᴇᴅ</gradient>
+  out-subtitle: <#8E959D>ʏᴏᴜʀ ᴋɪʟʟꜱ <dark_gray>» <#E6E8EB>{kills}

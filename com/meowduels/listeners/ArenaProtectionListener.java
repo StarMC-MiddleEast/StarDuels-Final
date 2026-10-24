@@ -194,8 +194,16 @@ implements Listener {
         if (this.eventArenaAllow(location, blockFromToEvent.getToBlock().getBlockData())) {
             return;
         }
-        if (!arena.isAllowLiquidFlow()) {
+        ActiveDuel activeDuel = this.activeDuelFor(arena);
+        Party party = this.partyFor(arena);
+        if (!arena.isAllowLiquidFlow() && activeDuel == null && party == null) {
             blockFromToEvent.setCancelled(true);
+            return;
+        }
+        if (activeDuel != null && arena.contains(location)) {
+            activeDuel.recordChange(location, blockFromToEvent.getToBlock().getBlockData());
+        } else if (party != null && arena.contains(location)) {
+            party.recordChange(location, blockFromToEvent.getToBlock().getBlockData());
         }
     }
 

@@ -36,7 +36,11 @@ public class MessageManager {
 
     public void reload() {
         if (!this.file.exists()) {
-            this.writeDefaults();
+            try {
+                this.plugin.saveResource("messages.yml", false);
+            } catch (IllegalArgumentException exception) {
+                this.writeDefaults();
+            }
         }
         this.config = YamlConfiguration.loadConfiguration((File)this.file);
         this.fillMissing();
@@ -47,6 +51,7 @@ public class MessageManager {
     private void writeDefaults() {
         YamlConfiguration yamlConfiguration = new YamlConfiguration();
         for (Map.Entry<String, String> entry : DEFAULTS.entrySet()) {
+            if (MessageManager.isTitleKey(entry.getKey())) continue;
             yamlConfiguration.set(entry.getKey(), (Object)entry.getValue());
         }
         try {
@@ -63,6 +68,7 @@ public class MessageManager {
         }
         boolean bl = false;
         for (Map.Entry<String, String> entry : DEFAULTS.entrySet()) {
+            if (MessageManager.isTitleKey(entry.getKey())) continue;
             if (this.config.contains(entry.getKey())) continue;
             this.config.set(entry.getKey(), (Object)entry.getValue());
             bl = true;
@@ -115,7 +121,7 @@ public class MessageManager {
         }
         try {
             this.config.save(this.file);
-            this.plugin.getLogger().info("Updated the duel countdown and FIGHT titles to the new ones. Your own wording, if you had any, was left alone - edit titles.* or party.countdown-* in messages.yml to change them back.");
+            this.plugin.getLogger().info("Updated legacy message defaults. Your custom wording was kept; edit match title text in titles.yml.");
         }
         catch (IOException iOException) {
             this.plugin.getLogger().warning("Failed to update messages.yml: " + iOException.getMessage());
@@ -132,6 +138,9 @@ public class MessageManager {
     }
 
     public String raw(String string) {
+        if (MessageManager.isTitleKey(string) && this.plugin.titles() != null) {
+            return this.plugin.titles().raw(string);
+        }
         String string2 = this.config == null ? null : this.config.getString(string);
         String string3 = string2;
         if (string2 == null) {
@@ -172,9 +181,15 @@ public class MessageManager {
         return Colors.toSection(string2);
     }
 
-    private static boolean isTitleKey(String key) {
+    static boolean isTitleKey(String key) {
         return key.startsWith("titles.") || key.endsWith("-title") || key.endsWith("-subtitle")
-            || key.equals("party.countdown-go") || key.equals("party.countdown-title");
+            || key.equals("party.countdown-go") || key.equals("party.countdown-title")
+            || key.equals("party.countdown-subtitle-split") || key.equals("party.countdown-subtitle-split-noteam")
+            || key.equals("party.win-subtitle-split");
+    }
+
+    static Map<String, String> defaultMessages() {
+        return DEFAULTS;
     }
 
     private static boolean isResultKey(String key) {
@@ -254,10 +269,14 @@ public class MessageManager {
         DEFAULTS.put("chat.kind-party", "party match");
         DEFAULTS.put("titles.match-found.title", "&cMATCH FOUND!");
         DEFAULTS.put("titles.match-found.subtitle", "&7Preparing your arena...");
+        DEFAULTS.put("titles.match-found.progress-1", "&c● &8● &8●");
+        DEFAULTS.put("titles.match-found.progress-2", "&c● &c● &8●");
+        DEFAULTS.put("titles.match-found.progress-3", "&c● &c● &c●");
+        DEFAULTS.put("titles.match-found.progress-4", "&8● &c● &c●");
         DEFAULTS.put("titles.countdown.title", COUNTDOWN_TITLE);
         DEFAULTS.put("titles.countdown.subtitle", COUNTDOWN_SUBTITLE);
         DEFAULTS.put("titles.fight.title", FIGHT_TITLE);
-        DEFAULTS.put("titles.fight.subtitle", OLD_COUNTDOWN_SUBTITLE);
+        DEFAULTS.put("titles.fight.subtitle", "<white>⚔ <bold><#FFFF00>{yourScore}</#FFFF00></bold> <gray>-</gray> <bold><#FF3030>{theirScore}</#FF3030></bold>");
         DEFAULTS.put("titles.round-won.title", "&a&lVICTORY");
         DEFAULTS.put("titles.round-won.subtitle", "&7Score &8\u00bb &a{yourScore} &7- &c{theirScore}");
         DEFAULTS.put("titles.round-lost.title", "&c&lDEFEAT");

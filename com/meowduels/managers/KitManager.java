@@ -39,6 +39,7 @@ public class KitManager {
             return;
         }
         boolean migratedModernSmpShield = false;
+        boolean migratedModernSmpIcon = false;
         boolean migratedGuiVisibility = false;
         for (String string : configurationSection.getKeys(false)) {
             ConfigurationSection configurationSection2 = configurationSection.getConfigurationSection(string);
@@ -51,6 +52,14 @@ public class KitManager {
             if (string.equalsIgnoreCase("ModernSMP") && (kit.getOffhand() == null || kit.getOffhand().getType() == Material.AIR)) {
                 kit.setOffhand(new ItemStack(Material.SHIELD));
                 migratedModernSmpShield = true;
+            }
+            if (string.equalsIgnoreCase("ModernSMP") && kit.getIcon() != Material.SHIELD) {
+                kit.setIcon(Material.SHIELD);
+                migratedModernSmpIcon = true;
+            }
+            if (string.equalsIgnoreCase("ModernSMP") && "item/totem_of_undying".equalsIgnoreCase(kit.getNameIcon())) {
+                kit.setNameIcon("none");
+                migratedModernSmpIcon = true;
             }
             this.kits.put(string.toLowerCase(Locale.ROOT), kit);
         }
@@ -69,9 +78,10 @@ public class KitManager {
             this.kits.put(spearMace.getName().toLowerCase(Locale.ROOT), spearMace);
             migratedGuiVisibility = true;
         }
-        if (migratedModernSmpShield || migratedGuiVisibility) {
+        if (migratedModernSmpShield || migratedModernSmpIcon || migratedGuiVisibility) {
             this.save();
             if (migratedModernSmpShield) this.plugin.getLogger().info("Added the missing offhand shield to the ModernSMP kit.");
+            if (migratedModernSmpIcon) this.plugin.getLogger().info("Updated the ModernSMP menu icon to a shield.");
         }
         this.plugin.getLogger().info("Loaded " + this.kits.size() + " kit(s).");
     }

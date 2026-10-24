@@ -45,7 +45,16 @@ public final class SpawnItems {
         boolean handWasEmpty = isEmpty(player.getInventory().getItemInMainHand())
                 || SpawnItems.isManagedItem(meowDuels, player.getInventory().getItemInMainHand());
         SpawnItems.clearManagedHotbar(meowDuels, player);
-        setIfEmpty(player, 3, SpawnItems.windCharge(meowDuels));
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+        if (!LOBBY_WIND_CHARGE.equals(Items.readTag(offhand, meowDuels.keyButton()))) {
+            ItemStack displaced = isEmpty(offhand) ? null : offhand.clone();
+            player.getInventory().setItemInOffHand(SpawnItems.windCharge(meowDuels));
+            if (displaced != null) {
+                for (ItemStack leftover : player.getInventory().addItem(displaced).values()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                }
+            }
+        }
         ItemStack[] itemStackArray = player.getInventory().getArmorContents();
         if (itemStackArray != null && itemStackArray.length > 2) {
             ItemStack chestItem = itemStackArray[2];

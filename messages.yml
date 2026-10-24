@@ -1,0 +1,484 @@
+# StarDuels messages. Edit values, keep keys intact, then run /starduels reload.
+prefix: <dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>
+general:
+  no-permission: '{prefix}&cYou don''t have permission to do that.'
+  reloaded: '{prefix}&aConfig reloaded.'
+  players-only: '{prefix}&cThis command can only be used by a player.'
+duel:
+  usage: '{prefix}&cUsage: /duel <player>'
+  cannot-duel-self: '{prefix}&cYou cannot duel yourself.'
+  already-in-duel: '{prefix}&cYou are already in a duel.'
+  target-in-duel: '{prefix}&c{target} is already in a duel.'
+  kit-gone: '{prefix}&cThat kit no longer exists.'
+  arena-booked: '{prefix}&cSorry, the Arena was booked.'
+  arena-world-unavailable: '{prefix}&cArena &e{arena}&c has a missing or unloaded
+    spawn world. An admin must repair its world or spawn points; players were returned
+    to spawn.'
+  requests-off: '{prefix}&c{target} has duel requests turned off.'
+  no-arenas: '{prefix}&cNo free arena is available right now - try again shortly.'
+  no-kits: '{prefix}&cNo kits have been created yet.'
+  target-offline: '{prefix}&cPlayer {name} is not online.'
+  sent: '{prefix}&aChallenge sent to &e{target} &a(&e{kit}&a, first to &e{rounds}&a).'
+  starting: '{prefix}&aDuel starting against &e{opponent}&a!'
+  victory-opponent-left: '{prefix}&aYour opponent left - you win.'
+  victory-opponent-disconnected: '{prefix}&aYour opponent disconnected - you win.'
+  left-confirm: '{prefix}&cYou left the duel.'
+  round: '{prefix}&fRound &d{round} &f- first to {roundsToWin}'
+  start:
+    header: <yellow><bold>DUEL</bold> <dark_gray>·</dark_gray> <white>{opponent}</white>
+    info: <gray>Kit <dark_gray>»</dark_gray> <white>{kit}</white> <dark_gray>·</dark_gray>
+      <gray>First to <yellow>{rounds}</yellow>
+    leave: <dark_gray>Type <yellow>/leave</yellow> to leave.</dark_gray>
+  victory: '{prefix}&a&lVICTORY! &fYou won the duel (&e{yourScore} &f- &e{theirScore}&f).'
+  defeat: '{prefix}&c&lDEFEAT. &f{winner} won the duel.'
+  match-result: |-
+    <yellow>☠ <white>{killer} killed <yellow>{victim}</white>
+
+    <yellow><bold>Match Result:</bold></yellow>
+    <yellow>⚔ <white>Winner: <yellow>{winner}</yellow>
+    <yellow>⚒ <white>Kit: <gradient:#FFF1B3:#E6A700>{kit}</gradient>
+    <yellow>★ <white>Score: <yellow>{score}
+  forfeit-broadcast: '&7Someone got ragebaited! &4☠'
+leave:
+  not-in-duel: '{prefix}&cYou are not in a duel.'
+spectate:
+  not-found: '{prefix}&cPlayer {name} is not online.'
+  in-duel: '{prefix}&cYou can''t spectate while in a duel.'
+  self: '{prefix}&cYou can''t spectate yourself.'
+  target-not-in-fight: '{prefix}&c{target} is not in a fight right now.'
+  not-allowed: '{prefix}&cSpectating is disabled in this arena.'
+  now: '{prefix}&aNow spectating &e{target}&a. Type &e/spectate&a to stop.'
+  stopped: '{prefix}&aStopped spectating.'
+  not-spectating: '{prefix}&cYou are not spectating anyone.'
+  fight-ended: '{prefix}&eThe fight ended - returning you back.'
+  started-watching: '{name} has started spectating you.'
+  stopped-watching: '{name} has stopped spectating you.'
+queue:
+  in-duel: '{prefix}&cYou are already in a duel.'
+  kit-gone: '{prefix}&cThat kit no longer exists.'
+  left: '{prefix}&aYou left every queue.'
+  not-queued: '{prefix}&cYou are not in a queue.'
+  no-arena: '{prefix}&cNo free arena is available for that kit right now.'
+  joined-text: '<white>Queued for '
+  left-text: '<white>Left queue for '
+accept:
+  no-requests: '{prefix}&cYou have no pending duel requests.'
+  target-offline: '{prefix}&cThat player is not online.'
+  expired: '{prefix}&cThat duel request has expired.'
+  sender-offline: '{prefix}&cThat player is no longer online.'
+  one-in-duel: '{prefix}&cOne of you is already in a duel.'
+  no-arena: '{prefix}&cNo free arena is available for that kit right now.'
+request:
+  header: '&6DUEL REQUEST FROM &e&l{sender}'
+  kit: '&eKit: &e&l{kit}'
+  rounds: '&eRounds: &f{rounds}'
+  click: '&6&l[CLICK HERE]'
+  click-hover: '&aClick to accept the duel from &f{sender}'
+menu:
+  select-kit-first: '{prefix}&cSelect a kit first.'
+  target-offline: '{prefix}&c{target} is no longer online.'
+  arena-incompatible: '{prefix}&cThat arena doesn''t support the selected kit.'
+arena:
+  cannot-edit: '{prefix}&cYou cannot edit an arena here.'
+chat:
+  isolated-notice: <dark_gray>▸ <#8E959D>{target} is in a <#E6E8EB>{kind}<#8E959D>
+    - they only see lines that name them. <#E6E8EB>/msg {target}<#8E959D> to talk
+    properly.
+  kind-duel: duel
+  kind-party: party match
+round:
+  won-chat: '&6☄ &aRound {round} won &8» &f{score} &7- &f{opponent_score}'
+  lost-chat: '&4☠ &cRound {round} lost &8» &f{score} &7- &f{opponent_score}'
+event:
+  announce: '&a{host} is hosting an event of &e{kit}&a. Do &f/event &ato join. &7Players:
+    &f{slots} &8| &7Time Left: &c{time}'
+  started: '&a&lThe Event has started!'
+  full: '&cThe event is full ({slots} slots).'
+  spectate-start: '&7You are now spectating the event. &f/eventleave &7to stop.'
+  spectate-playing: '&cYou''re playing in the event - you can''t spectate it.'
+  already-spectating: '&cYou''re already spectating the event.'
+  kill:
+    pvp: <#FF3B57>☠ <#FF8A93>{victim} <#6B7079>was eliminated by <#7CFF6B>{killer}
+      <dark_gray>• <#E6E8EB>{alive} <#6B7079>left
+    generic: <#FF3B57>☠ <#FF8A93>{victim} <#6B7079>was eliminated <dark_gray>• <#E6E8EB>{alive}
+      <#6B7079>left
+  win: '&a&l{winner} has won the event! &4☠'
+  joined: '&aYou joined the event! Wait for it to start.'
+  left: '&7You left the event.'
+  no-permission: '&cYou don''t have permission to host events.'
+  already-running: '&cAn event is already running.'
+  no-kit: '&cNo kit named that exists.'
+  no-arena: '&cNo free arena is available to host an event right now.'
+  no-event-spawn: '&cArena {arena} has no event spawn set - set it in /arena first.'
+  arena-busy: '&cArena {arena} is in use right now.'
+  none: '&cThere''s no event to join right now.'
+  already-joined: '&cYou already joined the event.'
+  busy: '&cLeave your duel, queue, or spectate first (&f/leave&c) to join the event.'
+  started-cannot-join: '&cThe event already started - you can''t join now.'
+  host-usage: '&cUsage: &f/event host <kit> <minutes> [slots]&c, &f/event host force_start&c
+    or &f/event host force_end'
+  force-ended: '&cThe event has been ended by a host.'
+party:
+  invite-header: '  &d★ &f&lPARTY INVITE'
+  invite-from: '  &7{leader} &7wants you in their party.'
+  invite-info: '  &8Members: &f{members}'
+  invite-accept: '  &a&l[ JOIN ]'
+  invite-gap: '   '
+  invite-decline: '&c&l[ DECLINE ]'
+  invite-accept-hover: '&aJoin {leader}''s party'
+  invite-decline-hover: '&cTurn down {leader}''s invite'
+  invite-sent: '&aInvited &f{player}&a - waiting for them to accept.'
+  invite-declined: '&7You turned down &f{leader}&7''s invite.'
+  invite-declined-by: '&7{player} &7turned down your party invite.'
+  match-started: '&aParty match started &8• &f{count} &7fighting on &f{arena}'
+  kill-pvp: <yellow>☠ <white>{victim} <white>was killed by <yellow>{killer} <dark_gray>•
+    <white>{alive} left
+  kill-generic: <yellow>☠ <white>{victim} <white>died <dark_gray>• <white>{alive}
+    left
+  team-aqua: <#7DE2FF>ᴛᴇᴀᴍ ᴀꞯᴜᴀ
+  team-red: <#FF8A8A>ᴛᴇᴀᴍ ʀᴇᴅ
+  teams-line: <#8E959D>ᴛᴇᴀᴍꜱ <dark_gray>» <#7DE2FF>{aqua} <dark_gray>ᴠꜱ <#FF8A8A>{red}
+  team-winner: <#FFD65C>★ {team} <#6B7079>won the party match!
+  winner: <yellow>★ <gradient:#FFF1B3:#E6A700>{winner}</gradient> <white>won the party
+    match!
+  no-winner: '&7The party match ended with no winner.'
+  force-ended: <#FF8A93>✖ <#6B7079>{leader} ended the party match.
+  duel-header: '  <#7DE2FF>⚔ <bold>ᴘᴀʀᴛʏ ᴅᴜᴇʟ ᴄʜᴀʟʟᴇɴɢᴇ</bold>'
+  duel-from: '  <#6B7079>ꜰʀᴏᴍ <#E6E8EB>{leader}<#6B7079>''ꜱ ᴘᴀʀᴛʏ <dark_gray>• <#E6E8EB>{members}
+    <#6B7079>ᴍᴇᴍʙᴇʀꜱ'
+  duel-terms: '  <#6B7079>ᴋɪᴛ <dark_gray>» <#E6E8EB>{kit} <dark_gray>• <#6B7079>ꜰɪʀꜱᴛ
+    ᴛᴏ <#E6E8EB>{rounds} <dark_gray>• <#E6E8EB>{pairs} <#6B7079>ᴠꜱ ʏᴏᴜ'
+  duel-accept: '  &a&l[ ACCEPT ]'
+  duel-decline: '&c&l[ DECLINE ]'
+  duel-accept-hover: '&aFight {leader}''s party'
+  duel-decline-hover: '&cTurn down {leader}''s party duel'
+  duel-sent: <#7DE2FF>⚔ <#6B7079>ᴄʜᴀʟʟᴇɴɢᴇᴅ <#E6E8EB>{party}<#6B7079>'ꜱ ᴘᴀʀᴛʏ <dark_gray>•
+    <#E6E8EB>{kit} <dark_gray>• <#6B7079>ꜰɪʀꜱᴛ ᴛᴏ <#E6E8EB>{rounds}
+  round-won: <#FFD65C>★ {team} <#6B7079>ᴛᴀᴋᴇꜱ ᴛʜᴇ ʀᴏᴜɴᴅ <dark_gray>• <#7DE2FF>{aqua}
+    <dark_gray>- <#FF8A8A>{red} <dark_gray>• <#6B7079>ꜰɪʀꜱᴛ ᴛᴏ <#E6E8EB>{rounds}
+  round-start: <#8E959D>ʀᴏᴜɴᴅ <#E6E8EB>{round}<dark_gray>/<#8E959D>{rounds}
+countdown:
+  player-ready: '&7{player} is Ready !'
+  forced: '&7♻ Duel Started Forcefully !'
+match:
+  toxic:
+    '1': '&6☄ &a{winner} &7obliterated &c{loser} &4☠ &8• &f{winner_score}&7-&f{loser_score}'
+    '2': '&4☠ &c{loser} &7got sent to spawn by &6☄ &a{winner} &8(&f{winner_score}&7-&f{loser_score}&8)'
+    '3': '&6☄ &a{winner} &7ended &c{loser}&7''s whole career &4☠ &8• &f{winner_score}&7-&f{loser_score}'
+    '4': '&4☠ &c{loser} &7just got ratio''d by &6☄ &a{winner} &8[&f{winner_score}&7-&f{loser_score}&8]'
+    '5': '&6☄ &a{winner} &7made &c{loser} &4☠ &7hit the respawn button &8• &f{winner_score}&7-&f{loser_score}'
+    '6': '&4☠ &c{loser} &7got absolutely clapped by &6☄ &a{winner} &8(&f{winner_score}&7-&f{loser_score}&8)'
+    '7': '&6☄ &a{winner} &7turned &c{loser} &4☠ &7into a corpse &8• &f{winner_score}&7-&f{loser_score}'
+    '8': '&4☠ &c{loser} &7should uninstall — &6☄ &a{winner} &7said gg &8[&f{winner_score}&7-&f{loser_score}&8]'
+    '9': '&6☄ &a{winner} &7dropped &c{loser} &4☠ &7like a bad habit &8• &f{winner_score}&7-&f{loser_score}'
+    '10': '&4☠ &c{loser} &7got humbled by &6☄ &a{winner} &8(&f{winner_score}&7-&f{loser_score}&8)'
+death:
+  duel:
+    '1': '&4☠ &c{victim} &7was killed by &a{killer} &8• &f{killer_score}&7-&f{victim_score}'
+    '2': '&4☠ &c{victim} &7got dropped by &a{killer} &8• &f{killer_score}&7-&f{victim_score}'
+    '3': '&a⚔ &a{killer} &7cut down &c{victim} &8• &f{killer_score}&7-&f{victim_score}'
+    '4': '&4☠ &c{victim} &7got sent flying by &a{killer} &8• &f{killer_score}&7-&f{victim_score}'
+    '5': '&a⚔ &a{killer} &7clapped &c{victim} &8• &f{killer_score}&7-&f{victim_score}'
+  normal:
+    pvp:
+      '1': '&4☠ &c{victim} &7was slain by &a{killer}'
+      '2': '&4☠ &c{victim} &7got dropped by &a{killer}'
+      '3': '&a⚔ &a{killer} &7ended &c{victim}'
+      '4': '&4☠ &c{victim} &7couldn''t handle &a{killer}'
+    generic: '&4☠ &c{victim} &7died'
+notice:
+  admin:
+    gave-golden-head: '&7Gave {amount} Golden Head{plural} to {target}.'
+    received-golden-head: '&7You received {amount} Golden Head{plural}.'
+    amount-must-at-least: '&7Amount must be at least 1.'
+    invalid-amount: '&7Invalid amount: {name}'
+    console-must-specify-player: '&7Console must specify a player: /givegoldenhead
+      <player> [amount]'
+    player-not-online: '&7Player {name} is not online.'
+    don-t-have-permission: '&7You don''t have permission to do that.'
+    config-reset-defaults-all: '&7Config reset to defaults and all arenas wiped. ({value}
+      arenas remain)'
+    sub-commands-list-create: '&7Sub-commands: list, create, delete, header, addkit,
+      removekit'
+    removed-from: '&7Removed {name} from {id}.'
+    added: '&7Added {name} to {id}.'
+    no-kit-named: '&7No kit named {name}.'
+    no-category-named: '&7No category named {name}.'
+    usage-id-kit: '&7Usage: /{cmd} {sub} <id> <kit>'
+    header-set: '&7Header for {id} set to {header}.'
+    no-category-named-2: '&7No category named {name}.'
+    usage-header-id-text: '&7Usage: /{cmd} header <id> <text>'
+    deleted-category: '&7Deleted category {name}.'
+    usage-delete-id: '&7Usage: /{cmd} delete <id>'
+    category-id-already-exists: '&7A category with that id already exists.'
+    created-category: '&7Created category {name}.'
+    usage-create-id-header: '&7Usage: /{cmd} create <id> [header]'
+    no-categories-yet-create: '&7No categories yet. Create one with /{cmd} create
+      <id>.'
+    no-kit-named-2: '&7No kit named {name}.'
+    aren-t-event-duel: '&7You aren''t in an event, duel, queue, or spectating.'
+    re-party-use-leave: '&7You''re in a party - use the Leave Party item, or /party
+      leave.'
+    aren-t-party-party: '&7You aren''t in a party. /party create to start one.'
+    isn-t-online: '&7{name} isn''t online.'
+    usage-party-player: '&7Usage: /party {sub} <player>'
+    isn-t-online-2: '&7{name} isn''t online.'
+    usage-party-duel-accept: '&7Usage: /party duel <accept|decline> <leader>'
+    aren-t-duel: '&7You aren''t in a duel.'
+    aren-t-event: '&7You aren''t in an event.'
+    re-queue-type-leave: '&7You''re in a queue - type /leave first.'
+    re-already-spectating-type: '&7You''re already spectating - type /leave first.'
+    re-duel-type-leave: '&7You''re in a duel - type /leave or /ff first.'
+    slots-must-number-e: '&7Slots must be a number, e.g. /event host {name} 5 8'
+    minutes-must-number-e: '&7Minutes must be a number, e.g. /event host {name} 5
+      8'
+    re-duel-type-leave-2: '&7You''re in a duel - type /leave or /ff first.'
+    re-queue-type-leave-2: '&7You''re in a queue - type /leave first.'
+    re-spectating-type-leave: '&7You''re spectating - type /leave first.'
+    re-event-type-leave: '&7You''re in an event - type /leave first.'
+    rounds-must-number-e: '&7Rounds must be a number, e.g. /duel {target} {kit} 3'
+    scoreboard-server-name-set: '&7Scoreboard server name set to {value}.'
+    usage-meowduelsserver-name: '&7Usage: /meowduelsserver <name...>'
+    current-scoreboard-server-name: '&7Current scoreboard server name: {servername}'
+    no-kit-named-3: '&7No kit named {name}.'
+    armor-trims-aren-t: '&7Armor trims aren''t supported on this server version.'
+    don-t-have-permission-2: '&7You don''t have permission to do that.'
+    scoreboard-ip-set: '&7Scoreboard IP set to {name}.'
+    scoreboard-ip-set-2: '&7Scoreboard IP set to {name} ({value}).'
+    color-minimessage-e-g: '&7[color] is MiniMessage, e.g. <dark_red> or <#8B0000>'
+    usage-scoreboardip-ip-color: '&7Usage: /scoreboardip <ip> [color]'
+    current-scoreboard-ip: '&7Current scoreboard IP: {scoreboardip}'
+    cleared-saved-layout-slots: '&7Cleared the saved {menuid} layout. The slots in
+      gui/{menuid2}.yml are in charge again.'
+    no-saved-layout-gui: '&7No saved layout for {menuid} - gui/{menuid2}.yml is already
+      in charge.'
+    usage-editgui-duelconfirm-mapselect: '&7Usage: /editgui <duelconfirm|mapselect>
+      [reset]'
+    kit-display-name-set: '&7Kit {kit} display name set.'
+    no-kit-named-4: '&7No kit named {name}.'
+    usage-kitdisplayname-name-display: '&7Usage: /kitdisplayname <name> <display...>'
+    kit-icon-set: '&7Kit {kit} icon set to {value}.'
+    hold-item-want-use: '&7Hold the item you want to use as the icon.'
+    no-kit-named-5: '&7No kit named {name}.'
+    usage-kiticon-name: '&7Usage: /kiticon <name>'
+    kit-deleted: '&7Kit {name} deleted.'
+    no-kit-named-6: '&7No kit named {name}.'
+    usage-deletekit-name: '&7Usage: /deletekit <name>'
+    kit-saved-from-current: '&7Kit {name} saved from your current inventory.'
+    kit-named-already-exists: '&7A kit named {name} already exists.'
+    usage-kitcreate-name: '&7Usage: /kitcreate <name>'
+    arena-deleted: '&7Arena {name} deleted.'
+    no-arena-named: '&7No arena named {name}.'
+    usage-deletearena-name: '&7Usage: /deletearena <name>'
+    duel-spawn-set-current: '&7Duel spawn set to your current location. Players will
+      be teleported here whenever a duel finishes.'
+    teleported: '&7Teleported to the {label} of {arenaname}.'
+    isn-t-set: '&7The {label} of {arenaname} isn''t set.'
+    no-configured-arena-named: '&7No configured arena named {arenaname}.'
+    snapshot-saved-now-regen: '&7Snapshot saved for {arenaname}. This is now the regen
+      baseline.'
+    no-configured-arena-named-2: '&7No configured arena named {arenaname}.'
+    regenerated-block-s: '&7Regenerated {written} block(s) in {arenaname}.'
+    no-snapshot-saved-yet: '&7No snapshot saved yet for {arenaname}. Run /arena {arenaname2}
+      snapshot first.'
+    no-configured-arena-named-3: '&7No configured arena named {arenaname}.'
+    pasted-block-s-registered: '&a✔ &fPlaced &e{value}&f blocks and registered &e{value2}&f
+      beside the source arena.'
+    clipboard-empty-run-arena: '&7Your clipboard is empty. Run /arena {arenaname}
+      copy first.'
+    clipboard-empty-run-arena-2: '&7Your clipboard is empty. Run /arena {arenaname}
+      copy first.'
+    copied-arena-clipboard-walk: '&e✦ &fCopied arena &e{arena}&f. Its aligned clone
+      will appear to the right when you run &e/arena {arenaname} paste&f.'
+    cloning-disabled-arena-enable: '&7Cloning is disabled for this arena. Enable it
+      in /arena {arenaname}.'
+    no-configured-arena-named-4: '&7No configured arena named {arenaname}.'
+    no-arena-named-2: '&7No arena named {name}.'
+    usage-arena-name-tp: '&7Usage: /arena <name> [tp|copy|paste|regen|snapshot]'
+    arena-created-open-arena: '&7Arena {name} created. Open /arena {name2} to set
+      it up.'
+    arena-named-already-exists: '&7An arena named {name} already exists.'
+    usage-createarena-name: '&7Usage: /createarena <name>'
+  arena:
+    teleported: '&7Teleported to the {label} of {arena}.'
+    isn-t-set-yet: '&7The {label} isn''t set yet.'
+    snapshot-saved: '&7Snapshot saved for {arena}.'
+    regenerated-block-s: '&7Regenerated {written} block(s).'
+    no-snapshot-saved-yet: '&7No snapshot saved yet - click Snapshot Now first.'
+  kit:
+    kit-now-inventory-everyone: '&7The {kit} kit is now your inventory - for everyone.'
+    shift-click-replace-kit: '&7Shift-click to copy inventory, armor, and offhand
+      into the editor. Press Save there to apply the {kit} kit.'
+    saved-s-items-everyone: '&7Saved {kit}''s items - for everyone.'
+    saved-own-layout: '&7Saved your own {kit} layout.'
+    isn-t-same-set: '&7That isn''t the same set of items. You can rearrange the kit,
+      but not change what''s in it.'
+    reset-kit-s-saved: '&7Reset to the kit''s saved layout.'
+    layout-was-reset-server: '&7Your {kit} layout was reset to the server default.'
+  event:
+    map-use-right-now: '&7That map is in use right now - pick another.'
+  editgui:
+    saved-menu-layout: '&7Saved the {value} menu layout.'
+    reset-default: '&7Reset {value} to default.'
+    added-decoration-panes-inventory: '&7Added decoration panes to your inventory.'
+    editor-closed-without-saving: '&7Editor closed without saving.'
+    saved-menu-layout-2: '&7Saved the {value} menu layout.'
+  party:
+    party-gone-pick-another: '&7That party is gone - pick another.'
+    only-party-leader-start: '&7Only the party leader can start a match.'
+    only-party-leader-invite: '&7Only the party leader can invite.'
+    kits-outside-category-aren: '&7Kits outside a category aren''t offered - add them
+      with /category.'
+    no-kits-category-yet: '&7No kits are in a category yet.'
+    only-party-leader-pick: '&7Only the party leader can pick the kit.'
+    only-party-leader-do: '&7Only the party leader can do that.'
+    re-not-party: '&7You''re not in a party.'
+    only-party-leader-start-2: '&7Only the party leader can start a match.'
+    re-not-party-2: '&7You''re not in a party.'
+    party-isn-t-available: '&7That party isn''t available any more.'
+    only-party-leader-start-3: '&7Only the party leader can start a match.'
+    only-party-leader-change: '&7Only the party leader can change party settings.'
+    only-party-leader-start-4: '&7Only the party leader can start a match.'
+    only-party-leader-set: '&7Only the party leader can set the teams.'
+    re-queue-type-queue: '&7You''re in a queue - type /queue leave first.'
+    re-spectating-type-leave: '&7You''re spectating - type /leave first.'
+    re-event-type-leave: '&7You''re in an event - type /leave first.'
+    re-duel-finish-first: '&7You''re in a duel - finish it first.'
+    try-again-after: '&7{target} is {what} - try again after.'
+    re-party-leave-first: '&7You''re in a party - leave it first to do that.'
+    re-party-match-type: '&7You''re in a party match - type /leave first.'
+    left-party-match: '&7You left the party match.'
+    no-free-arena-supports: '&7No free arena supports that kit right now.'
+    both-parties-need-someone: '&7Both parties need someone online.'
+    kit-no-longer-exists: '&7That kit no longer exists.'
+    one-parties-already-match: '&7One of the parties is already in a match.'
+    their-party-gone: '&7Their party is gone.'
+    need-leading-party-accept: '&7You need to be leading a party to accept.'
+    challenge-expired: '&7That challenge has expired.'
+    turned-down-party-duel: '&7{leader} turned down your party duel.'
+    turned-down-s-party: '&7You turned down {from}''s party duel.'
+    no-challenge-from: '&7No challenge from {from}.'
+    wait-s-before-challenging: '&7Wait {value}s before challenging again.'
+    they-already-have-challenge: '&7They already have your challenge - give them a
+      moment.'
+    their-leader-offline: '&7Their leader is offline.'
+    both-parties-need-someone-2: '&7Both parties need someone online.'
+    pick-kit-first: '&7Pick a kit first.'
+    party-just-started-match: '&7That party just started a match of their own.'
+    party-gone-pick-another-2: '&7That party is gone - pick another.'
+    party-already-fighting: '&7Your party is already fighting.'
+    only-party-leader-start-5: '&7Only the party leader can start a match.'
+    party-isn-t-match: '&7Your party isn''t in a match.'
+    only-party-leader-end: '&7Only the party leader can end the match.'
+    re-not-party-3: '&7You''re not in a party.'
+    spectating-party-match-leave: '&7Spectating the party match. /leave to stop.'
+    re-already-watching-leave: '&7You''re already watching. /leave to stop.'
+    re-match-t-spectate: '&7You''re in the match - you can''t spectate it.'
+    party-isn-t-fighting: '&7Your party isn''t fighting right now.'
+    re-not-party-4: '&7You''re not in a party.'
+    re-out-watching-rest: '&7You''re out - watching the rest. /leave to stop.'
+    both-teams-need-at: '&7Both teams need at least one online player.'
+    message: '&7{value}'
+    no-free-arena-supports-2: '&7No free arena supports that kit.'
+    not-enough-party-members: '&7Not enough party members are online.'
+    pick-kit-first-2: '&7Pick a kit first.'
+    need-at-least-2: '&7You need at least 2 players in the party.'
+    party-already-fighting-2: '&7Your party is already fighting.'
+    only-party-leader-start-6: '&7Only the party leader can start a match.'
+    message-2: '&7{reason}'
+    left-party: '&7You left the party.'
+    re-not-party-5: '&7You''re not in a party.'
+    party-run-by-they: '&7The party is run by {leader} - they pick the kit and start
+      the match.'
+    party-mid-match-try: '&7That party is mid-match - try again when it ends.'
+    haven-t-been-invited: '&7You haven''t been invited to that party.'
+    leave-current-party-first: '&7Leave your current party first.'
+    party-no-longer-exists: '&7That party no longer exists.'
+    wait-s-before-inviting: '&7Wait {value}s before inviting again.'
+    party-invites-turned-off: '&7{target} has party invites turned off.'
+    already-invite: '&7{target} already has your invite.'
+    already-party: '&7{target} is already in a party.'
+    they-re-already-party: '&7They''re already in your party.'
+    t-invite-during-party: '&7You can''t invite during a party match.'
+    only-party-leader-invite-2: '&7Only the party leader can invite.'
+    re-not-party-6: '&7You''re not in a party.'
+    party-created-invite-someone: '&7Party created. Invite someone with /party invite
+      <player>.'
+    re-already-party: '&7You''re already in a party.'
+    have-no-invite-from: '&7You have no invite from {leader}.'
+  trim:
+    cleared-trims: '&7Cleared your trims for {value}.'
+    applied-trim-all-armor: '&7Applied the trim to all your armor pieces (only you
+      will wear it).'
+    no-armor-trim-trims: '&7No armor to trim (or trims unsupported).'
+    applied-trim-only-will: '&7Applied {value} {value2} trim (only you will wear it).'
+    could-not-apply-trim: '&7Could not apply the trim (this server may not support
+      armor trims).'
+    kit-no-armor-slot: '&7That kit has no armor in that slot.'
+  guard:
+    use-get-out-first: '&7Use {value} to get out first.'
+    t-use-commands: '&7You can''t use commands {what}.'
+  duel:
+    no-potions-until-fight: '&7No potions until the fight starts.'
+    no-potions-until-fight-2: '&7No potions until the fight starts.'
+    t-duel-while-re: '&7You can''t duel while you''re in the event.'
+    re-party-leave-first: '&7You''re in a party - leave it first, or start a party
+      match.'
+    they-re-already-duel: '&7They''re already in a duel.'
+    player-no-longer-online: '&7That player is no longer online.'
+    no-recent-opponent-rematch: '&7No recent opponent to rematch.'
+    message: '&7{value}'
+    duel-t-start-someone: '&7That duel can''t start - someone is in the event.'
+    wait-s-before-sending: '&7Wait {value}s before sending another challenge.'
+    already-challenge-give-them: '&7{target} already has your challenge - give them
+      a moment.'
+    party-right-now: '&7{target} is in a party right now.'
+    re-party-leave-first-2: '&7You''re in a party - leave it first, or start a party
+      match.'
+    event-right-now: '&7{target} is in the event right now.'
+    t-duel-while-re-2: '&7You can''t duel while you''re in the event.'
+  spawn:
+    re-event-type-leave: '&7You''re in an event - type /leave first.'
+    re-spectating-type-leave: '&7You''re spectating - type /leave first.'
+    re-already-duel: '&7You''re already in a duel.'
+    only-party-leader-do: '&7Only the party leader can do that.'
+    re-not-party: '&7You''re not in a party.'
+  queue:
+    t-queue-while-re: '&7You can''t queue while you''re in the event.'
+  setup:
+    tip-after-decorating-arena: '&7Tip: after decorating the arena, run /arena {arena}
+      snapshot to update the baseline.'
+    arena-now-set-up: '&7Arena {arena} is now set up! A regen snapshot was captured
+      automatically.'
+    message: '&7{prompt}'
+    corner-2-saved: '&7Corner 2 saved.'
+    corner-1-saved: '&7Corner 1 saved.'
+    player-2-spawn-saved: '&7Player 2 spawn saved.'
+    player-1-spawn-saved: '&7Player 1 spawn saved.'
+    type-done-when-standing: '&7Type done when you are standing in position, or cancel.'
+    setup-cancelled: '&7Setup cancelled.'
+    message-2: '&7{prompt}'
+    type-cancel-at-any: '&7Type cancel at any time to abort.'
+    setup-started-arena: '&7Setup started for arena {arena}.'
+    event-border-area-saved: '&7Event border area saved for {arena}.'
+    now-go-second-border: '&7Now go to the second border corner and type done.'
+    first-border-corner-saved: '&7First border corner saved.'
+    type-done-where-re: '&7Type done where you''re standing, or cancel.'
+    border-setup-cancelled: '&7Border setup cancelled.'
+    type-cancel-abort: '&7Type cancel to abort.'
+    go-first-border-corner: '&7Go to the first border corner and type done in chat.'
+    event-spawn-saved: '&7Event spawn saved for {arena}.'
+    type-done-where-re-2: '&7Type done where you''re standing, or cancel.'
+    event-spawn-setup-cancelled: '&7Event spawn setup cancelled.'
+    type-cancel-abort-2: '&7Type cancel to abort.'
+    go-event-arena-spawn: '&7Go to the event arena spawn (where event players start)
+      and type done in chat.'
+  spectate:
+    spectators-turned-off: '&7{targetplayer} has spectators turned off.'
+    t-spectate-while-re: '&7You can''t spectate while you''re in a party match.'
+    t-spectate-duel-while: '&7You can''t spectate a duel while you''re in the event.'
+  tab:
+    tab-updated: '&7Tab {value} updated.'
+    cancelled: '&7Cancelled.'
+    type-cancel-abort: '&7Type cancel to abort.'
+    type-new-chat: '&7Type the new {label} in chat.'

@@ -1043,7 +1043,7 @@ kits:
     icon: SHIELD
     display-name: '<b><gradient:#C6DCFF:#4A7DFF>ꜱᴍᴘ</gradient></b>'
     prefix: ''
-    name-icon: item/totem_of_undying
+    name-icon: none
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671

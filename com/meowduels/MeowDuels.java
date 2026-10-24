@@ -35,6 +35,7 @@ import com.meowduels.managers.StatsManager;
 import com.meowduels.managers.TabService;
 import com.meowduels.managers.TipService;
 import com.meowduels.managers.TrimPreferenceManager;
+import com.meowduels.managers.TitlesManager;
 import com.meowduels.util.Cooldowns;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
@@ -79,6 +80,7 @@ extends JavaPlugin {
     private GuiConfigManager guiConfigManager;
     private ScoreboardService scoreboardService;
     private MessageManager messageManager;
+    private TitlesManager titlesManager;
     private CategoryManager categoryManager;
     private CategoryManager queueCategoryManager;
     private QueueManager queueManager;
@@ -119,6 +121,7 @@ extends JavaPlugin {
         this.serverName = this.getConfig().getString("server-name", "server");
         this.loadDuelSpawn();
         this.messageManager = new MessageManager(this);
+        this.titlesManager = new TitlesManager(this);
         this.arenaManager = new ArenaManager(this);
         this.arenaManager.recoverDirtyArenas();
         this.kitManager = new KitManager(this);
@@ -478,6 +481,10 @@ extends JavaPlugin {
         return this.messageManager;
     }
 
+    public TitlesManager titles() {
+        return this.titlesManager;
+    }
+
     public CategoryManager getCategoryManager() {
         return this.categoryManager;
     }
@@ -531,6 +538,9 @@ extends JavaPlugin {
         this.loadDuelSpawn();
         if (this.messageManager != null) {
             this.messageManager.reload();
+        }
+        if (this.titlesManager != null) {
+            this.titlesManager.reload();
         }
         if (this.guiConfigManager != null) {
             this.guiConfigManager.reload();

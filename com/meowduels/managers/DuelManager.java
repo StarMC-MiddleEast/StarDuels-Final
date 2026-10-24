@@ -278,8 +278,12 @@ public class DuelManager {
         long l = Math.max(20L, this.matchFoundTicks);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (int)l, 3));
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int)l, 0));
-        String[] stringArray = new String[]{Text.color("&c\u25cf &8\u25cf &8\u25cf"), Text.color("&c\u25cf &c\u25cf &8\u25cf"), Text.color("&c\u25cf &c\u25cf &c\u25cf"), Text.color("&8\u25cf &c\u25cf &c\u25cf")};
-        this.sendTitle(player, string, stringArray[0], 6, 20, 0);
+        String[] stringArray = new String[]{
+                this.msg("titles.match-found.progress-1", new String[0]),
+                this.msg("titles.match-found.progress-2", new String[0]),
+                this.msg("titles.match-found.progress-3", new String[0]),
+                this.msg("titles.match-found.progress-4", new String[0])};
+        this.sendTitle(player, string, this.msg("titles.match-found.subtitle", new String[0]), 6, 20, 0);
         UUID uUID = player.getUniqueId();
         for (int i = 1; i < stringArray.length; ++i) {
             String string2 = stringArray[i];
@@ -485,9 +489,10 @@ public class DuelManager {
             player.sendMessage((String)object);
             player2.sendMessage((String)object);
         }
-        object = "<white>\u2694 <bold><#FFFF00>" + activeDuel.getScoreFor(activeDuel.getPlayer1()) + "</#FFFF00></bold> <gray>-</gray> <bold><#FF3030>" + activeDuel.getScoreFor(activeDuel.getPlayer2()) + "</#FF3030></bold>";
-        this.sendTitle(player, this.msg("titles.fight.title", new String[0]), (String)object, 0, 100, 10);
-        this.sendTitle(player2, this.msg("titles.fight.title", new String[0]), (String)object, 0, 100, 10);
+        this.sendTitle(player, this.msg("titles.fight.title", new String[0]),
+                this.msg("titles.fight.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(activeDuel.getPlayer1())), "theirScore", String.valueOf(activeDuel.getScoreFor(activeDuel.getPlayer2()))), 0, 100, 10);
+        this.sendTitle(player2, this.msg("titles.fight.title", new String[0]),
+                this.msg("titles.fight.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(activeDuel.getPlayer2())), "theirScore", String.valueOf(activeDuel.getScoreFor(activeDuel.getPlayer1()))), 0, 100, 10);
         Sounds.fight(player);
         Sounds.fight(player2);
     }
