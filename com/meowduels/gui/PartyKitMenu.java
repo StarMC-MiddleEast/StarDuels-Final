@@ -46,36 +46,13 @@ extends Menu {
 
     private List<Page> pages() {
         ArrayList<Page> arrayList = new ArrayList<Page>();
-        List<CategoryManager.Category> list = this.plugin.getCategoryManager().all();
         List<KitCatalog.Entry> available = KitCatalog.available(this.plugin);
-        if (list.isEmpty()) {
-            ArrayList<String> arrayList2 = new ArrayList<String>();
-            for (KitCatalog.Entry entry : available) {
-                arrayList2.add(entry.label());
-            }
-            this.slice(arrayList, "\u1d0b\u026a\u1d1b\ua731", arrayList2);
-            return arrayList;
-        }
-        Set<String> added = new HashSet<String>();
-        ArrayList<String> unassigned = new ArrayList<String>();
-        for (CategoryManager.Category category : list) {
-            ArrayList<String> categoryKits = new ArrayList<String>();
-            for (String kitName : this.plugin.getCategoryManager().kitsFor(category)) {
-                KitCatalog.Entry entry = findEntry(available, kitName);
-                if (entry == null) continue;
-                categoryKits.add(entry.label());
-                added.add(entry.kit().toLowerCase(Locale.ROOT));
-            }
-            this.slice(arrayList, PartyKitMenu.smallCaps(category.getId()), categoryKits);
-        }
-        for (KitCatalog.Entry entry : available) {
-            if (!added.contains(entry.kit().toLowerCase(Locale.ROOT))) {
-                unassigned.add(entry.label());
-            }
-        }
-        if (!unassigned.isEmpty()) {
-            this.slice(arrayList, PartyKitMenu.smallCaps(list.get(0).getId()), unassigned);
-        }
+        // Party matches use the same complete kit catalog as normal queues.
+        // Categories are only organization metadata and must not hide kits or
+        // add a category prefix to the party picker.
+        ArrayList<String> kits = new ArrayList<String>();
+        for (KitCatalog.Entry entry : available) kits.add(entry.label());
+        this.slice(arrayList, "", kits);
         return arrayList;
     }
 
@@ -127,7 +104,7 @@ extends Menu {
         HashMap<String, String> hashMap = new HashMap<String, String>();
         hashMap.put("mode", this.mode.getLabel());
         hashMap.put("category", page.title);
-        this.createRaw(n, guiConfigManager.title(MENU, "<dark_gray>\u258f {mode} {sep}{value}{category}", hashMap));
+        this.createRaw(n, guiConfigManager.title(MENU, "<dark_gray>\u258f {mode}", hashMap));
         guiConfigManager.frame(MENU, this.inventory, n);
         String string = party.getKit();
         for (int i = 0; i < KIT_SLOTS.length && i < page.kits.size() && KIT_SLOTS[i] <= n2; ++i) {

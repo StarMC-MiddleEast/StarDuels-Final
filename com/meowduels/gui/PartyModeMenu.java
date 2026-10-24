@@ -91,8 +91,17 @@ extends Menu {
     public void onClick(Player player, InventoryClickEvent inventoryClickEvent) {
         PartyMode partyMode;
         String string = Items.readTag(inventoryClickEvent.getCurrentItem(), this.plugin.keyButton());
+        // Keep the three mode buttons usable with older/custom GUI files that
+        // omit the internal button tag. The configured slot remains the source
+        // of truth, so changing slots in partymode.yml still works normally.
         if (string == null) {
-            return;
+            int slot = inventoryClickEvent.getRawSlot();
+            GuiConfigManager gui = this.plugin.gui();
+            if (slot == gui.slot(MENU, "ffa", 11, inventoryClickEvent.getView().getTopInventory().getSize() / 9)) string = "mode-FFA";
+            else if (slot == gui.slot(MENU, "split", 13, inventoryClickEvent.getView().getTopInventory().getSize() / 9)) string = "mode-SPLIT";
+            else if (slot == gui.slot(MENU, "duels", 15, inventoryClickEvent.getView().getTopInventory().getSize() / 9)) string = "mode-DUELS";
+            else if (slot == gui.slot(MENU, "back", 18, inventoryClickEvent.getView().getTopInventory().getSize() / 9)) string = "mode-back";
+            else return;
         }
         if ("mode-back".equals(string)) {
             new PartyMenu(this.plugin).openFor(player);
