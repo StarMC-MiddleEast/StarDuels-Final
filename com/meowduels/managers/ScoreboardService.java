@@ -9,6 +9,7 @@ import com.meowduels.model.Kit;
 import com.meowduels.model.Party;
 import com.meowduels.model.PartyMode;
 import com.meowduels.util.Health;
+import com.meowduels.util.Marks;
 import com.meowduels.util.Tokens;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Criteria;
@@ -61,6 +63,7 @@ public class ScoreboardService {
     private int rankTeamCounter = 0;
     private boolean rankNametags = false;
     private boolean externalNametags = false;
+    private boolean tabPluginPresent = false;
     private boolean healthBelowName = true;
     private static final char[] SMALL = new char[]{'\u1d00', '\u0299', '\u1d04', '\u1d05', '\u1d07', '\ua730', '\u0262', '\u029c', '\u026a', '\u1d0a', '\u1d0b', '\u029f', '\u1d0d', '\u0274', '\u1d0f', '\u1d18', '\ua7af', '\u0280', '\ua731', '\u1d1b', '\u1d1c', '\u1d20', '\u1d21', 'x', '\u028f', '\u1d22'};
 
@@ -86,6 +89,7 @@ public class ScoreboardService {
         this.masterEnabled = configurationSection.getBoolean("enabled", true);
         this.rankNametags = false;
         this.externalNametags = configurationSection.getBoolean("external-nametags", true);
+        this.tabPluginPresent = this.plugin.getServer().getPluginManager().getPlugin("TAB") != null;
         this.healthBelowName = configurationSection.getBoolean("health-below-name", true);
         if (Bukkit.getScoreboardManager() != null) {
             this.setupHealthBelowName(Bukkit.getScoreboardManager().getMainScoreboard());
@@ -253,15 +257,15 @@ public class ScoreboardService {
         boolean bl6 = this.plugin.getEventManager().isInvolved(uUID);
         Party party = this.plugin.getPartyManager().partyOf(uUID);
         if (this.masterEnabled && bl5) {
-            if (bl3 && !this.duel.lines.isEmpty()) {
+            if (bl3 && this.duel.enabled && !this.duel.lines.isEmpty()) {
                 object2 = this.duel;
-            } else if (party != null && party.isFighting() && party.getMode() == PartyMode.FFA && !this.partyFfa.lines.isEmpty()) {
+            } else if (party != null && party.isFighting() && party.getMode() == PartyMode.FFA && this.partyFfa.enabled && !this.partyFfa.lines.isEmpty()) {
                 object2 = this.partyFfa;
             } else if (bl6 && this.ffa.enabled && !this.ffa.lines.isEmpty()) {
                 object2 = this.ffa;
-            } else if (party != null && !this.party.lines.isEmpty()) {
+            } else if (party != null && this.party.enabled && !this.party.lines.isEmpty()) {
                 object2 = this.party;
-            } else if (!this.global.lines.isEmpty()) {
+            } else if (this.global.enabled && !this.global.lines.isEmpty()) {
                 object2 = this.global;
             }
         }
@@ -269,7 +273,11 @@ public class ScoreboardService {
         boolean bl7 = bl4 && !this.externalNametags;
         boolean bl8 = bl7;
         boolean bl9 = bl = !bl4 && bl6 && !this.externalNametags;
-        if (object2 == null && !bl7 && !bl) {
+        // Red and Aqua nametags in Split and party-vs-party matches. TAB draws
+        // its own from %rel_starduels_tagprefix% when it is installed and
+        // trusted with nametags; otherwise nothing coloured them at all.
+        boolean partyTeams = party != null && party.isFighting() && party.isTeamMode() && (!this.externalNametags || !this.tabPluginPresent);
+        if (object2 == null && !bl7 && !bl && !partyTeams) {
             if (!bl3) {
                 this.sendQueueBar(player);
             }
@@ -287,9 +295,23 @@ public class ScoreboardService {
         }
         if (object2 != null) {
             object = this.tokens(player, activeDuel, uUID2, bl2);
-            board.setTitle(this.render(((Layout)object2).titleStatic, ((Layout)object2).title, (Map<String, String>)object));
+            // Each line is only re-parsed and re-sent when its text changed.
+            // Team prefix and objective name updates always send a packet, so
+            // this used to be one packet per line per player every second,
+            // plus a MiniMessage parse for each, for lines that mostly never
+            // change.
+            Layout layout = (Layout)object2;
+            Map<String, String> tokens = (Map<String, String>)object;
+            String title = this.lineKey(layout.titleStatic, layout.title, tokens);
+            if (!title.equals(board.lastTitle)) {
+                board.lastTitle = title;
+                board.setTitle(this.render(layout.titleStatic, layout.title, tokens));
+            }
             for (int i = 0; i < n; ++i) {
-                board.setLine(i, this.render(((Layout)object2).lineStatic[i], ((Layout)object2).lines.get(i), (Map<String, String>)object));
+                String line = this.lineKey(layout.lineStatic[i], layout.lines.get(i), tokens);
+                if (line.equals(board.lastLines[i])) continue;
+                board.lastLines[i] = line;
+                board.setLine(i, layout.lineStatic[i] != null ? layout.lineStatic[i] : this.deserialize(line));
             }
         }
         if (bl7) {
@@ -299,6 +321,7 @@ public class ScoreboardService {
         if (bl) {
             board.setFfaMembers(this.plugin.getEventManager().involved());
         }
+        board.setPartyTeams(partyTeams ? party : null);
         if (bl4 && activeDuel.getState() == ActiveDuel.State.FIGHTING && activeDuel.sinceFightStart() < 10000L) {
             this.sendActionBar(player, activeDuel, uUID2);
         } else if (!bl3) {
@@ -337,17 +360,56 @@ public class ScoreboardService {
         }
     }
 
+    private final Map<String, NumberFormat> belowFormats = new HashMap<String, NumberFormat>();
+
+    /**
+     * Pushes changed health values to the below-name objective.
+     *
+     * <p>Every board is a separate scoreboard with one viewer, so one health
+     * change used to be written to every online player's board - 200 players
+     * trading hits meant tens of thousands of score packets a second, almost
+     * all to players in another world who could not see the player at all.
+     * Now a change only goes to boards whose owner is in the same world, and a
+     * board whose owner changes world is brought up to date in one pass. The
+     * formatted heart is cached per value instead of re-parsed each time.
+     */
     public void updateHealthBelowName() {
         if (!this.healthBelowName) {
             return;
         }
         try {
+            boolean resync = false;
+            for (Map.Entry<UUID, Board> entry : this.boards.entrySet()) {
+                Player owner = Bukkit.getPlayer((UUID)entry.getKey());
+                if (owner == null) continue;
+                World world = owner.getWorld();
+                if (entry.getValue().healthWorld == world) continue;
+                entry.getValue().healthWorld = world;
+                resync = true;
+            }
+            if (resync) {
+                this.lastBelow.clear();
+            }
+            Scoreboard main = Bukkit.getScoreboardManager() == null ? null : Bukkit.getScoreboardManager().getMainScoreboard();
             for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID uUID = player.getUniqueId();
                 String string = Health.nametag(player.getHealth());
                 if (string.equals(this.lastBelow.get(uUID))) continue;
                 this.lastBelow.put(uUID, string);
-                this.applyBelowRank(player.getName(), NumberFormat.fixed((ComponentLike)((ComponentLike)this.deserialize("<red>\u2764 " + string))), 0);
+                NumberFormat numberFormat = this.belowFormats.get(string);
+                if (numberFormat == null) {
+                    numberFormat = NumberFormat.fixed((ComponentLike)((ComponentLike)this.deserialize("<red>\u2764 " + string)));
+                    this.belowFormats.put(string, numberFormat);
+                }
+                String name = player.getName();
+                if (main != null) {
+                    this.setBelowRank(main, name, numberFormat, 0);
+                }
+                World world = player.getWorld();
+                for (Board board : this.boards.values()) {
+                    if (board.healthWorld != null && board.healthWorld != world) continue;
+                    this.setBelowRank(board.scoreboard, name, numberFormat, 0);
+                }
             }
         }
         catch (Throwable throwable) {
@@ -405,6 +467,14 @@ public class ScoreboardService {
         if (this.boards.remove(uUID) != null && player != null && Bukkit.getScoreboardManager() != null) {
             player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
         }
+    }
+
+    /** The text a line will show; a pre-rendered static line keys on its identity. */
+    private String lineKey(Component component, String string, Map<String, String> map) {
+        if (component != null) {
+            return "\u0000static#" + System.identityHashCode(component);
+        }
+        return Tokens.apply(string, map);
     }
 
     private Component render(Component component, String string, Map<String, String> map) {
@@ -587,7 +657,7 @@ public class ScoreboardService {
     private String kitLabel(String string) {
         Kit kit = this.plugin.getKitManager().get(string);
         if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return kit.getDisplayName();
+            return kit.withIcon(kit.getDisplayName());
         }
         return string;
     }
@@ -605,6 +675,7 @@ public class ScoreboardService {
 
     private final class Board {
         private final Scoreboard scoreboard;
+        private World healthWorld;
         private final Objective sidebarObjective;
         private final Team[] teams;
         private final int sidebarLines;
@@ -625,6 +696,7 @@ public class ScoreboardService {
             this.hasNametags = bl;
             this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
             this.teams = new Team[n];
+            this.lastLines = new String[n];
             if (n > 0) {
                 Objective objective = this.scoreboard.registerNewObjective("mdside", Criteria.DUMMY, "");
                 objective.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -662,6 +734,9 @@ public class ScoreboardService {
             }
             ScoreboardService.this.setupHealthBelowName(this.scoreboard);
         }
+
+        private String lastTitle;
+        private String[] lastLines;
 
         private void setTitle(Component component) {
             if (this.sidebarObjective != null) {
@@ -701,6 +776,73 @@ public class ScoreboardService {
                 }
                 iterator.remove();
             }
+        }
+
+        private Team partyAqua;
+        private Team partyRed;
+        private Team partyOut;
+        private final Map<String, Team> partyEntries = new HashMap<String, Team>();
+
+        /**
+         * Puts every fighter in a team match on this viewer's board in Red,
+         * Aqua or (once out) grey. Only sends anything when someone's team
+         * changes, so a running match costs nothing per second.
+         */
+        private void setPartyTeams(Party party) {
+            if (party == null) {
+                if (this.partyEntries.isEmpty()) {
+                    return;
+                }
+                for (Map.Entry<String, Team> entry : this.partyEntries.entrySet()) {
+                    try {
+                        entry.getValue().removeEntry(entry.getKey());
+                    }
+                    catch (Throwable throwable) {
+                        // empty catch block
+                    }
+                }
+                this.partyEntries.clear();
+                return;
+            }
+            if (this.partyAqua == null) {
+                this.partyAqua = this.teamFor("md_paqua", ChatColor.AQUA, Marks.tag(Marks.AQUA));
+                this.partyRed = this.teamFor("md_pred", ChatColor.RED, Marks.tag(Marks.RED));
+                this.partyOut = this.teamFor("md_pout", ChatColor.DARK_GRAY, Marks.tagOut());
+            }
+            HashMap<String, Team> want = new HashMap<String, Team>();
+            for (Map.Entry<UUID, Party.Team> entry : party.getTeams().entrySet()) {
+                String name = ScoreboardService.this.nameOf(entry.getKey());
+                if (name.isEmpty() || entry.getValue() == null) continue;
+                Team team = party.getWatching().contains(entry.getKey()) ? this.partyOut : (entry.getValue() == Party.Team.AQUA ? this.partyAqua : this.partyRed);
+                want.put(name, team);
+            }
+            for (Map.Entry<String, Team> entry : want.entrySet()) {
+                if (this.partyEntries.get(entry.getKey()) == entry.getValue()) continue;
+                entry.getValue().addEntry(entry.getKey());
+                this.partyEntries.put(entry.getKey(), entry.getValue());
+            }
+            Iterator<Map.Entry<String, Team>> iterator = this.partyEntries.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Team> entry = iterator.next();
+                if (want.containsKey(entry.getKey())) continue;
+                try {
+                    entry.getValue().removeEntry(entry.getKey());
+                }
+                catch (Throwable throwable) {
+                    // empty catch block
+                }
+                iterator.remove();
+            }
+        }
+
+        private Team teamFor(String string, ChatColor chatColor, String prefix) {
+            Team team = this.scoreboard.getTeam(string);
+            if (team == null) {
+                team = this.scoreboard.registerNewTeam(string);
+            }
+            team.setColor(chatColor);
+            team.setPrefix(prefix);
+            return team;
         }
 
         private void setNametags(UUID uUID, UUID uUID2, boolean bl) {

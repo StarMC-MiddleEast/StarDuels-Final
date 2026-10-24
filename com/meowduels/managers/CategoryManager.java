@@ -94,6 +94,14 @@ public class CategoryManager {
         }
     }
 
+    /** Reload categories from disk after an administrator edits the YAML file. */
+    public void reload() {
+        this.load();
+        if ("queuecategories.yml".equalsIgnoreCase(this.resourceName)) {
+            this.ensureQueueCategories();
+        }
+    }
+
     public void save() {
         YamlConfiguration yamlConfiguration = new YamlConfiguration();
         for (Category category : this.categories.values()) {

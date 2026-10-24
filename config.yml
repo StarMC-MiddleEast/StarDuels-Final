@@ -317,7 +317,7 @@ external-tab: true
 
 # Server IP shown by {server_ip} / {server_ip_sc} (small-caps version).
 # Set in-game with: /scoreboardip <ip> [color]
-scoreboard-ip: "play.starmc.fun"
+scoreboard-ip: "play.starpvp.fun"
 scoreboard-ip-color: "<gradient:#FFF1B3:#E6A700>"
 
 # Server name shown as the duel scoreboard title ({server_name}).
@@ -325,69 +325,45 @@ scoreboard-ip-color: "<gradient:#FFF1B3:#E6A700>"
 server-name: "server"
 
 # ============================================================================
-#  TAB LIST
+#  PLAYER LIST VISIBILITY
 # ----------------------------------------------------------------------------
-#  TAB draws the tab list; these are the header and footer lines it asks for,
-#  one placeholder per line:  %meowduels_tab_header_1% .. %meowduels_tab_footer_4%
-#  See tab/config.yml in the plugin folder for the TAB side.
-#
-#  Three layouts, chosen per viewer:
-#    global - not fighting, not in a party
-#    duel   - fighting a duel, or spectating one
-#    party  - in a party (whether or not it is mid-match)
-#
-#  MiniMessage. "" is a blank line; delete a line to shorten a layout.
-#  Tokens: {player} {ping} {online} {in_duels}
-#  ({rank} and {elo} are gone with ELO; they still resolve, to nothing, so an
-#   older layout renders a gap rather than the literal braces.)
-#          {server_ip} {server_name} {discord} {store}
-#    duel:  {opponent} {score} {opponent_score} {kit} {arena} {round}
-#           {rounds_to_win} {time} {team_color}
-#    party: {party_leader} {party_size} {party_kit} {party_status}
-#           {party_alive} {party_role}
+#  These options control how duel and party members are hidden from one another.
+#  The plugin does not set a player-list header or footer.
 # ============================================================================
 tab:
-  # How a duel or party bubble hides the people you are not with.
-  #
-  # A DUEL hides them from the world as well as the tab list, and that is what
-  # makes the hiding stick. The tab-list-only call (unlistPlayer) is a request
-  # the client can be talked out of: TAB sends its own player-info updates for
-  # everyone it manages, and an update for a row the client has dropped makes
-  # the client recreate it. hidePlayer is not a request - the server stops
-  # sending them at all and nothing can put them back. Fighters and their
-  # spectators are alone in an arena, so there is nothing to lose by it.
-  #
-  # A PARTY does NOT hide the world: a party stands in the lobby with everyone
-  # else, and hiding there empties the lobby. Parties are tab-list-only and
-  # rely on the re-assert, which runs four times a second.
   duel-hides-world: true
   party-hides-world: false
-
-  # Logs what each bubble did, once per rebuild. Turn this on if tab hiding
-  # looks wrong and you want to know whether the plugin thinks it applied it.
+  # Only used when the TAB plugin is installed: how often (seconds) to force
+  # hidden players back off the tab list, in case TAB re-listed them.
+  # 0 turns it off. Lower = more packets.
+  force-resync-seconds: 10
   debug: false
 
+# ============================================================================
+#  KIT NAMES
+# ----------------------------------------------------------------------------
+#  Each kit's item icon is shown in front of its name: in /queue and the other
+#  kit menus, queue chat messages and the scoreboard. Players need a 1.21.9+
+#  client to see it. Pick the icon per kit with name-icon: in kits.yml or
+#  /starduels editkit <kit> nameicon <item/tnt_minecart | head:Name | none | auto>.
+#  Left out, a kit uses its menu icon (unless that item has no flat picture,
+#  like a shield, a head or a block).
+# ============================================================================
+kit-names:
+  icons: true
+  # Where the icon goes. {icon} {name}, or {name} {icon} to put it after.
+  format: "{icon} {name}"
 
-  # Branding, used by the duel/party layouts below and by the built-in tab when
-  # external-tab is false.
-  title: "<gold><bold>ServerName</bold></gold>"
-  discord: "<white>Ask staff for invite</white>"
-  store: "<yellow>store.example.net</yellow>"
-
-  global:
-    header: []
-    footer: []
-  # Fighters and the people watching them. Their tab list is only the match, so
-  # the header carries the match: who, what, where and the score.
-  duel:
-    header: []
-    footer: []
-
-  # A party sees only the party. Idle it shows who runs it; mid-match the header
-  # switches to how many are left, because that is what anyone is looking at.
-  party:
-    header: []
-    footer: []
+# ============================================================================
+#  ARENA REGENERATION
+# ----------------------------------------------------------------------------
+#  Blocks players placed/broke are put back the moment a match ends. The
+#  full snapshot check (water, lava, fire, cobble) then runs in the
+#  background, this many milliseconds per tick, and the arena is not reused
+#  until it finishes. Higher = arenas come back faster, but more MSPT.
+# ============================================================================
+regen:
+  ms-per-tick: 3
 
 # ============================================================================
 #  SIDEBAR SCOREBOARD

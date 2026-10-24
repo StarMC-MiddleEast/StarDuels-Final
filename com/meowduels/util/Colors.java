@@ -40,6 +40,19 @@ public final class Colors {
                     n2 = n5 < 0 ? n : n5 + 11;
                     continue;
                 }
+                // A kit icon or player head has no colour-code form. Drop the
+                // tag and the space after it, leaving just the name.
+                String low = string2.toLowerCase(java.util.Locale.ROOT);
+                if (low.startsWith("sprite:") || low.startsWith("head:")) {
+                    n2 = n3 + 1;
+                    if (n2 + 8 <= n && string.regionMatches(true, n2, "</white>", 0, 8)) {
+                        n2 += 8;
+                    }
+                    if (n2 < n && string.charAt(n2) == ' ') {
+                        ++n2;
+                    }
+                    continue;
+                }
                 String string4 = Colors.tagCode(string2);
                 if (string4 != null) {
                     stringBuilder.append(string4);

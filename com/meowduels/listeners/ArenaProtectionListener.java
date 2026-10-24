@@ -196,10 +196,6 @@ implements Listener {
         }
         if (!arena.isAllowLiquidFlow()) {
             blockFromToEvent.setCancelled(true);
-            return;
-        }
-        if (this.activeDuelFor(arena) == null && this.partyFor(arena) == null) {
-            blockFromToEvent.setCancelled(true);
         }
     }
 

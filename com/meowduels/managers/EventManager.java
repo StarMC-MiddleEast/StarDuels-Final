@@ -670,11 +670,8 @@ public class EventManager {
         this.resetBorder();
         if (this.arena != null) {
             this.clearDroppedItems(this.arena);
-            int n = this.plugin.getArenaManager().regenArena(this.arena);
-            if (n < 0 && !this.changedBlocks.isEmpty()) {
-                this.plugin.getArenaManager().restoreBlocks(this.changedBlocks);
-            }
-            this.plugin.getArenaManager().clearDirty(this.arena.getName());
+            this.plugin.getArenaManager().regenAfterMatch(this.arena,
+                    new java.util.HashMap<Location, org.bukkit.block.data.BlockData>(this.changedBlocks), null);
             this.plugin.getDuelManager().freeArena(this.arena.getName());
         }
         this.changedBlocks.clear();

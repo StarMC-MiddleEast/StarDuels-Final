@@ -45,6 +45,7 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Item;
@@ -208,10 +209,10 @@ public class DuelManager {
 
     private Arena resolveArena(DuelRequest duelRequest) {
         Arena arena2;
-        if (duelRequest.getArena() != null && (arena2 = this.plugin.getArenaManager().get(duelRequest.getArena())) != null && arena2.isConfigured() && arena2.isEnabled() && arena2.supportsKit(duelRequest.getKit()) && !this.arenasInUse.contains(arena2.getName().toLowerCase())) {
+        if (duelRequest.getArena() != null && (arena2 = this.plugin.getArenaManager().get(duelRequest.getArena())) != null && arena2.isConfigured() && arena2.isEnabled() && arena2.supportsKit(duelRequest.getKit()) && !this.isArenaInUse(arena2.getName())) {
             return arena2;
         }
-        return this.plugin.getArenaManager().findFreeArena(arena -> this.arenasInUse.contains(arena.getName().toLowerCase()) || !arena.supportsKit(duelRequest.getKit()));
+        return this.plugin.getArenaManager().findFreeArena(arena -> this.isArenaInUse(arena.getName()) || !arena.supportsKit(duelRequest.getKit()));
     }
 
     public DuelRequest getMostRecentRequest(Player player) {
@@ -319,6 +320,9 @@ public class DuelManager {
 
     private void startRound(ActiveDuel activeDuel) {
         Location location;
+        // Anything the between-rounds pass has not reached by now stays as it
+        // is - better than letting it revert blocks placed in this round.
+        this.plugin.getArenaManager().cancelRegen(activeDuel.getArena());
         activeDuel.setState(ActiveDuel.State.STARTING);
         Player player = Bukkit.getPlayer((UUID)activeDuel.getPlayer1());
         Player player2 = Bukkit.getPlayer((UUID)activeDuel.getPlayer2());
@@ -518,7 +522,7 @@ public class DuelManager {
     }
 
     private Component readyBar(ActiveDuel activeDuel) {
-        return DuelManager.mm("<red>\u25a3</red> <white>Sneak to skip countdown <bold><#FFFF00>(" + activeDuel.getReadyCount() + "/2)</#FFFF00></bold>");
+        return DuelManager.mm("<yellow>◎ Sneak to skip countdown " + activeDuel.getReadyCount() + "</yellow><gray>/</gray><white>2</white>");
     }
 
     private static Component mm(String string) {
@@ -542,10 +546,10 @@ public class DuelManager {
         String string = player2 != null ? player2.getName() : "A player";
         String string2 = player != null ? player.getName() : "A player";
         int n = 1 + ThreadLocalRandom.current().nextInt(5);
-        this.broadcast(this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
+        this.sendResultToParticipants(activeDuel, this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
         if (bl) {
             object = activeDuel.getKit() == null ? "Unknown" : activeDuel.getKit();
-            this.broadcast(this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(object), "score", activeDuel.getScoreFor(uUID2) + " - " + activeDuel.getScoreFor(uUID)}));
+            this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(object), "score", activeDuel.getScoreFor(uUID2) + " - " + activeDuel.getScoreFor(uUID)}));
         }
         if (player != null && location != null) {
             GameModeGuard.pin(player, GameMode.SPECTATOR);
@@ -585,7 +589,7 @@ public class DuelManager {
                 Sounds.roundLost(player);
             }
             activeDuel.nextRound();
-            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.regenArena(activeDuel), 2L);
+            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.regenArena(activeDuel, false), 2L);
             Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> {
                 if (this.isStill(activeDuel)) {
                     this.startRound(activeDuel);
@@ -594,35 +598,49 @@ public class DuelManager {
         }
     }
 
-    private void regenArena(ActiveDuel activeDuel) {
+    /**
+     * Regenerates a duel's arena, between rounds or after the match.
+     *
+     * <p>The configured regen delay now applies after the match only. Between
+     * rounds it could outlast the death-spectate pause, which meant the
+     * "previous" round's regen fired after the next round had started and
+     * deleted the blocks players had just placed.
+     */
+    private void regenArena(ActiveDuel activeDuel, boolean matchOver) {
         Arena arena = activeDuel.getArena();
         if (arena == null || !arena.isAutoRegenerate()) {
             return;
         }
-        if (arena.getRegenDelayTicks() > 0) {
-            try {
-                Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.regenNow(activeDuel), (long)arena.getRegenDelayTicks());
-                return;
-            }
-            catch (Throwable throwable) {
-                // empty catch block
-            }
+        if (matchOver && arena.getRegenDelayTicks() > 0) {
+            // Held from now, not from when the delay runs out: otherwise the
+            // arena is free during the delay, a new match is put there, and the
+            // delayed regen then fires in the middle of that match.
+            this.plugin.getArenaManager().holdForRegen(arena);
+            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.regenNow(activeDuel, true), (long)arena.getRegenDelayTicks());
+            return;
         }
-        this.regenNow(activeDuel);
+        this.regenNow(activeDuel, matchOver);
     }
 
-    private void regenNow(ActiveDuel activeDuel) {
+    private void regenNow(ActiveDuel activeDuel, boolean matchOver) {
         Arena arena = activeDuel.getArena();
         if (arena == null || !arena.isAutoRegenerate()) {
             return;
         }
-        int n = this.plugin.getArenaManager().regenArena(arena);
-        if (n < 0 && !activeDuel.getChangedBlocks().isEmpty()) {
-            this.plugin.getArenaManager().restoreBlocks(activeDuel.getChangedBlocks());
+        if (!matchOver && activeDuel.isFinished()) {
+            // The round-end regen is scheduled two ticks out; if the match
+            // ended in between, the match-end regen already owns the arena and
+            // a round pass here would cancel it.
+            return;
         }
+        HashMap<Location, BlockData> changed = new HashMap<Location, BlockData>(activeDuel.getChangedBlocks());
         activeDuel.getChangedBlocks().clear();
+        if (matchOver) {
+            this.plugin.getArenaManager().regenAfterMatch(arena, changed, null);
+        } else {
+            this.plugin.getArenaManager().regenBetweenRounds(arena, changed);
+        }
         this.clearArenaEntities(arena);
-        this.plugin.getArenaManager().clearDirty(arena.getName());
     }
 
     private void clearArenaEntities(Arena arena) {
@@ -667,7 +685,7 @@ public class DuelManager {
                 this.sendTitle((Player)object, this.msg("titles.defeat.title", new String[0]), this.msg("titles.defeat.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID2)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID2))), 5, 70, 10);
             }
         }
-        this.regenArena(activeDuel);
+        this.regenArena(activeDuel, true);
         this.restorePlayer(activeDuel.getPlayer1(), true);
         this.restorePlayer(activeDuel.getPlayer2(), true);
         this.giveSpawnItemsTo(activeDuel.getPlayer1());
@@ -731,14 +749,18 @@ public class DuelManager {
                 if (player != null) {
                     player.sendMessage(string3);
                 }
-                if (player2 == null) break;
-                player2.sendMessage(string3);
+                if (player2 != null) {
+                    player2.sendMessage(string3);
+                }
+                this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(activeDuel.getKit()), "score", activeDuel.getScoreFor(uUID) + " - " + activeDuel.getScoreAgainst(uUID)}));
                 break;
             }
             case 2: {
-                if (player == null) break;
-                player.sendMessage(this.msg("duel.victory-opponent-disconnected", new String[0]));
-                Sounds.victory(player);
+                if (player != null) {
+                    player.sendMessage(this.msg("duel.victory-opponent-disconnected", new String[0]));
+                    Sounds.victory(player);
+                }
+                this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(activeDuel.getKit()), "score", activeDuel.getScoreFor(uUID) + " - " + activeDuel.getScoreAgainst(uUID)}));
                 break;
             }
             default: {
@@ -750,7 +772,7 @@ public class DuelManager {
                 }
                 String string4 = player2 != null ? player2.getName() : "A player";
                 int n = 1 + ThreadLocalRandom.current().nextInt(10);
-                this.broadcast(this.msg("match.toxic." + n, "winner", string, "loser", string4, "winner_score", String.valueOf(activeDuel.getScoreFor(uUID)), "loser_score", String.valueOf(activeDuel.getScoreAgainst(uUID))));
+                this.sendResultToParticipants(activeDuel, this.msg("match.toxic." + n, "winner", string, "loser", string4, "winner_score", String.valueOf(activeDuel.getScoreFor(uUID)), "loser_score", String.valueOf(activeDuel.getScoreAgainst(uUID))));
             }
         }
     }
@@ -770,9 +792,14 @@ public class DuelManager {
         player.setFallDistance(0.0f);
     }
 
-    private void broadcast(String string) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(string);
+    private void sendResultToParticipants(ActiveDuel duel, String message) {
+        Player first = Bukkit.getPlayer(duel.getPlayer1());
+        Player second = Bukkit.getPlayer(duel.getPlayer2());
+        if (first != null) {
+            first.sendMessage(message);
+        }
+        if (second != null && second != first) {
+            second.sendMessage(message);
         }
     }
 
@@ -828,7 +855,7 @@ public class DuelManager {
     }
 
     public boolean isArenaInUse(String string) {
-        return this.arenasInUse.contains(string.toLowerCase());
+        return this.arenasInUse.contains(string.toLowerCase()) || this.plugin.getArenaManager().isRegenerating(string);
     }
 
     public void markArenaInUse(String string) {
@@ -884,7 +911,7 @@ public class DuelManager {
             ++n3;
             if (!arena.supportsKit(string)) continue;
             ++n4;
-            if (this.arenasInUse.contains(arena.getName().toLowerCase())) continue;
+            if (this.isArenaInUse(arena.getName())) continue;
             ++n5;
         }
         return n + " arena(s): " + n2 + " configured, " + n3 + " enabled, " + n4 + " support this kit, " + n5 + " free.";
@@ -929,7 +956,7 @@ public class DuelManager {
         if (arena == null) {
             return true;
         }
-        if (this.arenasInUse.contains(arena.getName().toLowerCase())) {
+        if (this.isArenaInUse(arena.getName())) {
             return true;
         }
         for (ActiveDuel activeDuel : this.playerDuels.values()) {
@@ -1036,11 +1063,11 @@ public class DuelManager {
     }
 
     public boolean hasFreeArenaFor(String string) {
-        return this.plugin.getArenaManager().findFreeArena(arena -> this.arenasInUse.contains(arena.getName().toLowerCase()) || !arena.supportsKit(string)) != null;
+        return this.plugin.getArenaManager().findFreeArena(arena -> this.isArenaInUse(arena.getName()) || !arena.supportsKit(string)) != null;
     }
 
     public boolean hasUsableArena(String string) {
-        return this.plugin.getArenaManager().findFreeArena(arena -> this.arenasInUse.contains(arena.getName().toLowerCase()) || !arena.supportsKit(string)) != null;
+        return this.plugin.getArenaManager().findFreeArena(arena -> this.isArenaInUse(arena.getName()) || !arena.supportsKit(string)) != null;
     }
 
     public void tickArenaSafety() {
@@ -1079,7 +1106,7 @@ public class DuelManager {
         activeDuel.setState(ActiveDuel.State.ENDING);
         Player player = Bukkit.getPlayer((UUID)activeDuel.getPlayer1());
         Player player2 = Bukkit.getPlayer((UUID)activeDuel.getPlayer2());
-        this.regenArena(activeDuel);
+        this.regenArena(activeDuel, true);
         if (player != null) {
             player.setGlowing(false);
         }
@@ -1118,6 +1145,15 @@ public class DuelManager {
         }
     }
 
+    /**
+     * Keeps an arena world clear and at noon.
+     *
+     * <p>Runs every second for every busy arena. setTime sends a time packet
+     * to every player in the world, so with many arenas in one world this was
+     * dozens of packets per player per second for a value nobody could see
+     * change. Now each call only writes what has actually drifted: weather
+     * when it is not clear, the clock when it has moved off noon.
+     */
     public static void applyWorldLocks(Arena arena) {
         if (arena == null || arena.getWorld() == null) {
             return;
@@ -1125,11 +1161,17 @@ public class DuelManager {
         World world = arena.getWorld();
         try {
             if (arena.isLockClearWeather()) {
-                world.setStorm(false);
-                world.setThundering(false);
-                world.setWeatherDuration(Integer.MAX_VALUE);
+                if (world.hasStorm()) {
+                    world.setStorm(false);
+                }
+                if (world.isThundering()) {
+                    world.setThundering(false);
+                }
+                if (world.getWeatherDuration() < 1_000_000) {
+                    world.setWeatherDuration(Integer.MAX_VALUE);
+                }
             }
-            if (arena.isLockDayTime()) {
+            if (arena.isLockDayTime() && Math.abs(world.getTime() - 6000L) > 200L) {
                 world.setTime(6000L);
             }
         }
@@ -1162,7 +1204,7 @@ public class DuelManager {
         if (this.isInDuel(player.getUniqueId()) || this.isInDuel(player2.getUniqueId())) {
             return false;
         }
-        Arena arena2 = this.plugin.getArenaManager().findFreeArena(arena -> this.arenasInUse.contains(arena.getName().toLowerCase()) || !arena.supportsKit(string));
+        Arena arena2 = this.plugin.getArenaManager().findFreeArena(arena -> this.isArenaInUse(arena.getName()) || !arena.supportsKit(string));
         if (arena2 == null) {
             return false;
         }
@@ -1174,7 +1216,7 @@ public class DuelManager {
         for (ActiveDuel object : new HashSet<ActiveDuel>(this.playerDuels.values())) {
             if (object == null || object.getArena() == null) continue;
             try {
-                this.regenNow(object);
+                this.regenNow(object, true);
             }
             catch (Throwable throwable) {
                 this.plugin.getLogger().warning("Failed to regenerate arena '" + object.getArena().getName() + "' during shutdown: " + String.valueOf(throwable));
@@ -1206,7 +1248,7 @@ public class DuelManager {
                 this.playerDuels.remove(activeDuel.getPlayer2());
                 if (activeDuel.getArena() == null) continue;
                 this.arenasInUse.remove(activeDuel.getArena().getName().toLowerCase());
-                this.regenNow(activeDuel);
+                this.regenNow(activeDuel, true);
             }
         }
     }

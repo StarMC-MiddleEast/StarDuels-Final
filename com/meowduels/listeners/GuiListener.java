@@ -51,14 +51,14 @@ implements Listener {
             }
             return;
         }
-        InventoryAction inventoryAction = inventoryClickEvent.getAction();
-        if (inventoryAction == InventoryAction.MOVE_TO_OTHER_INVENTORY || inventoryAction == InventoryAction.COLLECT_TO_CURSOR) {
-            inventoryClickEvent.setCancelled(true);
-            return;
-        }
         if (bl && menu.isProtectedSlot(n)) {
             inventoryClickEvent.setCancelled(true);
             menu.onClick(player, inventoryClickEvent);
+            return;
+        }
+        InventoryAction inventoryAction = inventoryClickEvent.getAction();
+        if (inventoryAction == InventoryAction.MOVE_TO_OTHER_INVENTORY || inventoryAction == InventoryAction.COLLECT_TO_CURSOR) {
+            inventoryClickEvent.setCancelled(true);
         }
     }
 

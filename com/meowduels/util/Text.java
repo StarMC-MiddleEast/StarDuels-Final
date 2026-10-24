@@ -44,6 +44,16 @@ public final class Text {
         return Colors.toSection(MiniMessageUtil.toMiniMessage("<gray>" + string2));
     }
 
+    /** Where the tag opening at i ends, or -1 if this '<' does not start one. */
+    private static int tagEnd(String string, int i) {
+        int close = string.indexOf('>', i);
+        if (close <= i + 1) {
+            return -1;
+        }
+        int next = string.indexOf('<', i + 1);
+        return next >= 0 && next < close ? -1 : close;
+    }
+
     public static String smallCaps(String string) {
         StringBuilder stringBuilder = new StringBuilder(string.length());
         for (int i = 0; i < string.length(); ++i) {
@@ -51,6 +61,14 @@ public final class Text {
             if ((c == '&' || c == '\u00a7') && i + 1 < string.length()) {
                 stringBuilder.append(c).append(string.charAt(i + 1));
                 ++i;
+                continue;
+            }
+            // MiniMessage tags pass through untouched: re-casing <gradient:...>
+            // or a kit icon's <sprite:items:item/...> would break the tag.
+            int close = c == '<' ? Text.tagEnd(string, i) : -1;
+            if (close > i) {
+                stringBuilder.append(string, i, close + 1);
+                i = close;
                 continue;
             }
             if (c >= 'a' && c <= 'z') {

@@ -104,6 +104,69 @@ public class PartyManager {
         return arrayList;
     }
 
+    public List<String> publicPartyLeaders() {
+        java.util.TreeSet<String> names = new java.util.TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        for (Party party : new HashSet<Party>(this.byPlayer.values())) {
+            if (!party.isOpenToAll() || party.isFighting() || party.isFinished()) {
+                continue;
+            }
+            Player leader = Bukkit.getPlayer(party.getLeader());
+            if (leader == null || party.size() >= this.maxPartySize(leader)) {
+                continue;
+            }
+            names.add(leader.getName());
+        }
+        return new ArrayList<String>(names);
+    }
+
+    public boolean togglePublic(Player player) {
+        Party party = this.partyOf(player.getUniqueId());
+        if (party == null) {
+            player.sendMessage(this.plugin.messages().get("notice.party.re-not-party", new String[0]));
+            return false;
+        }
+        if (!party.isLeader(player.getUniqueId())) {
+            player.sendMessage(this.plugin.messages().get("notice.party.only-party-leader-change", new String[0]));
+            return false;
+        }
+        if (party.isFighting()) {
+            player.sendMessage(this.plugin.messages().get("notice.party.t-invite-during-party", new String[0]));
+            return false;
+        }
+        party.setOpenToAll(!party.isOpenToAll());
+        this.broadcast(party, party.isOpenToAll()
+            ? "&aThis party is now public. Use &f/party join " + player.getName() + "&a to join."
+            : "&eThis party is now private.");
+        return true;
+    }
+
+    public boolean promote(Player player) {
+        Party party = this.partyOf(player.getUniqueId());
+        if (party == null) {
+            player.sendMessage(this.plugin.messages().get("notice.party.re-not-party", new String[0]));
+            return false;
+        }
+        if (!party.isLeader(player.getUniqueId())) {
+            player.sendMessage(this.plugin.messages().get("notice.party.only-party-leader-change", new String[0]));
+            return false;
+        }
+        if (party.isFighting()) {
+            player.sendMessage(this.plugin.messages().get("notice.party.t-invite-during-party", new String[0]));
+            return false;
+        }
+        party.setOpenToAll(true);
+        TextComponent announcement = new TextComponent("✦ " + Text.smallCaps(player.getName()) + " IS HOSTING A PARTY  •  CLICK TO JOIN ✦");
+        announcement.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+        announcement.setBold(true);
+        announcement.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/party join " + player.getName()));
+        announcement.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            new ComponentBuilder(Text.smallCaps("JOIN " + player.getName() + "'S PARTY")).color(net.md_5.bungee.api.ChatColor.YELLOW).create()));
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            online.spigot().sendMessage(announcement);
+        }
+        return true;
+    }
+
     public void decline(Player player, Player player2) {
         Party party = this.partyOf(player2.getUniqueId());
         if (party == null || !party.getInvited().remove(player.getUniqueId())) {
@@ -876,7 +939,7 @@ public class PartyManager {
         if (kit == null) {
             return string == null ? "?" : string;
         }
-        return kit.getDisplayName() == null || kit.getDisplayName().isEmpty() ? kit.getName() : kit.getDisplayName();
+        return kit.withIcon(kit.getDisplayName() == null || kit.getDisplayName().isEmpty() ? kit.getName() : kit.getDisplayName());
     }
 
     private List<Player> onlineMembers(Party party) {
@@ -939,10 +1002,15 @@ public class PartyManager {
         if (playerSnapshot != null) {
             playerSnapshot.restore(player);
         }
-        if ((location = this.plugin.getDuelSpawn()) != null) {
+        location = this.plugin.getDuelSpawn();
+        if (location == null && !Bukkit.getWorlds().isEmpty()) {
+            location = Bukkit.getWorlds().get(0).getSpawnLocation();
+        }
+        if (location != null) {
             player.teleport(location);
         }
         this.refreshItems(player);
+        this.plugin.giveSpawnItems(player);
     }
 
     private void checkWin(Party party) {
@@ -990,6 +1058,15 @@ public class PartyManager {
             }
             Sounds.roundLost(player);
         }
+        // Party rounds never regenerated: blocks from round one were still
+        // standing in round two. Restore them as the round ends, the same way
+        // 1v1 duels always have.
+        Arena roundArena = party2.getArena();
+        if (roundArena != null && roundArena.isAutoRegenerate()) {
+            this.plugin.getArenaManager().regenBetweenRounds(roundArena,
+                    new HashMap<Location, BlockData>(party2.getChangedBlocks()));
+            party2.getChangedBlocks().clear();
+        }
         double d = this.plugin.getConfig().getDouble("party.round-seconds", 2.5);
         int n = party2.getRound();
         Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> {
@@ -1025,6 +1102,7 @@ public class PartyManager {
             this.endSplit(party, n > 0 ? Party.Team.AQUA : (n2 > 0 ? Party.Team.RED : null));
             return;
         }
+        this.plugin.getArenaManager().cancelRegen(arena);
         this.plugin.getArenaManager().clearLooseEntities(arena);
         long l = System.currentTimeMillis();
         int n3 = Math.max(1, this.plugin.getConfig().getInt("party.countdown-seconds", 5));
@@ -1115,13 +1193,14 @@ public class PartyManager {
             this.pullOut(party, uUID);
         }
         if (arena != null) {
-            this.plugin.getDuelManager().freeArena(arena.getName());
             if (arena.isAutoRegenerate()) {
-                if (this.plugin.getArenaManager().regenArena(arena) < 0 && !party.getChangedBlocks().isEmpty()) {
-                    this.plugin.getArenaManager().restoreBlocks(party.getChangedBlocks());
-                }
-                this.plugin.getArenaManager().clearDirty(arena.getName());
+                // Restores what was changed now and checks the rest over the
+                // next ticks; the arena stays out of rotation until it is done.
+                this.plugin.getArenaManager().regenAfterMatch(arena,
+                        new HashMap<Location, BlockData>(party.getChangedBlocks()), null);
             }
+            party.getChangedBlocks().clear();
+            this.plugin.getDuelManager().freeArena(arena.getName());
             this.plugin.getArenaManager().clearLooseEntities(arena);
         }
         Party party2 = party.getOpponent();
@@ -1244,7 +1323,8 @@ public class PartyManager {
         }
         int n = 2;
         for (int i = 3; i <= 100; ++i) {
-            if (!player.hasPermission("starduels.party.size." + i)) continue;
+            if (!player.hasPermission("starduels.party.size." + i)
+                && !player.hasPermission("meowduels.party.size." + i)) continue;
             n = i;
         }
         return n;

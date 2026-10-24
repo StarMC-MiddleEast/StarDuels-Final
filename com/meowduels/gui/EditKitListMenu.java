@@ -6,6 +6,7 @@ import com.meowduels.gui.Menu;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.model.Kit;
 import com.meowduels.util.Items;
+import com.meowduels.util.KitCatalog;
 import com.meowduels.util.Text;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,7 @@ extends Menu {
         int n = guiConfigManager.rows(MENU, 6);
         this.createRaw(n, guiConfigManager.title(MENU, "&7&l\u1d07\u1d05\u026a\u1d1b \u1d0b\u026a\u1d1b"));
         guiConfigManager.frame(MENU, this.inventory, n);
-        List<Kit> list = this.plugin.getKitManager().all();
+        List<Kit> list = KitCatalog.visibleKits(this.plugin);
         int n2 = n * 9;
         for (int i = 0; i < SLOTS.length && i < list.size() && SLOTS[i] < n2; ++i) {
             this.inventory.setItem(SLOTS[i], this.icon(guiConfigManager, list.get(i)));
@@ -46,7 +47,7 @@ extends Menu {
         if (string != null) {
             items.rawName(string);
         } else if (kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            items.miniName(kit.getDisplayName());
+            items.miniName(kit.withIcon(kit.getDisplayName()));
         } else {
             items.rawName("&e" + Text.smallCaps(kit.getName()));
         }

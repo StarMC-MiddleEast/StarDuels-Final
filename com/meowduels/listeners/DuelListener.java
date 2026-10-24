@@ -250,16 +250,15 @@ implements Listener {
         }
         if (activeDuel.getState() == ActiveDuel.State.FIGHTING) {
             Arena arena = activeDuel.getArena();
-            Location location4 = arena == null ? null : arena.getMin();
-            Location location5 = arena == null ? null : arena.getMax();
-            Location location6 = location5;
-            if (location4 == null || location5 == null) {
+            // Runs on every move packet of every fighter: read the corners
+            // straight, instead of building two Locations each time.
+            if (arena == null || !arena.hasCorners()) {
                 return;
             }
-            double d = location4.getBlockX();
-            double d2 = (double)location5.getBlockX() + 1.0;
-            double d3 = location4.getBlockZ();
-            double d4 = (double)location5.getBlockZ() + 1.0;
+            double d = arena.minX();
+            double d2 = (double)arena.maxX() + 1.0;
+            double d3 = arena.minZ();
+            double d4 = (double)arena.maxZ() + 1.0;
             if (location.getX() >= d - 4.0 && location.getX() <= d2 + 4.0 && location.getZ() >= d3 - 4.0 && location.getZ() <= d4 + 4.0) {
                 return;
             }
@@ -387,7 +386,15 @@ implements Listener {
             return;
         }
         Party party = this.plugin.getPartyManager().partyOf(player.getUniqueId());
-        if (party == null || !party.has(player2.getUniqueId())) {
+        if (party == null) {
+            return;
+        }
+        boolean sameParty = party.has(player2.getUniqueId());
+        // In a party-vs-party match the other side is not in this party, and
+        // used to fall straight through here - so they could hit each other
+        // during the countdown.
+        boolean opponent = !sameParty && party.isFighting() && party.getOpponent() != null && party.getOpponent().has(player2.getUniqueId());
+        if (!sameParty && !opponent) {
             return;
         }
         if (party.isCountingDown()) {
@@ -401,7 +408,7 @@ implements Listener {
             }
             return;
         }
-        if (!party.isFighting() && !party.isFriendlyFire()) {
+        if (sameParty && !party.isFighting() && !party.isFriendlyFire()) {
             entityDamageByEntityEvent.setCancelled(true);
         }
     }
@@ -463,7 +470,6 @@ implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent playerJoinEvent) {
         Player player = playerJoinEvent.getPlayer();
-        this.plugin.getTabService().onPlayerJoin(player);
         this.plugin.getScoreboardService().handleJoin(player);
         if (this.plugin.getConfig().getBoolean("on-join-reset", true)) {
             for (PotionEffect potionEffect : player.getActivePotionEffects()) {

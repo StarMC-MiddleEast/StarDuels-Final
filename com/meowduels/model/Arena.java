@@ -36,7 +36,7 @@ public class Arena {
     private int wallMargin = 0;
     private boolean allowExplosions = false;
     private boolean allowFireSpread = false;
-    private boolean allowLiquidFlow = false;
+    private boolean allowLiquidFlow = true;
     private boolean allowMobSpawns = false;
     private boolean allowFallDamage = true;
     private boolean allowHungerLoss = false;
@@ -236,6 +236,27 @@ public class Arena {
         this.worldName = location.getWorld().getName();
     }
 
+    /** True once both corners are set. With minX/maxX/minZ/maxZ, for hot paths that must not allocate. */
+    public boolean hasCorners() {
+        return this.corner1 != null && this.corner2 != null;
+    }
+
+    public int minX() {
+        return Math.min(this.corner1.getBlockX(), this.corner2.getBlockX());
+    }
+
+    public int maxX() {
+        return Math.max(this.corner1.getBlockX(), this.corner2.getBlockX());
+    }
+
+    public int minZ() {
+        return Math.min(this.corner1.getBlockZ(), this.corner2.getBlockZ());
+    }
+
+    public int maxZ() {
+        return Math.max(this.corner1.getBlockZ(), this.corner2.getBlockZ());
+    }
+
     public Location getMin() {
         if (this.corner1 == null || this.corner2 == null) {
             return null;
@@ -252,13 +273,44 @@ public class Arena {
         return new Location(world, (double)Math.max(this.corner1.getBlockX(), this.corner2.getBlockX()), (double)Math.max(this.corner1.getBlockY(), this.corner2.getBlockY()), (double)Math.max(this.corner1.getBlockZ(), this.corner2.getBlockZ()));
     }
 
+    /**
+     * Whether a location is inside this arena's box.
+     *
+     * <p>Called for every arena on every block break, place, burn and - most
+     * of all - every liquid flow tick in an arena world, so the cheap checks
+     * go first and nothing is allocated. It used to run isConfigured() (two
+     * world lookups and two Location clones) and build two new Locations
+     * before comparing a single coordinate.
+     */
     public boolean contains(Location location) {
-        if (!this.isConfigured() || location.getWorld() == null || !location.getWorld().getName().equals(this.worldName)) {
+        Location a = this.corner1;
+        Location b = this.corner2;
+        if (a == null || b == null || this.worldName == null || location == null) {
             return false;
         }
-        Location location2 = this.getMin();
-        Location location3 = this.getMax();
-        return location.getBlockX() >= location2.getBlockX() && location.getBlockX() <= location3.getBlockX() && location.getBlockY() >= location2.getBlockY() && location.getBlockY() <= location3.getBlockY() && location.getBlockZ() >= location2.getBlockZ() && location.getBlockZ() <= location3.getBlockZ();
+        int x = location.getBlockX();
+        int y = location.getBlockY();
+        int z = location.getBlockZ();
+        int ax = a.getBlockX();
+        int bx = b.getBlockX();
+        if (x < Math.min(ax, bx) || x > Math.max(ax, bx)) {
+            return false;
+        }
+        int az = a.getBlockZ();
+        int bz = b.getBlockZ();
+        if (z < Math.min(az, bz) || z > Math.max(az, bz)) {
+            return false;
+        }
+        int ay = a.getBlockY();
+        int by = b.getBlockY();
+        if (y < Math.min(ay, by) || y > Math.max(ay, by)) {
+            return false;
+        }
+        World world = location.getWorld();
+        if (world == null || !world.getName().equals(this.worldName)) {
+            return false;
+        }
+        return this.isConfigured();
     }
 
     public Zone classify(Location location) {
@@ -667,7 +719,7 @@ public class Arena {
         arena.wallMargin = configurationSection.getInt("settings.wall-margin", 0);
         arena.allowExplosions = configurationSection.getBoolean("settings.allow-explosions", false);
         arena.allowFireSpread = configurationSection.getBoolean("settings.allow-fire-spread", false);
-        arena.allowLiquidFlow = configurationSection.getBoolean("settings.allow-liquid-flow", false);
+        arena.allowLiquidFlow = configurationSection.getBoolean("settings.allow-liquid-flow", true);
         arena.allowMobSpawns = configurationSection.getBoolean("settings.allow-mob-spawns", false);
         arena.allowFallDamage = configurationSection.getBoolean("settings.allow-fall-damage", true);
         arena.allowHungerLoss = configurationSection.getBoolean("settings.allow-hunger-loss", false);

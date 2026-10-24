@@ -10,6 +10,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class Kit {
     private final String name;
@@ -18,6 +21,9 @@ public class Kit {
     private ItemStack offhand;
     private Material icon = Material.IRON_SWORD;
     private String displayName;
+    private String prefix = "";
+    private String nameIcon;
+    private boolean guiVisible = true;
     private final Set<StartEffect> startEffects = EnumSet.noneOf(StartEffect.class);
 
     public Kit(String string) {
@@ -57,6 +63,62 @@ public class Kit {
     public void setDisplayName(String string) {
         this.displayName = string;
     }
+
+    public String getPrefix() { return this.prefix == null ? "" : this.prefix; }
+
+    /** kits.yml name-icon: the icon shown before this kit's name; null = from the menu icon. */
+    public String getNameIcon() { return this.nameIcon; }
+
+    public void setNameIcon(String nameIcon) { this.nameIcon = nameIcon == null || nameIcon.isBlank() ? null : nameIcon.trim(); }
+
+    /** The given label with this kit's icon in front, per kit-names in config.yml. */
+    public String withIcon(String label) { return com.meowduels.util.KitIcons.decorate(this, label); }
+
+    /** The queue name with this kit's icon in front. */
+    public String getQueueDisplayNameWithIcon() { return this.withIcon(this.getQueueDisplayName()); }
+
+    public Component getPrefixComponent() {
+        return MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(this.getPrefix()));
+    }
+
+    /** Prefix plus configured queue name, suppressing a prefix already present in the name. */
+    private transient String queueNameKey;
+    private transient String queueNameValue;
+
+    /**
+     * Memoized: the queue menus refresh every second for every viewer, and
+     * this parses MiniMessage four times per kit per call. The result only
+     * changes when the name or prefix does.
+     */
+    public String getQueueDisplayName() {
+        String key = this.displayName + "\u0000" + this.getPrefix() + "\u0000" + this.name;
+        if (key.equals(this.queueNameKey)) {
+            return this.queueNameValue;
+        }
+        String value = this.computeQueueDisplayName();
+        this.queueNameValue = value;
+        this.queueNameKey = key;
+        return value;
+    }
+
+    private String computeQueueDisplayName() {
+        String name = this.displayName;
+        if (name == null || name.isBlank()) name = "<yellow>" + this.name.replace('_', ' ') + "</yellow>";
+        String prefix = this.getPrefix();
+        if (prefix.isBlank()) return com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+        String prefixText = PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(prefix))).trim();
+        String nameText = PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(name)));
+        if (!prefixText.isEmpty() && nameText.toLowerCase(java.util.Locale.ROOT).contains(prefixText.toLowerCase(java.util.Locale.ROOT))) {
+            return com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+        }
+        return com.meowduels.util.MiniMessageUtil.toMiniMessage(prefix) + com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+    }
+
+    public void setPrefix(String prefix) { this.prefix = prefix == null || prefix.equalsIgnoreCase("clear") ? "" : prefix; }
+
+    public boolean isGuiVisible() { return this.guiVisible; }
+
+    public void setGuiVisible(boolean guiVisible) { this.guiVisible = guiVisible; }
 
     public void captureFrom(Player player) {
         PlayerInventory playerInventory = player.getInventory();
@@ -168,6 +230,9 @@ public class Kit {
     public void save(ConfigurationSection configurationSection) {
         configurationSection.set("icon", (Object)this.icon.name());
         configurationSection.set("display-name", (Object)this.displayName);
+        configurationSection.set("prefix", this.prefix);
+        configurationSection.set("name-icon", this.nameIcon);
+        configurationSection.set("gui-visible", this.guiVisible);
         ArrayList<String> arrayList = new ArrayList<String>();
         for (StartEffect startEffect : this.startEffects) {
             arrayList.add(startEffect.name());
@@ -185,6 +250,10 @@ public class Kit {
         Material material = Material.matchMaterial((String)string2);
         kit.icon = material == null ? Material.IRON_SWORD : material;
         kit.displayName = configurationSection.getString("display-name");
+        kit.prefix = configurationSection.getString("prefix", "");
+        if (kit.prefix == null) kit.prefix = "";
+        kit.setNameIcon(configurationSection.getString("name-icon"));
+        kit.guiVisible = configurationSection.getBoolean("gui-visible", false);
         for (String string3 : configurationSection.getStringList("start-effects")) {
             try {
                 kit.startEffects.add(StartEffect.valueOf(string3));

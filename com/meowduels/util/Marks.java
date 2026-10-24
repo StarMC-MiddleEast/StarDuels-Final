@@ -4,6 +4,8 @@ public final class Marks {
     public static final String FLAG = "\u2691";
     public static final String SKULL = "\u2620";
     public static final char BLUE = '9';
+    /** Team Aqua's colour - light blue, matching the team's name in messages. */
+    public static final char AQUA = 'b';
     public static final char RED = 'c';
     public static final char EVENT = 'e';
     public static final char ALIVE = 'a';

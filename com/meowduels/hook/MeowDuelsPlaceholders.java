@@ -47,12 +47,6 @@ implements Relational {
         if (string == null) {
             return "";
         }
-        if (string.regionMatches(true, 0, "tab_header_", 0, 11)) {
-            return this.tabLine(offlinePlayer, "header", string.substring(11));
-        }
-        if (string.regionMatches(true, 0, "tab_footer_", 0, 11)) {
-            return this.tabLine(offlinePlayer, "footer", string.substring(11));
-        }
         String string2 = string.toLowerCase();
         switch (string2) {
             case "players_in_duels": {
@@ -63,15 +57,6 @@ implements Relational {
             }
             case "server_ip": {
                 return this.plugin.getScoreboardIp();
-            }
-            case "tab_title": {
-                return this.plugin.getTabTitle();
-            }
-            case "tab_discord": {
-                return this.plugin.getTabDiscord();
-            }
-            case "tab_store": {
-                return this.plugin.getTabStore();
             }
         }
         if (offlinePlayer == null) {
@@ -194,6 +179,21 @@ implements Relational {
             }
         }
         if (activeDuel == null) {
+            // Party matches have teams too; these used to come back empty there.
+            if ("team".equals(string2) || "team_color".equals(string2) || "team_prefix".equals(string2)) {
+                Party party = this.plugin.getPartyManager().partyOf((UUID)object);
+                Party.Team team = party != null && party.isFighting() && party.isTeamMode() ? party.teamOf((UUID)object) : null;
+                if (team != null) {
+                    boolean aqua = team == Party.Team.AQUA;
+                    if ("team".equals(string2)) {
+                        return aqua ? "AQUA" : "RED";
+                    }
+                    if ("team_color".equals(string2)) {
+                        return aqua ? "&b" : "&c";
+                    }
+                    return Marks.tab(aqua ? Marks.AQUA : Marks.RED);
+                }
+            }
             return "";
         }
         Object object3 = n != 0 ? object2 : object;
@@ -204,10 +204,10 @@ implements Relational {
                 return bl ? "AQUA" : "RED";
             }
             case "team_color": {
-                return bl ? "&9" : "&c";
+                return bl ? "&b" : "&c";
             }
             case "team_prefix": {
-                return Marks.tab(bl ? (char)'9' : 'c');
+                return Marks.tab(bl ? Marks.AQUA : Marks.RED);
             }
             case "state": {
                 return activeDuel.getState().name();
@@ -247,18 +247,6 @@ implements Relational {
         return "";
     }
 
-    private String tabLine(OfflinePlayer offlinePlayer, String string, String string2) {
-        int n;
-        try {
-            n = Integer.parseInt(string2.trim());
-        }
-        catch (NumberFormatException numberFormatException) {
-            return "";
-        }
-        UUID uUID = offlinePlayer == null ? null : offlinePlayer.getUniqueId();
-        return Colors.toSection(this.plugin.getTabService().layoutLine(uUID, string, n));
-    }
-
     private boolean inAFight(UUID uUID) {
         return this.plugin.getDuelManager().isInDuel(uUID) || this.plugin.getPartyManager().inPartyMatch(uUID) || this.plugin.getEventManager().isInvolved(uUID);
     }
@@ -274,7 +262,7 @@ implements Relational {
         if ("tabprefix".equals(string2)) {
             ActiveDuel activeDuel = this.plugin.getDuelManager().getDuel(uUID);
             if (bl && activeDuel != null) {
-                return Marks.tab(activeDuel.isAqua(uUID) ? (char)'9' : 'c');
+                return Marks.tab(activeDuel.isAqua(uUID) ? Marks.AQUA : Marks.RED);
             }
             String string3 = this.partyPrefix(player, player2, true);
             if (string3 != null) {
@@ -283,6 +271,10 @@ implements Relational {
             return this.lpPrefix((OfflinePlayer)player2);
         }
         if ("tagprefix".equals(string2)) {
+            String team = this.matchTeamPrefix(player2, false);
+            if (team != null) {
+                return team;
+            }
             if (this.inAFight(uUID)) {
                 return PLAIN_TAG;
             }
@@ -312,7 +304,38 @@ implements Relational {
         return party.isLeader(uUID) ? "\u00a76\u2605 " + string : PLAIN_TAG + string;
     }
 
+    /**
+     * Red or Aqua for anyone fighting on a team in a party match - Split, or
+     * one party against another.
+     *
+     * <p>This is read from the target's own party, so it applies to everyone
+     * looking at them. It used to be read from the viewer's party and gated
+     * on the target being a member of it, which in a party-vs-party match is
+     * never true for the other side: every opponent fell through to their
+     * rank prefix, and the red team never showed as red at all.
+     */
+    private String matchTeamPrefix(Player player2, boolean bl) {
+        UUID uUID = player2.getUniqueId();
+        Party party = this.plugin.getPartyManager().partyOf(uUID);
+        if (party == null || !party.isFighting() || !party.isTeamMode()) {
+            return null;
+        }
+        Party.Team team = party.teamOf(uUID);
+        if (team == null) {
+            return null;
+        }
+        if (party.getWatching().contains(uUID)) {
+            return bl ? Marks.tabOut() : Marks.tagOut();
+        }
+        char c = team == Party.Team.AQUA ? Marks.AQUA : Marks.RED;
+        return bl ? Marks.tab(c) : Marks.tag(c);
+    }
+
     private String partyPrefix(Player player, Player player2, boolean bl) {
+        String team = this.matchTeamPrefix(player2, bl);
+        if (team != null) {
+            return team;
+        }
         if (player == null) {
             return null;
         }
@@ -322,13 +345,6 @@ implements Relational {
         }
         UUID uUID = player2.getUniqueId();
         if (party.isFighting()) {
-            if (party.isTeamMode() && party.teamOf(uUID) != null) {
-                if (party.getWatching().contains(uUID)) {
-                    return bl ? Marks.tabOut() : Marks.tagOut();
-                }
-                char c = party.teamOf(uUID) == Party.Team.AQUA ? (char)'9' : 'c';
-                return bl ? Marks.tab(c) : Marks.tag(c);
-            }
             if (party.getAlive().contains(uUID)) {
                 return bl ? Marks.tab('a') : Marks.tag('a');
             }
@@ -357,8 +373,28 @@ implements Relational {
         return " \u00a7r\u00a78" + string;
     }
 
+    private final java.util.concurrent.ConcurrentHashMap<UUID, Object[]> lpPrefixCache = new java.util.concurrent.ConcurrentHashMap<UUID, Object[]>();
+
+    /**
+     * The rank prefix, cached for two seconds per player.
+     *
+     * <p>Relational placeholders are asked for every viewer/target pair, so
+     * this ran a PlaceholderAPI expansion lookup players-squared times per TAB
+     * refresh - for a value that changes when someone ranks up.
+     */
     private String lpPrefix(OfflinePlayer offlinePlayer) {
-        return Colors.toSection(this.papi(offlinePlayer, "%luckperms_prefix%"));
+        UUID uUID = offlinePlayer.getUniqueId();
+        long now = System.currentTimeMillis();
+        Object[] hit = this.lpPrefixCache.get(uUID);
+        if (hit != null && now - (Long)hit[0] < 2000L) {
+            return (String)hit[1];
+        }
+        String value = Colors.toSection(this.papi(offlinePlayer, "%luckperms_prefix%"));
+        if (this.lpPrefixCache.size() > 4096) {
+            this.lpPrefixCache.clear();
+        }
+        this.lpPrefixCache.put(uUID, new Object[]{now, value});
+        return value;
     }
 
     private String papi(OfflinePlayer offlinePlayer, String string) {

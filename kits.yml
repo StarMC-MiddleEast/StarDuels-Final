@@ -1,7 +1,9 @@
 kits:
   NetheriteOP:
     icon: NETHERITE_SWORD
-    display-name: <b><gradient:#FFC62F:#FCD05C>ɴᴇᴛʜᴇʀɪᴛᴇ ᴏᴘ</gradient></b>
+    display-name: '<b><gradient:#E9E1F0:#8E7AA6>ᴍᴏᴅᴇʀɴ ɴᴇᴛʜᴏᴘ</gradient></b>'
+    prefix: ''
+    name-icon: item/netherite_sword
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -327,7 +329,9 @@ kits:
       schema_version: 1
   ModernAxe:
     icon: DIAMOND_AXE
-    display-name: <b><gradient:#18FC00:#65FC5C>ᴍᴏᴅᴇʀɴ ᴀxᴇ</gradient></b>
+    display-name: '<b><gradient:#B6E3FF:#3A8FD6>ᴍᴏᴅᴇʀɴ ᴀxᴇ</gradient></b>'
+    prefix: ''
+    name-icon: item/diamond_axe
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -416,6 +420,9 @@ kits:
       schema_version: 1
   UHC:
     icon: LAVA_BUCKET
+    display-name: '<b><gradient:#FFF6B0:#F2C21B>ᴜʜᴄ</gradient></b>'
+    prefix: ''
+    name-icon: item/golden_apple
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -568,7 +575,9 @@ kits:
       schema_version: 1
   ModernUHC:
     icon: LAVA_BUCKET
-    display-name: <b><gradient:#E43A96:#FF78C1>ᴍᴏᴅᴇʀɴ ᴜʜᴄ</gradient></b>
+    display-name: '<b><gradient:#FFC48A:#FF5A2B>ᴍᴏᴅᴇʀɴ ᴜʜᴄ</gradient></b>'
+    prefix: ''
+    name-icon: item/lava_bucket
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -723,7 +732,9 @@ kits:
       schema_version: 1
   Mace:
     icon: MACE
-    display-name: <b><gradient:#555555:#9B9B9B>ᴍᴏᴅᴇʀɴ ᴍᴀᴄᴇ</gradient></b>
+    display-name: '<b><gradient:#FFCDF4:#D63AC0>ᴍᴏᴅᴇʀɴ ᴍᴀᴄᴇ</gradient></b>'
+    prefix: ''
+    name-icon: item/mace
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -1030,7 +1041,9 @@ kits:
       schema_version: 1
   ModernSMP:
     icon: SHIELD
-    display-name: <b><gradient:#E55353:#E94747>ᴍᴏᴅᴇʀɴ ѕᴍᴘ</gradient></b>
+    display-name: '<b><gradient:#C6DCFF:#4A7DFF>ꜱᴍᴘ</gradient></b>'
+    prefix: ''
+    name-icon: item/totem_of_undying
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -1320,10 +1333,14 @@ kits:
     offhand:
       ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
-      id: minecraft:air
+      id: minecraft:shield
+      count: 1
       schema_version: 1
   PotionIO:
     icon: SPLASH_POTION
+    display-name: '<b><gradient:#FFB8BE:#F0364F>ᴍᴏᴅᴇʀɴ ᴘᴏᴛɪᴏɴ</gradient></b>'
+    prefix: ''
+    name-icon: item/splash_potion
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -1613,7 +1630,9 @@ kits:
       schema_version: 1
   Potion:
     icon: SPLASH_POTION
-    display-name: <b><gradient:#5FE2C5:#4498DB>ᴘᴏᴛɪᴏɴ</gradient></b>
+    display-name: '<b><gradient:#A6F7E2:#3E9BE0>ᴘᴏᴛɪᴏɴ</gradient></b>'
+    prefix: ''
+    name-icon: item/potion
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -1905,7 +1924,9 @@ kits:
       schema_version: 1
   Sword:
     icon: DIAMOND_SWORD
-    display-name: <b><gradient:#D7115A:#E90256>ѕᴡᴏʀᴅ</gradient></b>
+    display-name: '<b><gradient:#C9FBFF:#36CFE0>ᴍᴏᴅᴇʀɴ ꜱᴡᴏʀᴅ</gradient></b>'
+    prefix: ''
+    name-icon: item/diamond_sword
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -1983,7 +2004,9 @@ kits:
       schema_version: 1
   DiaSMP:
     icon: CHORUS_FRUIT
-    display-name: <b><gradient:#FCB600:#FCD05C>ᴅɪᴀ ѕᴍᴘ</gradient></b>
+    display-name: '<b><gradient:#F1DDFF:#A458F5>ᴅɪᴀꜱᴍᴘ</gradient></b>'
+    prefix: ''
+    name-icon: item/chorus_fruit
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -2281,7 +2304,9 @@ kits:
       schema_version: 1
   MoneySMP:
     icon: PLAYER_HEAD
-    display-name: <b><gradient:#11D71E:#53EE4A>ᴍᴏɴᴇʏ ѕᴍᴘ</gradient></b>
+    display-name: '<b><gradient:#C9FFE0:#1FB46B>ᴍᴏɴᴇʏ ꜱᴍᴘ</gradient></b>'
+    prefix: ''
+    name-icon: item/emerald
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -2556,7 +2581,9 @@ kits:
       schema_version: 1
   Speed:
     icon: SPLASH_POTION
-    display-name: <b><gradient:#5FE2C5:#4498DB>ѕᴘᴇᴇᴅ</gradient></b>
+    display-name: '<b><gradient:#E8F7FF:#6FB7D6>ꜱᴘᴇᴇᴅ</gradient></b>'
+    prefix: ''
+    name-icon: item/sugar
     contents:
     - null
     - null
@@ -2684,7 +2711,9 @@ kits:
       schema_version: 1
   Creeper:
     icon: CREEPER_SPAWN_EGG
-    display-name: <b><gradient:#75FF12:#68D26F>ᴄʀᴇᴇᴘᴇʀ</gradient></b>
+    display-name: '<b><gradient:#E4FFB3:#6CC72A>ᴄʀᴇᴇᴘᴇʀ</gradient></b>'
+    prefix: ''
+    name-icon: item/creeper_spawn_egg
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -2947,7 +2976,9 @@ kits:
       schema_version: 1
   CartHT:
     icon: TNT_MINECART
-    display-name: <b><gradient:#FF8F8F:#F87DA5>ᴄᴀʀᴛ ʜᴛ</gradient></b>
+    display-name: '<b><gradient:#FFC2B8:#FF3B3B>ᴄᴀʀᴛ ʜᴛ</gradient></b>'
+    prefix: ''
+    name-icon: item/tnt_minecart
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -3197,7 +3228,9 @@ kits:
       schema_version: 1
   CartLT:
     icon: TNT_MINECART
-    display-name: <b><gradient:#FF8F8F:#F87DA5>ᴄᴀʀᴛ ʟᴛ</gradient></b>
+    display-name: '<b><gradient:#FFE0B8:#FF8A2B>ᴄᴀʀᴛ ʟᴛ</gradient></b>'
+    prefix: ''
+    name-icon: item/tnt_minecart
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -3449,7 +3482,9 @@ kits:
       schema_version: 1
   OGV:
     icon: DIAMOND_HELMET
-    display-name: <b><gradient:#5B8C96:#6A71AE>ᴏɢᴠ</gradient></b>
+    display-name: '<b><gradient:#DCE4F5:#6F82BF>ᴏɢᴠ</gradient></b>'
+    prefix: ''
+    name-icon: item/diamond_helmet
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -3726,7 +3761,9 @@ kits:
       schema_version: 1
   Bow:
     icon: BOW
-    display-name: <b><gradient:#FCD05C:#FFD831>ʙᴏᴡ</gradient></b>
+    display-name: '<b><gradient:#F7E3C6:#C0803F>ʙᴏᴡ</gradient></b>'
+    prefix: ''
+    name-icon: item/bow
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -3810,7 +3847,9 @@ kits:
       schema_version: 1
   Elytra:
     icon: ELYTRA
-    display-name: <b><gradient:#FC625C:#FF9531>ᴇʟʏᴛʀᴀ</gradient></b>
+    display-name: '<b><gradient:#E9E6FF:#8F86F0>ᴇʟʏᴛʀᴀ</gradient></b>'
+    prefix: ''
+    name-icon: item/elytra
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -4021,7 +4060,9 @@ kits:
       schema_version: 1
   Trident:
     icon: TRIDENT
-    display-name: <b><gradient:#5B8C96:#6A71AE>ᴛʀɪᴅᴇɴᴛ</gradient></b>
+    display-name: '<b><gradient:#B9FFE9:#17A895>ᴛʀɪᴅᴇɴᴛ</gradient></b>'
+    prefix: ''
+    name-icon: item/trident
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671
@@ -4172,7 +4213,9 @@ kits:
       schema_version: 1
   CrystalIO:
     icon: END_CRYSTAL
-    display-name: <b><gradient:#FFC835:#FF922B>ᴄʀʏѕᴛᴀʟ ɪᴏ</gradient></b>
+    display-name: '<b><gradient:#FFD3EA:#E0407F>ᴍᴏᴅᴇʀɴ ᴄʀʏꜱᴛᴀʟ</gradient></b>'
+    prefix: ''
+    name-icon: item/end_crystal
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671

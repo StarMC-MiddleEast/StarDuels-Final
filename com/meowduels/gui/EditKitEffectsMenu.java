@@ -63,11 +63,10 @@ extends Menu {
                 player.sendMessage(this.plugin.messages().get("notice.kit.shift-click-replace-kit", "kit", this.kit.getName()));
                 return;
             }
-            this.kit.captureFrom(player);
-            this.plugin.getKitManager().put(this.kit);
-            this.plugin.getKitManager().save();
             player.closeInventory();
-            player.sendMessage(this.plugin.messages().get("notice.kit.kit-now-inventory-everyone", "kit", this.kit.getName()));
+            KitItemsEditMenu editor = new KitItemsEditMenu(this.plugin, this.kit);
+            editor.open(player);
+            editor.copyInventoryIntoEditor(player);
             return;
         }
         try {

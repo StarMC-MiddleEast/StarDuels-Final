@@ -115,7 +115,7 @@ extends Menu {
             return "<yellow>None";
         }
         String string = kit.getDisplayName();
-        return string == null || string.isEmpty() ? "<yellow>" + kit.getName() : string;
+        return kit.withIcon(string == null || string.isEmpty() ? "<yellow>" + kit.getName() : string);
     }
 
     private Map<String, String> tokens() {

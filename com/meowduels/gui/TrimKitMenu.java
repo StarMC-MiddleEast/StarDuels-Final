@@ -38,7 +38,7 @@ extends Menu {
             if (string != null) {
                 items.rawName(string);
             } else if (kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-                items.miniName(kit.getDisplayName());
+                items.miniName(kit.withIcon(kit.getDisplayName()));
             } else {
                 items.rawName("&e" + Text.smallCaps(kit.getName()));
             }

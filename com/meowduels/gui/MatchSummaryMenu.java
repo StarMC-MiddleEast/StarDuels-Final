@@ -81,7 +81,7 @@ extends Menu {
     private String kitLabel() {
         Kit kit = this.plugin.getKitManager().get(this.duel.getKit());
         if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return kit.getDisplayName();
+            return kit.withIcon(kit.getDisplayName());
         }
         return this.duel.getKit();
     }

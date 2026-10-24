@@ -25,10 +25,10 @@ public class KitLayoutManager {
     public KitLayoutManager(MeowDuels meowDuels) {
         this.plugin = meowDuels;
         this.file = new File(meowDuels.getDataFolder(), "kitlayouts.yml");
-        this.load();
+        this.reload();
     }
 
-    private void load() {
+    public void reload() {
         this.data = this.file.exists() ? YamlConfiguration.loadConfiguration((File)this.file) : new YamlConfiguration();
     }
 

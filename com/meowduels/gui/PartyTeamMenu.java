@@ -109,7 +109,7 @@ extends Menu {
         if (kit == null) {
             return "<#6B7079>\u0274\u1d0f\u1d1b \u1d04\u029c\u1d0f\ua731\u1d07\u0274";
         }
-        return kit.getDisplayName() == null || kit.getDisplayName().isEmpty() ? VALUE + kit.getName() : kit.getDisplayName();
+        return kit.withIcon(kit.getDisplayName() == null || kit.getDisplayName().isEmpty() ? VALUE + kit.getName() : kit.getDisplayName());
     }
 
     private String nameOf(UUID uUID) {

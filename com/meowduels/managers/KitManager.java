@@ -9,8 +9,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 public class KitManager {
     private final MeowDuels plugin;
@@ -36,10 +38,40 @@ public class KitManager {
         if (configurationSection == null) {
             return;
         }
+        boolean migratedModernSmpShield = false;
+        boolean migratedGuiVisibility = false;
         for (String string : configurationSection.getKeys(false)) {
             ConfigurationSection configurationSection2 = configurationSection.getConfigurationSection(string);
             if (configurationSection2 == null) continue;
-            this.kits.put(string.toLowerCase(Locale.ROOT), Kit.load(string, configurationSection2));
+            Kit kit = Kit.load(string, configurationSection2);
+            if (!configurationSection2.contains("gui-visible")) {
+                kit.setGuiVisible(com.meowduels.util.KitCatalog.defaultVisible(string));
+                migratedGuiVisibility = true;
+            }
+            if (string.equalsIgnoreCase("ModernSMP") && (kit.getOffhand() == null || kit.getOffhand().getType() == Material.AIR)) {
+                kit.setOffhand(new ItemStack(Material.SHIELD));
+                migratedModernSmpShield = true;
+            }
+            this.kits.put(string.toLowerCase(Locale.ROOT), kit);
+        }
+        if (!this.exists("SpearMace") && this.exists("Trident")) {
+            Kit legacy = this.get("Trident");
+            Kit spearMace = new Kit("SpearMace");
+            spearMace.setContents(legacy.getContents());
+            spearMace.setArmor(legacy.getArmor());
+            spearMace.setOffhand(legacy.getOffhand());
+            spearMace.setDisplayName("<gradient:#FFF36A:#F39A22><bold>SPEAR MACE</bold></gradient>");
+            spearMace.setGuiVisible(true);
+            Material spear = Material.matchMaterial("IRON_SPEAR");
+            if (spear == null) spear = Material.matchMaterial("SPEAR");
+            spearMace.setIcon(spear == null ? Material.TRIDENT : spear);
+            spearMace.getStartEffects().addAll(legacy.getStartEffects());
+            this.kits.put(spearMace.getName().toLowerCase(Locale.ROOT), spearMace);
+            migratedGuiVisibility = true;
+        }
+        if (migratedModernSmpShield || migratedGuiVisibility) {
+            this.save();
+            if (migratedModernSmpShield) this.plugin.getLogger().info("Added the missing offhand shield to the ModernSMP kit.");
         }
         this.plugin.getLogger().info("Loaded " + this.kits.size() + " kit(s).");
     }

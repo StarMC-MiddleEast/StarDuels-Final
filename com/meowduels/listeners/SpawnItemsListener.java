@@ -6,7 +6,7 @@ import com.meowduels.gui.PartyConfirmMenu;
 import com.meowduels.gui.PartyMenu;
 import com.meowduels.gui.PartyModeMenu;
 import com.meowduels.gui.PartySettingsMenu;
-import com.meowduels.gui.QueueCategoriesMenu;
+import com.meowduels.gui.QueuePickMenu;
 import com.meowduels.gui.SettingsMenu;
 import com.meowduels.model.Party;
 import com.meowduels.util.Items;
@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -33,14 +34,25 @@ implements Listener {
     }
 
     private boolean isSpawnItem(ItemStack itemStack) {
-        String string = Items.readTag(itemStack, this.plugin.keyButton());
-        return "spawn-queue".equals(string) || "spawn-quick".equals(string) || "spawn-leavequeue".equals(string) || "spawn-kiteditor".equals(string) || "spawn-settings".equals(string) || "spawn-rematch".equals(string) || "spawn-createparty".equals(string) || "party-match".equals(string) || "party-spectate".equals(string) || "party-leave".equals(string) || "party-settings".equals(string) || "party-info".equals(string) || "lobby-wind-charge".equals(string) || "lobby-elytra".equals(string);
+        return SpawnItems.isManagedItem(this.plugin, itemStack);
     }
 
     @EventHandler(ignoreCancelled=true)
     public void onDrop(PlayerDropItemEvent playerDropItemEvent) {
         if (playerDropItemEvent.getItemDrop() != null && this.isSpawnItem(playerDropItemEvent.getItemDrop().getItemStack())) {
             playerDropItemEvent.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onLobbyElytraGlide(EntityToggleGlideEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        ItemStack chestItem = player.getInventory().getChestplate();
+        if (event.isGliding() && !SpawnItems.canUseLobbyElytra(player)
+                && SpawnItems.LOBBY_ELYTRA.equals(Items.readTag(chestItem, this.plugin.keyButton()))) {
+            event.setCancelled(true);
         }
     }
 
@@ -128,7 +140,7 @@ implements Listener {
             if (this.busy(player)) {
                 return;
             }
-            new QueueCategoriesMenu(this.plugin).open(player);
+            new QueuePickMenu(this.plugin).open(player);
         } else if ("spawn-quick".equals(string)) {
             playerInteractEvent.setCancelled(true);
             if (this.busy(player)) {

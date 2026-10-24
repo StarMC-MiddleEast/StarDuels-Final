@@ -13,11 +13,15 @@ import com.meowduels.model.Kit;
 import com.meowduels.model.Party;
 import com.meowduels.model.PartyMode;
 import com.meowduels.util.Items;
+import com.meowduels.util.KitCatalog;
 import com.meowduels.util.Text;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.HashSet;
+import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -43,18 +47,43 @@ extends Menu {
     private List<Page> pages() {
         ArrayList<Page> arrayList = new ArrayList<Page>();
         List<CategoryManager.Category> list = this.plugin.getCategoryManager().all();
+        List<KitCatalog.Entry> available = KitCatalog.available(this.plugin);
         if (list.isEmpty()) {
             ArrayList<String> arrayList2 = new ArrayList<String>();
-            for (Kit kit : this.plugin.getKitManager().all()) {
-                arrayList2.add(kit.getName());
+            for (KitCatalog.Entry entry : available) {
+                arrayList2.add(entry.label());
             }
             this.slice(arrayList, "\u1d0b\u026a\u1d1b\ua731", arrayList2);
             return arrayList;
         }
+        Set<String> added = new HashSet<String>();
+        ArrayList<String> unassigned = new ArrayList<String>();
         for (CategoryManager.Category category : list) {
-            this.slice(arrayList, PartyKitMenu.smallCaps(category.getId()), this.plugin.getCategoryManager().kitsFor(category));
+            ArrayList<String> categoryKits = new ArrayList<String>();
+            for (String kitName : this.plugin.getCategoryManager().kitsFor(category)) {
+                KitCatalog.Entry entry = findEntry(available, kitName);
+                if (entry == null) continue;
+                categoryKits.add(entry.label());
+                added.add(entry.kit().toLowerCase(Locale.ROOT));
+            }
+            this.slice(arrayList, PartyKitMenu.smallCaps(category.getId()), categoryKits);
+        }
+        for (KitCatalog.Entry entry : available) {
+            if (!added.contains(entry.kit().toLowerCase(Locale.ROOT))) {
+                unassigned.add(entry.label());
+            }
+        }
+        if (!unassigned.isEmpty()) {
+            this.slice(arrayList, PartyKitMenu.smallCaps(list.get(0).getId()), unassigned);
         }
         return arrayList;
+    }
+
+    private static KitCatalog.Entry findEntry(List<KitCatalog.Entry> entries, String kitName) {
+        for (KitCatalog.Entry entry : entries) {
+            if (entry.kit().equalsIgnoreCase(kitName)) return entry;
+        }
+        return null;
     }
 
     private void slice(List<Page> list, String string, List<String> list2) {
@@ -114,15 +143,17 @@ extends Menu {
     }
 
     private ItemStack kitIcon(GuiConfigManager guiConfigManager, String string, String string2) {
-        Kit kit = this.plugin.getKitManager().get(string);
+        KitCatalog.Entry entry = findEntry(KitCatalog.available(this.plugin), string);
+        if (entry == null) return null;
+        Kit kit = this.plugin.getKitManager().get(entry.kit());
         if (kit == null) {
             return null;
         }
         HashMap<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("kit", kit.getName());
+        hashMap.put("kit", entry.label());
         Items items = guiConfigManager.toggle(MENU, "kit", kit.getName().equalsIgnoreCase(string2), hashMap, GuiConfigManager.Face.of(guiConfigManager.material(MENU, "kit", kit.getIcon()), "&e{kit}", new String[0]).glow(), GuiConfigManager.Face.of(guiConfigManager.material(MENU, "kit", kit.getIcon()), "&e{kit}", new String[0])).hideTooltip().tag(this.plugin.keyKit(), kit.getName());
         if (guiConfigManager.name(MENU, "kit", hashMap) == null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            items.miniName(kit.getDisplayName());
+            items.miniName(kit.withIcon(kit.getDisplayName()));
         }
         return items.build();
     }

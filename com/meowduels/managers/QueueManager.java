@@ -4,6 +4,7 @@ import com.meowduels.MeowDuels;
 import com.meowduels.model.Kit;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
+import com.meowduels.util.KitCatalog;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,9 +42,10 @@ public class QueueManager {
         }
         UUID uUID = player.getUniqueId();
         ArrayList<Kit> arrayList = new ArrayList<Kit>();
-        for (Kit object : this.plugin.getKitManager().all()) {
-            if (!this.plugin.getDuelManager().hasUsableArena(object.getName()) || this.isQueuedFor(uUID, object.getName())) continue;
-            arrayList.add(object);
+        for (KitCatalog.Entry entry : KitCatalog.available(this.plugin)) {
+            Kit kit = this.plugin.getKitManager().get(entry.kit());
+            if (kit == null || !this.plugin.getDuelManager().hasUsableArena(kit.getName()) || this.isQueuedFor(uUID, kit.getName())) continue;
+            arrayList.add(kit);
         }
         if (arrayList.isEmpty()) {
             Sounds.deny(player);
@@ -177,7 +179,7 @@ public class QueueManager {
             return;
         }
         this.remove(player.getUniqueId());
-        player.sendMessage(this.msg("queue.left", new String[0]));
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>You left <yellow>all</yellow> the queues!</gray>"));
         Sounds.queueLeave(player);
     }
 
@@ -224,16 +226,13 @@ public class QueueManager {
     }
 
     private Component queuedLine(String string, String string2) {
-        String string3 = this.plugin.messages().raw(string);
-        return MiniMessage.miniMessage().deserialize(("<gray>" + string3 + "</gray>" + this.kitMini(string2) + "<gray>.</gray>"));
+        String wording = string.equals("queue.left-text") ? "You have left the queue for " : "You have joined the queue for ";
+        return MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>" + wording + "</gray>" + this.kitMini(string2));
     }
 
     private String kitMini(String string) {
         Kit kit = this.plugin.getKitManager().get(string);
-        if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return kit.getDisplayName();
-        }
-        return "<gray>" + string + "</gray>";
+        return kit == null ? "<yellow>" + string.replace("_", " ") + "</yellow>" : kit.getQueueDisplayNameWithIcon();
     }
 
     private static String key(String string) {

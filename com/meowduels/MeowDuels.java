@@ -32,7 +32,6 @@ import com.meowduels.managers.ScoreboardService;
 import com.meowduels.managers.SetupManager;
 import com.meowduels.managers.SpectateManager;
 import com.meowduels.managers.StatsManager;
-import com.meowduels.managers.TabEditManager;
 import com.meowduels.managers.TabService;
 import com.meowduels.managers.TipService;
 import com.meowduels.managers.TrimPreferenceManager;
@@ -84,7 +83,6 @@ extends JavaPlugin {
     private CategoryManager queueCategoryManager;
     private QueueManager queueManager;
     private TabService tabService;
-    private TabEditManager tabEditManager;
     private SpectateManager spectateManager;
     private StatsManager statsManager;
     private EventManager eventManager;
@@ -97,11 +95,8 @@ extends JavaPlugin {
     private NamespacedKey keyKit;
     private NamespacedKey keyButton;
     private NamespacedKey keyArena;
-    private String scoreboardIp = "play.example.net";
+    private String scoreboardIp = "play.starpvp.fun";
     private String serverName = "server";
-    private String tabTitle;
-    private String tabDiscord;
-    private String tabStore;
     private Location duelSpawn;
     private static final String OLD_BRAND_TITLE = "<bold><red>\u0299\u029f\u1d0f\u1d0f\u1d05\u1d1b\u029c\u026a\u0280\ua731\u1d1b";
 
@@ -120,11 +115,8 @@ extends JavaPlugin {
         this.keyKit = new NamespacedKey((Plugin)this, "kit");
         this.keyButton = new NamespacedKey((Plugin)this, "button");
         this.keyArena = new NamespacedKey((Plugin)this, "arena");
-        this.scoreboardIp = this.getConfig().getString("scoreboard-ip", "play.starmc.fun");
+        this.scoreboardIp = this.getConfig().getString("scoreboard-ip", "play.starpvp.fun");
         this.serverName = this.getConfig().getString("server-name", "server");
-        this.tabTitle = this.getConfig().getString("tab.title", "<gold><bold>ServerName</bold></gold>");
-        this.tabDiscord = this.getConfig().getString("tab.discord", "<aqua>discord.example.net</aqua>");
-        this.tabStore = this.getConfig().getString("tab.store", "<yellow>store.example.net</yellow>");
         this.loadDuelSpawn();
         this.messageManager = new MessageManager(this);
         this.arenaManager = new ArenaManager(this);
@@ -140,7 +132,6 @@ extends JavaPlugin {
         this.queueManager = new QueueManager(this);
         this.partyManager = new PartyManager(this);
         this.tabService = new TabService(this);
-        this.tabEditManager = new TabEditManager(this);
         this.spectateManager = new SpectateManager(this);
         this.statsManager = new StatsManager(this);
         this.eventManager = new EventManager(this);
@@ -150,6 +141,7 @@ extends JavaPlugin {
         Sounds.mutedWhen(player -> !this.playerSettingsManager.isSounds(player.getUniqueId()));
         Sounds.load(this.getConfig().getConfigurationSection("sounds"));
         Style.load(this.getConfig().getConfigurationSection("theme"));
+        com.meowduels.util.KitIcons.load(this.getConfig().getConfigurationSection("kit-names"));
         this.tipService = new TipService(this);
         this.tabHook = new TabHook();
         if (this.tabHook.isAvailable()) {
@@ -162,7 +154,6 @@ extends JavaPlugin {
         this.hookPlaceholderAPI();
         this.getServer().getScheduler().runTaskTimer((Plugin)this, () -> {
             this.scoreboardService.tick();
-            this.tabService.tick();
             this.spectateManager.tick();
             this.duelManager.tickWorldLocks();
             this.duelManager.tickArenaSafety();
@@ -180,8 +171,8 @@ extends JavaPlugin {
             this.tipService.tick();
             QueuePickMenu.refreshAll();
         }, 20L, 20L);
-        this.getServer().getScheduler().runTaskTimer((Plugin)this, () -> this.tabService.reassertBubbles(), 5L, 5L);
-        this.getServer().getScheduler().runTaskTimer((Plugin)this, () -> this.scoreboardService.updateHealthBelowName(), 2L, 2L);
+        this.getServer().getScheduler().runTaskTimer((Plugin)this, () -> this.tabService.reassertBubbles(), TabService.REASSERT_PERIOD, TabService.REASSERT_PERIOD);
+        this.getServer().getScheduler().runTaskTimer((Plugin)this, () -> this.scoreboardService.updateHealthBelowName(), 4L, 4L);
         this.getLogger().info("StarDuels enabled.");
     }
 
@@ -233,6 +224,7 @@ extends JavaPlugin {
         }
         if (this.arenaManager != null) {
             this.arenaManager.save();
+            this.arenaManager.shutdown();
         }
         if (this.kitManager != null) {
             this.kitManager.save();
@@ -250,7 +242,7 @@ extends JavaPlugin {
         } else {
             this.getLogger().warning("Command 'leaderboard' is missing from plugin.yml.");
         }
-        for (String string : new String[]{"starduels", "createarena", "arena", "deletearena", "kitcreate", "deletekit", "kiticon", "kitdisplayname", "editgui", "category", "categoryqueue", "scoreboardip", "duel", "leave", "queue", "meowduelstab", "editkit", "spectate", "meowduelssetspawn", "kiteditor", "party", "givegoldenhead", "resetconfig", "meowduelsserver", "meowduelstrims", "ff", "event", "eventspec", "eventleave", "meowduelsspawnitems"}) {
+        for (String string : new String[]{"starduels", "createarena", "arena", "deletearena", "kitcreate", "deletekit", "kiticon", "kitdisplayname", "editgui", "category", "categoryqueue", "scoreboardip", "duel", "leave", "queue", "editkit", "spectate", "meowduelssetspawn", "kiteditor", "party", "givegoldenhead", "resetconfig", "meowduelsserver", "meowduelstrims", "ff", "event", "eventspec", "eventleave", "meowduelsspawnitems"}) {
             PluginCommand pluginCommand2 = this.getCommand(string);
             if (pluginCommand2 != null) {
                 pluginCommand2.setExecutor((CommandExecutor)meowDuelsCommand);
@@ -369,11 +361,10 @@ extends JavaPlugin {
         List<String> list;
         List<String> list2;
         String string;
-        List<String> list3;
-        List<String> list4;
         boolean bl = false;
-        if ("example.net".equals(this.getConfig().getString("scoreboard-ip"))) {
-            this.getConfig().set("scoreboard-ip", (Object)"play.starmc.fun");
+        if ("example.net".equals(this.getConfig().getString("scoreboard-ip"))
+                || "play.starmc.fun".equals(this.getConfig().getString("scoreboard-ip"))) {
+            this.getConfig().set("scoreboard-ip", (Object)"play.starpvp.fun");
             bl = true;
         }
         if ("<#FF78C1>".equals(this.getConfig().getString("scoreboard-ip-color"))) {
@@ -400,35 +391,6 @@ extends JavaPlugin {
             this.getConfig().set("scoreboard.global.title", (Object)"<bold><gradient:#FFF1B3:#E6A700>PRACTICE</gradient></bold>");
             bl = true;
         }
-        if ((list4 = Arrays.asList("", "<bold><gradient:#FFF1B3:#E6A700>STARDUELS</gradient></bold>", "<yellow>\u2726 <white>TOTAL PLAYERS: <yellow>{online}</yellow></white>", "<yellow>\u2694 <white>PRACTICE: <yellow>{online}</yellow> <dark_gray>|</dark_gray> <yellow>\u2694 <white>FIGHTING: <yellow>{in_duels}</yellow></white>", "")).equals(this.getConfig().getStringList("tab.global.header"))) {
-            this.getConfig().set("tab.global.header", Arrays.asList("", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>STAR DUELS</gradient></bold>", "<bold><yellow>\u2726 PLAYERS: <white>{online}</white> <dark_gray>\u00b7</dark_gray> <yellow>FIGHTING: <white>{in_duels}</white></yellow></bold>", ""));
-            bl = true;
-        }
-        if ((list3 = Arrays.asList("", "<yellow>DISCORD <dark_gray>\u00bb</dark_gray> {discord}", "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>")).equals(this.getConfig().getStringList("tab.global.footer"))) {
-            this.getConfig().set("tab.global.footer", Arrays.asList("", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>play.starmc.fun</gradient></bold>"));
-            bl = true;
-        }
-        List<String> list5 = Arrays.asList("", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>STAR DUELS</gradient></bold>", "<bold><yellow>\u2726 PLAYERS: <white>{online}</white> <dark_gray>\u00b7</dark_gray> <yellow>FIGHTING: <white>{in_duels}</white></yellow></bold>", "");
-        List<String> list6 = Arrays.asList("", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>STAR DUELS</gradient></bold>", "<bold><yellow>\u2726 TOTAL PLAYERS: <white>{online}</white></yellow></bold>", "<bold><yellow>\u2694 PRACTICE: <white>{practice}</white> <dark_gray>\u2502</dark_gray> \u2694 FIGHTING: <white>{fighting}</white></yellow></bold>", "");
-        List<String> list7 = Arrays.asList("", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>play.starmc.fun</gradient></bold>");
-        List<String> list8 = Arrays.asList("", "<bold><yellow>DISCORD</yellow> <dark_gray>\u00bb</dark_gray> <white>{discord}</white></bold>", "<bold><yellow>WEBSITE</yellow> <dark_gray>\u00bb</dark_gray> <white>{store}</white></bold>");
-        if (list5.equals(this.getConfig().getStringList("tab.global.header"))) {
-            this.getConfig().set("tab.global.header", list6);
-            bl = true;
-        }
-        if (list7.equals(this.getConfig().getStringList("tab.global.footer"))) {
-            this.getConfig().set("tab.global.footer", list8);
-            bl = true;
-        }
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.global.header", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>STAR DUELS</gradient></bold>", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>\ua731\u1d1b\u1d00\u0280 \u1d05\u1d1c\u1d07\u029f\ua731</gradient></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.global.header", "<bold><yellow>\u2726 TOTAL PLAYERS: <white>{online}</white></yellow></bold>", "<bold><yellow>\u2726 \u1d1b\u1d0f\u1d1b\u1d00\u029f \u1d18\u029f\u1d00\u028f\u1d07\u0280\ua731: <white>{online}</white></yellow></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.global.header", "<bold><yellow>\u2694 PRACTICE: <white>{practice}</white> <dark_gray>\u2502</dark_gray> \u2694 FIGHTING: <white>{fighting}</white></yellow></bold>", "<bold><yellow>\u2694 \u1d18\u0280\u1d00\u1d04\u1d1b\u026a\u1d04\u1d07: <white>{practice}</white> <dark_gray>\u2502</dark_gray> \u2694 \ua730\u026a\u0262\u029c\u1d1b\u026a\u0274\u0262: <white>{fighting}</white></yellow></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.global.footer", "<bold><yellow>DISCORD</yellow> <dark_gray>\u00bb</dark_gray> <white>{discord}</white></bold>", "<bold><yellow>\u1d05\u026a\ua731\u1d04\u1d0f\u0280\u1d05</yellow> <dark_gray>\u00bb</dark_gray> <white>{discord}</white></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.global.footer", "<bold><yellow>WEBSITE</yellow> <dark_gray>\u00bb</dark_gray> <white>{store}</white></bold>", "<bold><yellow>\u1d21\u1d07\u0299\ua731\u026a\u1d1b\u1d07</yellow> <dark_gray>\u00bb</dark_gray> <white>{store}</white></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.duel.header", "<bold><gradient:#FF2D95:#FF8AD0>\u1d05\u1d1c\u1d07\u029f</gradient></bold>", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>\u1d05\u1d1c\u1d07\u029f</gradient></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.party.header", "<bold><gradient:#FF8AD0:#B04BD6>\u1d18\u1d00\u0280\u1d1b\u028f</gradient></bold>", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>\u1d18\u1d00\u0280\u1d1b\u028f</gradient></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.duel.footer", "<#FF5FB0>{server_ip}", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>{server_ip}</gradient></bold>");
-        bl |= MeowDuels.replaceLine(this.getConfig(), "tab.party.footer", "<#FF5FB0>{server_ip}", "<bold><gradient:#FFF1B3:#FFFFFF:#E6A700>{server_ip}</gradient></bold>");
         List<String> list9 = Arrays.asList("<gray><strikethrough>                    </strikethrough>", "<#FF2E55>\u2694 \u1d0b\u026a\u029f\u029f\ua731 <dark_gray>: <red>{kills}", "<#FF2E55>\u2620 \u1d05\u1d07\u1d00\u1d1b\u029c\ua731 <dark_gray>: <red>{deaths}", "<#FF2E55>\u231a \u1d18\u029f\u1d00\u028f\u1d1b\u026a\u1d0d\u1d07 <dark_gray>: <red>{playtime}", "<gray><strikethrough>                    </strikethrough>", "{ip_color}{server_ip}");
         if (list9.equals(this.getConfig().getStringList("scoreboard.global.lines"))) {
             this.getConfig().set("scoreboard.global.lines", Arrays.asList("", "<yellow>\u2694 <white>\u1d0b\u026a\u029f\u029f\ua731 <dark_gray>\u00bb <white>{kills}", "<yellow>\u2620 <white>\u1d05\u1d07\u1d00\u1d1b\u029c\ua731 <dark_gray>\u00bb <white>{deaths}", "<yellow>\u2726 <white>\ua731\u1d1b\u0280\u1d07\u1d00\u1d0b <dark_gray>\u00bb <white>{streak}", "", "<yellow>\u25c6 <white>\u1d0b\u1d05\u0280 <dark_gray>\u00bb <white>{kdr}", "<yellow>\u2605 <white>\u1d21\u026a\u0274\ua731 <dark_gray>\u00bb <white>{wins}", "<yellow>\u2301 <white>\u1d18\u026a\u0274\u0262 <dark_gray>\u00bb <white>{ping}ms", "", "<gradient:#FFF1B3:#E6A700>{server_ip}</gradient>"));
@@ -532,10 +494,6 @@ extends JavaPlugin {
         return this.tabService;
     }
 
-    public TabEditManager getTabEditManager() {
-        return this.tabEditManager;
-    }
-
     public StatsManager getStatsManager() {
         return this.statsManager;
     }
@@ -547,13 +505,29 @@ extends JavaPlugin {
     public void reloadAll() {
         this.reloadConfig();
         this.mergeConfigDefaults();
+        // mergeConfigDefaults can add keys to disk, so refresh Bukkit's in-memory view.
         this.reloadConfig();
         this.migrateYellowTheme();
-        this.scoreboardIp = this.getConfig().getString("scoreboard-ip", "play.starmc.fun");
+        // Reload the editable YAML-backed plugin settings as well as config.yml.
+        // Player and match data files are deliberately left to their managers;
+        // reloading those during a live match could replace in-memory state.
+        if (this.kitManager != null) {
+            this.kitManager.load();
+        }
+        if (this.categoryManager != null) {
+            this.categoryManager.reload();
+        }
+        if (this.queueCategoryManager != null) {
+            this.queueCategoryManager.reload();
+        }
+        if (this.guiLayoutManager != null) {
+            this.guiLayoutManager.load();
+        }
+        if (this.kitLayoutManager != null) {
+            this.kitLayoutManager.reload();
+        }
+        this.scoreboardIp = this.getConfig().getString("scoreboard-ip", "play.starpvp.fun");
         this.serverName = this.getConfig().getString("server-name", "server");
-        this.tabTitle = this.getConfig().getString("tab.title", "<gold><bold>ServerName</bold></gold>");
-        this.tabDiscord = this.getConfig().getString("tab.discord", "<aqua>discord.example.net</aqua>");
-        this.tabStore = this.getConfig().getString("tab.store", "<yellow>store.example.net</yellow>");
         this.loadDuelSpawn();
         if (this.messageManager != null) {
             this.messageManager.reload();
@@ -569,40 +543,11 @@ extends JavaPlugin {
         }
         Sounds.load(this.getConfig().getConfigurationSection("sounds"));
         Style.load(this.getConfig().getConfigurationSection("theme"));
+        com.meowduels.util.KitIcons.load(this.getConfig().getConfigurationSection("kit-names"));
     }
 
     public SpectateManager getSpectateManager() {
         return this.spectateManager;
-    }
-
-    public String getTabTitle() {
-        return this.tabTitle;
-    }
-
-    public String getTabDiscord() {
-        return this.tabDiscord;
-    }
-
-    public String getTabStore() {
-        return this.tabStore;
-    }
-
-    public void setTabTitle(String string) {
-        this.tabTitle = string;
-        this.getConfig().set("tab.title", (Object)string);
-        this.saveConfig();
-    }
-
-    public void setTabDiscord(String string) {
-        this.tabDiscord = string;
-        this.getConfig().set("tab.discord", (Object)string);
-        this.saveConfig();
-    }
-
-    public void setTabStore(String string) {
-        this.tabStore = string;
-        this.getConfig().set("tab.store", (Object)string);
-        this.saveConfig();
     }
 
     public PartyManager getPartyManager() {

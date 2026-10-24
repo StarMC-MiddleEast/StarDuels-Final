@@ -36,27 +36,87 @@ public final class SpawnItems {
         if (player == null) {
             return;
         }
-        player.getInventory().clear();
-        player.getInventory().setItem(3, SpawnItems.windCharge(meowDuels));
-        player.getInventory().setHeldItemSlot(3);
+        if ((meowDuels.getDuelManager() != null && meowDuels.getDuelManager().isInDuel(player.getUniqueId()))
+                || (meowDuels.getEventManager() != null && meowDuels.getEventManager().isInvolved(player.getUniqueId()))
+                || (meowDuels.getPartyManager() != null && meowDuels.getPartyManager().inPartyMatch(player.getUniqueId()))
+                || (meowDuels.getSpectateManager() != null && meowDuels.getSpectateManager().isSpectating(player.getUniqueId()))) {
+            return;
+        }
+        boolean handWasEmpty = isEmpty(player.getInventory().getItemInMainHand())
+                || SpawnItems.isManagedItem(meowDuels, player.getInventory().getItemInMainHand());
+        SpawnItems.clearManagedHotbar(meowDuels, player);
+        setIfEmpty(player, 3, SpawnItems.windCharge(meowDuels));
         ItemStack[] itemStackArray = player.getInventory().getArmorContents();
         if (itemStackArray != null && itemStackArray.length > 2) {
-            itemStackArray[2] = Items.of(Material.ELYTRA).miniName("<gradient:#FFE27A:#F2A900>\u029f\u1d0f\u0299\u0299\u028f \u1d07\u029f\u028f\u1d1b\u0280\u1d00</gradient>").hideTooltip().tag(meowDuels.keyButton(), LOBBY_ELYTRA).build();
-            player.getInventory().setArmorContents(itemStackArray);
+            ItemStack chestItem = itemStackArray[2];
+            if (SpawnItems.canUseLobbyElytra(player)) {
+                if (isEmpty(chestItem)) {
+                    itemStackArray[2] = Items.of(Material.ELYTRA).miniName("<gradient:#FFE27A:#F2A900>\u029f\u1d0f\u0299\u0299\u028f \u1d07\u029f\u028f\u1d1b\u0280\u1d00</gradient>").hideTooltip().tag(meowDuels.keyButton(), LOBBY_ELYTRA).build();
+                    player.getInventory().setArmorContents(itemStackArray);
+                }
+            } else if (LOBBY_ELYTRA.equals(Items.readTag(chestItem, meowDuels.keyButton()))) {
+                itemStackArray[2] = null;
+                player.getInventory().setArmorContents(itemStackArray);
+            }
         }
         if (meowDuels.getPartyManager() != null && meowDuels.getPartyManager().inParty(player.getUniqueId())) {
             SpawnItems.giveParty(meowDuels, player);
+            selectFirstItemWhenHandEmpty(player, handWasEmpty);
+            player.updateInventory();
             return;
         }
-        player.getInventory().setItem(0, Items.of(Material.DIAMOND_SWORD).miniName("<gradient:#FF6B6B:#A01028>\u2694 \u0280\u1d00\u0274\u1d0b\u1d07\u1d05 \u01eb\u1d1c\u1d07\u1d1c\u1d07</gradient>").hideTooltip().tag(meowDuels.keyButton(), QUEUE).build());
-        player.getInventory().setItem(1, Items.of(Material.GOAT_HORN).miniName("<gold>\u1d18\u1d00\u0280\u1d1b\u028f</gold>").hideTooltip().tag(meowDuels.keyButton(), CREATEPARTY).build());
-        player.getInventory().setItem(4, Items.of(Material.CHEST).miniName("<red>\u2739</red> <red>\u01eb\u1d1c\u026a\u1d04\u1d0b \u01eb\u1d1c\u1d07\u1d1c\u1d07</red> <white>(\u0280\u026a\u0262\u029c\u1d1b \u1d04\u029f\u026a\u1d04\u1d0b)</white>").rawLore("", "<white>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d0a\u1d0f\u026a\u0274 \u1d00 \u01eb\u1d1c\u1d07\u1d1c\u1d07</white>").tag(meowDuels.keyButton(), QUICK).build());
-        player.getInventory().setItem(7, Items.of(Material.BOOK).miniName("<gradient:#8AD9FF:#3F6BE0>\ud83d\udcd6 \u1d0b\u026a\u1d1b \u1d07\u1d05\u026a\u1d1b\u1d0f\u0280</gradient>").hideTooltip().tag(meowDuels.keyButton(), KITEDITOR).build());
-        player.getInventory().setItem(8, Items.of(Material.GRINDSTONE).miniName("<gradient:#C8C8C8:#707070>\u2699 \u0455\u1d07\u1d1b\u1d1b\u026a\u0274\u0262\u0455</gradient>").hideTooltip().tag(meowDuels.keyButton(), SETTINGS).build());
+        setIfEmpty(player, 0, Items.of(Material.DIAMOND_SWORD).miniName("<gradient:#FF6B6B:#A01028>\u2694 \u0280\u1d00\u0274\u1d0b\u1d07\u1d05 \u01eb\u1d1c\u1d07\u1d1c\u1d07</gradient>").hideTooltip().tag(meowDuels.keyButton(), QUEUE).build());
+        setIfEmpty(player, 1, Items.of(Material.GOAT_HORN).miniName("<gold>\u1d18\u1d00\u0280\u1d1b\u028f</gold>").hideTooltip().tag(meowDuels.keyButton(), CREATEPARTY).build());
+        setIfEmpty(player, 4, Items.of(Material.CHEST).miniName("<red>\u2739</red> <red>\u01eb\u1d1c\u026a\u1d04\u1d0b \u01eb\u1d1c\u1d07\u1d1c\u1d07</red> <white>(\u0280\u026a\u0262\u029c\u1d1b \u1d04\u029f\u026a\u1d04\u1d0b)</white>").rawLore("", "<white>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d0a\u1d0f\u026a\u0274 \u1d00 \u01eb\u1d1c\u1d07\u1d1c\u1d07</white>").tag(meowDuels.keyButton(), QUICK).build());
+        setIfEmpty(player, 7, Items.of(Material.BOOK).miniName("<gradient:#8AD9FF:#3F6BE0>\ud83d\udcd6 \u1d0b\u026a\u1d1b \u1d07\u1d05\u026a\u1d1b\u1d0f\u0280</gradient>").hideTooltip().tag(meowDuels.keyButton(), KITEDITOR).build());
+        setIfEmpty(player, 8, Items.of(Material.GRINDSTONE).miniName("<gradient:#C8C8C8:#707070>\u2699 \u0455\u1d07\u1d1b\u1d1b\u026a\u0274\u0262\u0455</gradient>").hideTooltip().tag(meowDuels.keyButton(), SETTINGS).build());
         if (meowDuels.getQueueManager().isQueued(player.getUniqueId())) {
-            player.getInventory().setItem(5, SpawnItems.leaveQueueItem(meowDuels));
+            setIfEmpty(player, 5, SpawnItems.leaveQueueItem(meowDuels));
         }
+        selectFirstItemWhenHandEmpty(player, handWasEmpty);
         player.updateInventory();
+    }
+
+    private static void setIfEmpty(Player player, int slot, ItemStack item) {
+        if (isEmpty(player.getInventory().getItem(slot))) {
+            player.getInventory().setItem(slot, item);
+        }
+    }
+
+    private static boolean isEmpty(ItemStack item) {
+        return item == null || item.getType() == Material.AIR;
+    }
+
+    public static boolean isManagedItem(MeowDuels plugin, ItemStack item) {
+        String tag = Items.readTag(item, plugin.keyButton());
+        return QUEUE.equals(tag) || QUICK.equals(tag) || LEAVEQUEUE.equals(tag)
+                || KITEDITOR.equals(tag) || SETTINGS.equals(tag) || REMATCH.equals(tag)
+                || CREATEPARTY.equals(tag) || PARTYMATCH.equals(tag) || PARTYSPECTATE.equals(tag)
+                || PARTYLEAVE.equals(tag) || PARTYSETTINGS.equals(tag) || PARTYINFO.equals(tag)
+                || LOBBY_WIND_CHARGE.equals(tag) || LOBBY_ELYTRA.equals(tag);
+    }
+
+    public static boolean canUseLobbyElytra(Player player) {
+        return player != null && player.hasPermission("starduels.elytra.true")
+                && !player.hasPermission("starduels.elytra.false");
+    }
+
+    private static void clearManagedHotbar(MeowDuels plugin, Player player) {
+        for (int slot = 0; slot < 9; slot++) {
+            ItemStack item = player.getInventory().getItem(slot);
+            if (SpawnItems.isManagedItem(plugin, item)) {
+                player.getInventory().setItem(slot, null);
+            }
+        }
+    }
+
+    private static void selectFirstItemWhenHandEmpty(Player player, boolean handWasEmpty) {
+        if (!handWasEmpty) return;
+        for (int slot = 0; slot < 9; slot++) {
+            if (isEmpty(player.getInventory().getItem(slot))) continue;
+            player.getInventory().setHeldItemSlot(slot);
+            return;
+        }
     }
 
     private static void giveParty(MeowDuels meowDuels, Player player) {
@@ -66,13 +126,13 @@ public final class SpawnItems {
         }
         boolean bl = party.isLeader(player.getUniqueId());
         if (bl) {
-            player.getInventory().setItem(0, Items.of(Material.DIAMOND_SWORD).miniName("<gradient:#FF8AD0:#B04BD6>\u2694 \u1d18\u1d00\u0280\u1d1b\u028f \u1d0d\u1d00\u1d1b\u1d04\u029c</gradient>").rawLore("", "<#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \ua731\u1d07\u1d1b \u1d1c\u1d18 \u1d1b\u029c\u1d07 \u1d0d\u1d00\u1d1b\u1d04\u029c", "<dark_gray>\u25b8 <#8E959D>\ua730\ua730\u1d00, \ua731\u1d18\u029f\u026a\u1d1b \u1d0f\u0280 \u1d05\u1d1c\u1d07\u029f\ua731").hideTooltip().tag(meowDuels.keyButton(), PARTYMATCH).build());
-            player.getInventory().setItem(8, Items.of(Material.GRINDSTONE).miniName("<gradient:#C8C8C8:#707070>\u2699 \u1d18\u1d00\u0280\u1d1b\u028f \ua731\u1d07\u1d1b\u1d1b\u026a\u0274\u0262\ua731</gradient>").hideTooltip().tag(meowDuels.keyButton(), PARTYSETTINGS).build());
+            setIfEmpty(player, 0, Items.of(Material.DIAMOND_SWORD).miniName("<gradient:#FF8AD0:#B04BD6>\u2694 \u1d18\u1d00\u0280\u1d1b\u028f \u1d0d\u1d00\u1d1b\u1d04\u029c</gradient>").rawLore("", "<#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \ua731\u1d07\u1d1b \u1d1c\u1d18 \u1d1b\u029c\u1d07 \u1d0d\u1d00\u1d1b\u1d04\u029c", "<dark_gray>\u25b8 <#8E959D>\ua730\ua730\u1d00, \ua731\u1d18\u029f\u026a\u1d1b \u1d0f\u0280 \u1d05\u1d1c\u1d07\u029f\ua731").hideTooltip().tag(meowDuels.keyButton(), PARTYMATCH).build());
+            setIfEmpty(player, 8, Items.of(Material.GRINDSTONE).miniName("<gradient:#C8C8C8:#707070>\u2699 \u1d18\u1d00\u0280\u1d1b\u028f \ua731\u1d07\u1d1b\u1d1b\u026a\u0274\u0262\ua731</gradient>").hideTooltip().tag(meowDuels.keyButton(), PARTYSETTINGS).build());
         } else {
-            player.getInventory().setItem(0, Items.of(Material.PAPER).miniName("<gradient:#FF8AD0:#B04BD6>\u25c8 \u1d18\u1d00\u0280\u1d1b\u028f \u026a\u0274\ua730\u1d0f</gradient>").rawLore("", "<#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \ua731\u1d07\u1d07 \u1d21\u029c\u1d0f'\ua731 \u026a\u0274", "", "<#6B7079>\u0280\u1d1c\u0274 \u0299\u028f <#E6E8EB>" + SpawnItems.nameOf(party.getLeader())).hideTooltip().tag(meowDuels.keyButton(), PARTYINFO).build());
+            setIfEmpty(player, 0, Items.of(Material.PAPER).miniName("<gradient:#FF8AD0:#B04BD6>\u25c8 \u1d18\u1d00\u0280\u1d1b\u028f \u026a\u0274\ua730\u1d0f</gradient>").rawLore("", "<#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \ua731\u1d07\u1d07 \u1d21\u029c\u1d0f'\ua731 \u026a\u0274", "", "<#6B7079>\u0280\u1d1c\u0274 \u0299\u028f <#E6E8EB>" + SpawnItems.nameOf(party.getLeader())).hideTooltip().tag(meowDuels.keyButton(), PARTYINFO).build());
         }
-        player.getInventory().setItem(1, Items.of(Material.ENDER_PEARL).miniName("<gradient:#8AD9FF:#3F6BE0>\u25c9 \u1d18\u1d00\u0280\u1d1b\u028f \ua731\u1d18\u1d07\u1d04\u1d1b\u1d00\u1d1b\u1d07</gradient>").rawLore("", "<#8E959D>\u1d21\u1d00\u1d1b\u1d04\u029c \u028f\u1d0f\u1d1c\u0280 \u1d18\u1d00\u0280\u1d1b\u028f'\ua731 \u1d0d\u1d00\u1d1b\u1d04\u029c", "<dark_gray>\u25b8 <#8E959D>/leave \u1d1b\u1d0f \ua731\u1d1b\u1d0f\u1d18").hideTooltip().tag(meowDuels.keyButton(), PARTYSPECTATE).build());
-        player.getInventory().setItem(7, Items.of(Material.RED_DYE).miniName(bl ? "<gradient:#FF6B6B:#A01028>\u2716 \u1d05\u026a\ua731\u0299\u1d00\u0274\u1d05 \u1d18\u1d00\u0280\u1d1b\u028f</gradient>" : "<gradient:#FF6B6B:#A01028>\u2716 \u029f\u1d07\u1d00\u1d20\u1d07 \u1d18\u1d00\u0280\u1d1b\u028f</gradient>").rawLore("", bl ? "<#8E959D>\u1d1b\u029c\u026a\ua731 \u1d07\u0274\u1d05\ua731 \u1d1b\u029c\u1d07 \u1d18\u1d00\u0280\u1d1b\u028f \ua730\u1d0f\u0280 \u1d07\u1d20\u1d07\u0280\u028f\u1d0f\u0274\u1d07" : "<#8E959D>\u028f\u1d0f\u1d1c \u1d0b\u1d07\u1d07\u1d18 \u1d18\u029f\u1d00\u028f\u026a\u0274\u0262 \u1d00\u029f\u1d0f\u0274\u1d07", "", "<dark_gray>\u25b8 <#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d04\u1d0f\u0274\ua730\u026a\u0280\u1d0d").hideTooltip().tag(meowDuels.keyButton(), PARTYLEAVE).build());
+        setIfEmpty(player, 1, Items.of(Material.ENDER_PEARL).miniName("<gradient:#8AD9FF:#3F6BE0>\u25c9 \u1d18\u1d00\u0280\u1d1b\u028f \ua731\u1d18\u1d07\u1d04\u1d1b\u1d00\u1d1b\u1d07</gradient>").rawLore("", "<#8E959D>\u1d21\u1d00\u1d1b\u1d04\u029c \u028f\u1d0f\u1d1c\u0280 \u1d18\u1d00\u0280\u1d1b\u028f'\ua731 \u1d0d\u1d00\u1d1b\u1d04\u029c", "<dark_gray>\u25b8 <#8E959D>/leave \u1d1b\u1d0f \ua731\u1d1b\u1d0f\u1d18").hideTooltip().tag(meowDuels.keyButton(), PARTYSPECTATE).build());
+        setIfEmpty(player, 7, Items.of(Material.RED_DYE).miniName(bl ? "<gradient:#FF6B6B:#A01028>\u2716 \u1d05\u026a\ua731\u0299\u1d00\u0274\u1d05 \u1d18\u1d00\u0280\u1d1b\u028f</gradient>" : "<gradient:#FF6B6B:#A01028>\u2716 \u029f\u1d07\u1d00\u1d20\u1d07 \u1d18\u1d00\u0280\u1d1b\u028f</gradient>").rawLore("", bl ? "<#8E959D>\u1d1b\u029c\u026a\ua731 \u1d07\u0274\u1d05\ua731 \u1d1b\u029c\u1d07 \u1d18\u1d00\u0280\u1d1b\u028f \ua730\u1d0f\u0280 \u1d07\u1d20\u1d07\u0280\u028f\u1d0f\u0274\u1d07" : "<#8E959D>\u028f\u1d0f\u1d1c \u1d0b\u1d07\u1d07\u1d18 \u1d18\u029f\u1d00\u028f\u026a\u0274\u0262 \u1d00\u029f\u1d0f\u0274\u1d07", "", "<dark_gray>\u25b8 <#8E959D>\u0280\u026a\u0262\u029c\u1d1b-\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d04\u1d0f\u0274\ua730\u026a\u0280\u1d0d").hideTooltip().tag(meowDuels.keyButton(), PARTYLEAVE).build());
         player.updateInventory();
     }
 
@@ -100,7 +160,7 @@ public final class SpawnItems {
                 // empty catch block
             }
         }
-        player.getInventory().setItem(2, itemStack);
+        setIfEmpty(player, 2, itemStack);
         player.updateInventory();
     }
 
@@ -108,7 +168,11 @@ public final class SpawnItems {
         if (player == null) {
             return;
         }
-        player.getInventory().setItem(5, bl ? SpawnItems.leaveQueueItem(meowDuels) : null);
+        if (bl) {
+            player.getInventory().setItem(5, SpawnItems.leaveQueueItem(meowDuels));
+        } else if (LEAVEQUEUE.equals(Items.readTag(player.getInventory().getItem(5), meowDuels.keyButton()))) {
+            player.getInventory().setItem(5, null);
+        }
         player.updateInventory();
     }
 

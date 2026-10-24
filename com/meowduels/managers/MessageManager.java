@@ -14,7 +14,7 @@ public class MessageManager {
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<String, String>();
     private static final String COUNTDOWN_TITLE = "<gradient:#FFD65C:#FFB02E>{seconds}</gradient>";
     private static final String COUNTDOWN_SUBTITLE = "<#6B7079>\u0262\u1d07\u1d1b \u0280\u1d07\u1d00\u1d05\u028f</#6B7079>";
-    private static final String PREFIX = "<gradient:#FFF1B3:#E6A700>\u2726</gradient> <yellow>STAR</yellow> <dark_gray>\u00bb</dark_gray> ";
+    private static final String PREFIX = "<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>";
     private static final String FIGHT_TITLE = "<bold><gradient:#FFF500:#FFD000>FIGHT</gradient></bold>";
     private static final String OLD_COUNTDOWN_TITLE = "&e{seconds}";
     private static final String OLD_COUNTDOWN_SUBTITLE = "";
@@ -41,7 +41,7 @@ public class MessageManager {
         this.config = YamlConfiguration.loadConfiguration((File)this.file);
         this.fillMissing();
         this.retireOldTitles();
-        this.prefix = this.raw("prefix");
+        this.prefix = PREFIX;
     }
 
     private void writeDefaults() {
@@ -147,6 +147,10 @@ public class MessageManager {
             string2 = string2.replace("{" + stringArray[n] + "}", stringArray[n + 1]);
             n += 2;
         }
+        if (!MessageManager.isTitleKey(string) && !MessageManager.isResultKey(string)
+            && !string2.contains("ⓘ")) {
+            string2 = "<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>" + string2;
+        }
         if (!string.startsWith("titles.")) {
             string2 = MessageManager.yellowWhite(string2);
         }
@@ -173,8 +177,14 @@ public class MessageManager {
             || key.equals("party.countdown-go") || key.equals("party.countdown-title");
     }
 
+    private static boolean isResultKey(String key) {
+        return key.startsWith("titles.victory") || key.startsWith("titles.defeat")
+            || key.startsWith("duel.victory") || key.startsWith("duel.defeat")
+            || key.startsWith("match.result") || key.startsWith("match.over");
+    }
+
     private static String yellowWhite(String string) {
-        return string.replace("&7", "&f").replace("&a", "&f").replace("&2", "&f").replace("&c", "&6").replace("&4", "&6").replace("&e", "&6").replace("&d", "&6").replace("<gray>", "<white>").replace("<#8E959D>", "<white>").replace("<yellow>", "<gold>").replace("<red>", "<gold>").replace("<dark_red>", "<gold>").replace("<green>", "<white>").replace("<#FF2E55>", "<gold>").replace("<#FF7FC4>", "<gold>").replace("<#FF5FB0>", "<gold>").replace("<#FF2020>", "<gold>").replace("<#FF3030>", "<gold>").replace("<#FF3B57>", "<gold>").replace("<#FF8A8A>", "<gold>").replace("<#FF8A93>", "<gold>").replace("<#C0392B>", "<gold>").replace("<#8B0000>", "<gold>").replace("<#7CFF6B>", "<white>").replace("<#1FA32F>", "<white>").replace("<#6B7079>", "<white>").replace("<#E6E8EB>", "<white>");
+        return string.replace("&7", "&f").replace("&a", "&f").replace("&2", "&f").replace("&c", "&e").replace("&4", "&e").replace("&e", "&e").replace("&d", "&e").replace("<gray>", "<white>").replace("<#8E959D>", "<white>").replace("<yellow>", "<yellow>").replace("<gold>", "<yellow>").replace("<red>", "<yellow>").replace("<dark_red>", "<yellow>").replace("<green>", "<white>").replace("<#FF2E55>", "<yellow>").replace("<#FF7FC4>", "<yellow>").replace("<#FF5FB0>", "<yellow>").replace("<#FF2020>", "<yellow>").replace("<#FF3030>", "<yellow>").replace("<#FF3B57>", "<yellow>").replace("<#FF8A8A>", "<yellow>").replace("<#FF8A93>", "<yellow>").replace("<#C0392B>", "<yellow>").replace("<#8B0000>", "<yellow>").replace("<#7CFF6B>", "<white>").replace("<#1FA32F>", "<white>").replace("<#6B7079>", "<white>").replace("<#E6E8EB>", "<white>");
     }
 
     static {
@@ -453,7 +463,7 @@ public class MessageManager {
         DEFAULTS.put("notice.arena.regenerated-block-s", "&7Regenerated {written} block(s).");
         DEFAULTS.put("notice.arena.no-snapshot-saved-yet", "&7No snapshot saved yet - click Snapshot Now first.");
         DEFAULTS.put("notice.kit.kit-now-inventory-everyone", "&7The {kit} kit is now your inventory - for everyone.");
-        DEFAULTS.put("notice.kit.shift-click-replace-kit", "&7Shift-click to replace the {kit} kit with your inventory - for everyone.");
+        DEFAULTS.put("notice.kit.shift-click-replace-kit", "&7Shift-click to copy inventory, armor, and offhand into the editor. Press Save there to apply the {kit} kit.");
         DEFAULTS.put("notice.kit.saved-s-items-everyone", "&7Saved {kit}'s items - for everyone.");
         DEFAULTS.put("notice.kit.saved-own-layout", "&7Saved your own {kit} layout.");
         DEFAULTS.put("notice.kit.isn-t-same-set", "&7That isn't the same set of items. You can rearrange the kit, but not change what's in it.");

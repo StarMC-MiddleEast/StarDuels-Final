@@ -6,6 +6,7 @@ import com.meowduels.gui.Menu;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.model.Kit;
 import com.meowduels.util.Items;
+import com.meowduels.util.KitCatalog;
 import java.util.HashMap;
 import java.util.List;
 import org.bukkit.Material;
@@ -37,7 +38,7 @@ extends Menu {
         this.createRaw(n, this.personal ? guiConfigManager.titleOf(MENU, "personal", "&d&l\u028f\u1d0f\u1d1c\u0280 \u1d0b\u026a\u1d1b\ua731 &7- \u1d18\u026a\u1d04\u1d0b \u1d00 \u0262\u1d00\u1d0d\u1d07\u1d0d\u1d0f\u1d05\u1d07", null) : guiConfigManager.titleOf(MENU, "global", "&d&l\u1d0b\u026a\u1d1b \u1d07\u1d05\u026a\u1d1b\u1d0f\u0280 &7- \u1d18\u026a\u1d04\u1d0b \u1d00 \u0262\u1d00\u1d0d\u1d07\u1d0d\u1d0f\u1d05\u1d07", null));
         guiConfigManager.frame(MENU, this.inventory, n);
         int n2 = n * 9;
-        List<Kit> list = this.plugin.getKitManager().all();
+        List<Kit> list = KitCatalog.visibleKits(this.plugin);
         if (list.isEmpty()) {
             this.inventory.setItem(Math.min(n2 - 1, guiConfigManager.slot(MENU, "empty", 22, n)), guiConfigManager.item(MENU, "empty", Material.BARRIER, "&c\u0274\u1d0f \u1d0b\u026a\u1d1b\ua731 \u028f\u1d07\u1d1b", "&7\u1d04\u0280\u1d07\u1d00\u1d1b\u1d07 \u1d0f\u0274\u1d07 \u1d21\u026a\u1d1b\u029c &e/\u1d0b\u026a\u1d1b\u1d04\u0280\u1d07\u1d00\u1d1b\u1d07 <\u0274\u1d00\u1d0d\u1d07>&7.").build());
             return;
@@ -55,7 +56,7 @@ extends Menu {
         items.hideTooltip().tag(this.plugin.keyKit(), kit.getName());
         String string2 = string = this.personal ? guiConfigManager.name(MENU, "kit-personal", hashMap) : guiConfigManager.name(MENU, "kit-global", hashMap);
         if (string == null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            items.miniName(kit.getDisplayName());
+            items.miniName(kit.withIcon(kit.getDisplayName()));
         }
         return items.build();
     }
