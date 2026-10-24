@@ -10,7 +10,6 @@ import com.meowduels.util.Text;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Material;
@@ -83,43 +82,24 @@ public final class QueuePickMenu extends Menu {
         }
         int fights = this.plugin.getQueueManager().dueling(entry.kit());
         int queued = this.plugin.getQueueManager().queued(entry.kit());
-        String[] colors = this.kitGradient(kit);
-        String label = "<gradient:" + colors[0] + ":" + colors[1] + ":" + colors[2] + "><bold>" + Text.smallCaps(entry.label()) + "</bold></gradient>";
+        String label = kit.getDisplayName() == null || kit.getDisplayName().isBlank()
+            ? "<yellow><bold>" + Text.smallCaps(entry.label()) + "</bold></yellow>"
+            : kit.getQueueDisplayName();
         HashMap<String, String> placeholders = new HashMap<String, String>();
         placeholders.put("kit", label);
         placeholders.put("queued", String.valueOf(queued));
         placeholders.put("fights", String.valueOf(fights));
         boolean isQueued = this.viewer != null && this.plugin.getQueueManager().isQueuedFor(this.viewer.getUniqueId(), entry.kit());
         int amount = Math.max(1, Math.min(64, fights));
-        String icon = this.kitLogo(kit);
         Items item = gui.toggle(MENU, "kit", isQueued, placeholders,
             GuiConfigManager.Face.of(gui.material(MENU, "kit", kit.getIcon()), "{kit}", "<white>ᴅᴜᴇʟɪɴɢ <yellow>{fights}", "<white>ɪɴ ǫᴜᴇᴜᴇ <yellow>{queued}", "", "<yellow>➜ ᴄʟɪᴄᴋ ᴛᴏ ǫᴜᴇᴜᴇ").amount(amount),
             GuiConfigManager.Face.of(gui.material(MENU, "kit", kit.getIcon()), "{kit}", "<white>ᴅᴜᴇʟɪɴɢ <yellow>{fights}", "<white>ɪɴ ǫᴜᴇᴜᴇ <yellow>{queued}", "", "<yellow>➜ ʟᴇᴀᴠᴇ ǫᴜᴇᴜᴇ").amount(amount))
             .tag(this.plugin.keyKit(), entry.kit()).glint(Boolean.FALSE);
         item.miniName(label);
-        item.rawLore("<white>" + icon + " <gray>ᴅᴜᴇʟɪɴɢ <yellow>" + fights,
-            "<white>" + icon + " <gray>ɪɴ ǫᴜᴇᴜᴇ <yellow>" + queued,
+        item.rawLore("<gray>ᴅᴜᴇʟɪɴɢ <yellow>" + fights,
+            "<gray>ɪɴ ǫᴜᴇᴜᴇ <yellow>" + queued,
             "", isQueued ? "<yellow>➜ ʟᴇᴀᴠᴇ ǫᴜᴇᴜᴇ" : "<yellow>➜ ᴄʟɪᴄᴋ ᴛᴏ ǫᴜᴇᴜᴇ");
         return item.build();
-    }
-
-    private String kitLogo(Kit kit) {
-        Material material = kit.getIcon();
-        if (material == null) return "✦";
-        if (material.name().equals("TRIDENT")) return "⚒";
-        if (material.name().endsWith("_SWORD")) return "⚔";
-        if (material.name().endsWith("_AXE")) return "⚒";
-        if (material.name().contains("POTION")) return "◉";
-        if (material.name().contains("CRYSTAL")) return "✧";
-        return "✦";
-    }
-
-    private String[] kitGradient(Kit kit) {
-        Material material = kit.getIcon();
-        if (material != null && material.name().endsWith("_SWORD")) return new String[]{"#00DFFF", "#B7FFFF", "#00A6D6"};
-        if (material != null && material.name().endsWith("_AXE")) return new String[]{"#FF9B35", "#FFF0A8", "#FFB000"};
-        String[][] colors = new String[][]{{"#FF6B6B", "#FFD0A6", "#E63946"}, {"#8B5CF6", "#E9D5FF", "#A855F7"}, {"#20C997", "#B7FFE6", "#00A878"}, {"#3B82F6", "#C7E5FF", "#2563EB"}, {"#F472B6", "#FFE0F0", "#DB2777"}, {"#FF8C42", "#FFE0B2", "#E85D04"}, {"#A3E635", "#F0FFC2", "#65A30D"}, {"#22D3EE", "#C8FBFF", "#0891B2"}};
-        return colors[Math.floorMod(kit.getName().toLowerCase(Locale.ROOT).hashCode(), colors.length)];
     }
 
     @Override

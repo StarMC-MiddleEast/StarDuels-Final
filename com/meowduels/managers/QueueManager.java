@@ -5,7 +5,6 @@ import com.meowduels.model.Kit;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
 import com.meowduels.util.KitCatalog;
-import com.meowduels.util.MiniMessageUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -180,7 +179,7 @@ public class QueueManager {
             return;
         }
         this.remove(player.getUniqueId());
-        player.sendMessage(this.msg("queue.left", new String[0]));
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>You left <yellow>all</yellow> the queues!</gray>"));
         Sounds.queueLeave(player);
     }
 
@@ -227,18 +226,13 @@ public class QueueManager {
     }
 
     private Component queuedLine(String string, String string2) {
-        String string3 = this.plugin.messages().raw(string).replace("{prefix}", "");
-        String serverPrefix = MiniMessageUtil.toMiniMessage(this.plugin.messages().raw("prefix"));
-        return MiniMessage.miniMessage().deserialize(serverPrefix + "<gray>" + string3 + "</gray>" + this.kitMini(string2) + "<gray>.</gray>");
+        String wording = string.equals("queue.left-text") ? "You have left the queue for " : "You have joined the queue for ";
+        return MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>" + wording + "</gray>" + this.kitMini(string2));
     }
 
     private String kitMini(String string) {
         Kit kit = this.plugin.getKitManager().get(string);
-        String prefix = kit == null ? "" : MiniMessageUtil.toMiniMessage(kit.getPrefix());
-        if (kit != null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            return prefix + kit.getDisplayName();
-        }
-        return prefix + "<gray>" + string + "</gray>";
+        return kit == null ? "<yellow>" + string.replace("_", " ") + "</yellow>" : kit.getQueueDisplayName();
     }
 
     private static String key(String string) {

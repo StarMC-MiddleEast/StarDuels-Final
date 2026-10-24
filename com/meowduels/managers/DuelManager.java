@@ -518,7 +518,7 @@ public class DuelManager {
     }
 
     private Component readyBar(ActiveDuel activeDuel) {
-        return DuelManager.mm("<red>\u25a3</red> <white>Sneak to skip countdown <bold><#FFFF00>(" + activeDuel.getReadyCount() + "/2)</#FFFF00></bold>");
+        return DuelManager.mm("<yellow>◎ Sneak to skip countdown " + activeDuel.getReadyCount() + "</yellow><gray>/</gray><white>2</white>");
     }
 
     private static Component mm(String string) {

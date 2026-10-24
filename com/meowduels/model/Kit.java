@@ -10,6 +10,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 public class Kit {
     private final String name;
@@ -60,9 +63,27 @@ public class Kit {
         this.displayName = string;
     }
 
-    public String getPrefix() { return this.prefix; }
+    public String getPrefix() { return this.prefix == null ? "" : this.prefix; }
 
-    public void setPrefix(String prefix) { this.prefix = prefix == null ? "" : prefix; }
+    public Component getPrefixComponent() {
+        return MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(this.getPrefix()));
+    }
+
+    /** Prefix plus configured queue name, suppressing a prefix already present in the name. */
+    public String getQueueDisplayName() {
+        String name = this.displayName;
+        if (name == null || name.isBlank()) name = "<yellow>" + this.name.replace('_', ' ') + "</yellow>";
+        String prefix = this.getPrefix();
+        if (prefix.isBlank()) return com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+        String prefixText = PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(prefix))).trim();
+        String nameText = PlainTextComponentSerializer.plainText().serialize(MiniMessage.miniMessage().deserialize(com.meowduels.util.MiniMessageUtil.toMiniMessage(name)));
+        if (!prefixText.isEmpty() && nameText.toLowerCase(java.util.Locale.ROOT).contains(prefixText.toLowerCase(java.util.Locale.ROOT))) {
+            return com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+        }
+        return com.meowduels.util.MiniMessageUtil.toMiniMessage(prefix) + com.meowduels.util.MiniMessageUtil.toMiniMessage(name);
+    }
+
+    public void setPrefix(String prefix) { this.prefix = prefix == null || prefix.equalsIgnoreCase("clear") ? "" : prefix; }
 
     public boolean isGuiVisible() { return this.guiVisible; }
 
@@ -198,6 +219,7 @@ public class Kit {
         kit.icon = material == null ? Material.IRON_SWORD : material;
         kit.displayName = configurationSection.getString("display-name");
         kit.prefix = configurationSection.getString("prefix", "");
+        if (kit.prefix == null) kit.prefix = "";
         kit.guiVisible = configurationSection.getBoolean("gui-visible", false);
         for (String string3 : configurationSection.getStringList("start-effects")) {
             try {
