@@ -833,7 +833,11 @@ public class DuelManager {
             if (bl) {
                 Location location = this.plugin.getDuelSpawn();
                 if (location == null || location.getWorld() == null) {
-                    location = playerSnapshot.getLocation();
+                    // A duel snapshot is the arena location. Falling back to
+                    // it leaves players inside the match when no custom duel
+                    // spawn was configured, so use the server world spawn.
+                    World world = player.getWorld();
+                    location = world == null ? null : world.getSpawnLocation();
                 }
                 if (location != null && location.getWorld() != null) {
                     player.teleport(location);

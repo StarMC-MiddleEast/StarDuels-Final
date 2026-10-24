@@ -71,7 +71,8 @@ public class KitManager {
             spearMace.setOffhand(legacy.getOffhand());
             spearMace.setDisplayName("<gradient:#FFF36A:#F39A22><bold>SPEAR MACE</bold></gradient>");
             spearMace.setGuiVisible(true);
-            Material spear = Material.matchMaterial("IRON_SPEAR");
+            Material spear = Material.matchMaterial("NETHERITE_SPEAR");
+            if (spear == null) spear = Material.matchMaterial("IRON_SPEAR");
             if (spear == null) spear = Material.matchMaterial("SPEAR");
             spearMace.setIcon(spear == null ? Material.TRIDENT : spear);
             spearMace.getStartEffects().addAll(legacy.getStartEffects());
