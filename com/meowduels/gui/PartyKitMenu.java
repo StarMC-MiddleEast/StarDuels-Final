@@ -1,80 +1,44 @@
 package com.meowduels.gui;
 
 import com.meowduels.MeowDuels;
-import com.meowduels.gui.Menu;
-import com.meowduels.gui.PartyDuelsConfirmMenu;
-import com.meowduels.gui.PartyModeMenu;
-import com.meowduels.gui.PartyOpponentMenu;
-import com.meowduels.gui.PartyStartConfirmMenu;
-import com.meowduels.gui.PartyTeamMenu;
-import com.meowduels.managers.CategoryManager;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.model.Kit;
 import com.meowduels.model.Party;
 import com.meowduels.model.PartyMode;
 import com.meowduels.util.Items;
 import com.meowduels.util.KitCatalog;
-import com.meowduels.util.Text;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.HashSet;
-import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class PartyKitMenu
-extends Menu {
+public class PartyKitMenu extends Menu {
     private static final String MENU = "partykit";
-    private static final int ROWS = 4;
-    private static final int SIZE = 36;
     private static final int[] KIT_SLOTS = new int[]{10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
-    private static final int SLOT_ARROW = 35;
-    private static final int SLOT_BACK = 27;
     private final MeowDuels plugin;
     private final PartyMode mode;
-    private int step = 0;
+    private int page;
 
-    public PartyKitMenu(MeowDuels meowDuels, PartyMode partyMode) {
-        this.plugin = meowDuels;
-        this.mode = partyMode;
+    public PartyKitMenu(MeowDuels plugin, PartyMode mode) {
+        this.plugin = plugin;
+        this.mode = mode;
     }
 
     private List<Page> pages() {
-        ArrayList<Page> arrayList = new ArrayList<Page>();
-        List<KitCatalog.Entry> available = KitCatalog.available(this.plugin);
-        // Party matches use the same complete kit catalog as normal queues.
-        // Categories are only organization metadata and must not hide kits or
-        // add a category prefix to the party picker.
         ArrayList<String> kits = new ArrayList<String>();
-        for (KitCatalog.Entry entry : available) kits.add(entry.label());
-        this.slice(arrayList, "", kits);
-        return arrayList;
-    }
-
-    private static KitCatalog.Entry findEntry(List<KitCatalog.Entry> entries, String kitName) {
-        for (KitCatalog.Entry entry : entries) {
-            if (entry.kit().equalsIgnoreCase(kitName)) return entry;
+        for (KitCatalog.Entry entry : KitCatalog.available(this.plugin)) {
+            kits.add(entry.kit());
         }
-        return null;
-    }
-
-    private void slice(List<Page> list, String string, List<String> list2) {
-        ArrayList<String> arrayList = new ArrayList<String>(new LinkedHashSet<String>(list2));
-        if (arrayList.isEmpty()) {
-            return;
+        ArrayList<String> unique = new ArrayList<String>(new LinkedHashSet<String>(kits));
+        ArrayList<Page> pages = new ArrayList<Page>();
+        for (int start = 0; start < unique.size(); start += KIT_SLOTS.length) {
+            pages.add(new Page(unique.subList(start, Math.min(unique.size(), start + KIT_SLOTS.length))));
         }
-        for (int i = 0; i < arrayList.size(); i += KIT_SLOTS.length) {
-            list.add(new Page(string, arrayList.subList(i, Math.min(arrayList.size(), i + KIT_SLOTS.length))));
-        }
-    }
-
-    private static String smallCaps(String string) {
-        return Text.smallCaps(string == null ? "" : string.replace('_', ' '));
+        return pages;
     }
 
     @Override
@@ -88,102 +52,99 @@ extends Menu {
             player.sendMessage(this.plugin.messages().get("notice.party.only-party-leader-pick", new String[0]));
             return;
         }
-        List<Page> list = this.pages();
-        if (list.isEmpty()) {
+        List<Page> pages = this.pages();
+        if (pages.isEmpty()) {
             player.sendMessage(this.plugin.messages().get("notice.party.no-kits-category-yet", new String[0]));
             player.sendMessage(this.plugin.messages().get("notice.party.kits-outside-category-aren", new String[0]));
             return;
         }
-        if (this.step >= list.size() || this.step < 0) {
-            this.step = 0;
+        this.page = Math.max(0, Math.min(this.page, pages.size() - 1));
+        Page current = pages.get(this.page);
+        GuiConfigManager gui = this.plugin.gui();
+        int rows = gui.rows(MENU, 4);
+        int lastSlot = rows * 9 - 1;
+        HashMap<String, String> tokens = new HashMap<String, String>();
+        tokens.put("mode", this.mode.getLabel());
+        this.createRaw(rows, gui.title(MENU, "<dark_gray>▏ {mode}", tokens));
+        gui.frame(MENU, this.inventory, rows);
+
+        String selectedKit = party.getKit();
+        for (int i = 0; i < KIT_SLOTS.length && i < current.kits.size() && KIT_SLOTS[i] <= lastSlot; i++) {
+            ItemStack icon = this.kitIcon(gui, current.kits.get(i), selectedKit);
+            if (icon != null) this.inventory.setItem(KIT_SLOTS[i], icon);
         }
-        Page page = list.get(this.step);
-        GuiConfigManager guiConfigManager = this.plugin.gui();
-        int n = guiConfigManager.rows(MENU, 4);
-        int n2 = n * 9 - 1;
-        HashMap<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("mode", this.mode.getLabel());
-        hashMap.put("category", page.title);
-        this.createRaw(n, guiConfigManager.title(MENU, "<dark_gray>\u258f {mode}", hashMap));
-        guiConfigManager.frame(MENU, this.inventory, n);
-        String string = party.getKit();
-        for (int i = 0; i < KIT_SLOTS.length && i < page.kits.size() && KIT_SLOTS[i] <= n2; ++i) {
-            ItemStack itemStack = this.kitIcon(guiConfigManager, page.kits.get(i), string);
-            if (itemStack == null) continue;
-            this.inventory.setItem(KIT_SLOTS[i], itemStack);
-        }
-        this.inventory.setItem(Math.min(n2, guiConfigManager.slot(MENU, "back", 27, n)), guiConfigManager.back(MENU, "back").tag(this.plugin.keyButton(), "kit-back").build());
-        if (list.size() > 1) {
-            this.inventory.setItem(Math.min(n2, guiConfigManager.slot(MENU, "next-category", 35, n)), guiConfigManager.face(MENU, "next-category", null, GuiConfigManager.Face.of(Material.ARROW, "{value}\u0274\u1d07x\u1d1b \u1d04\u1d00\u1d1b\u1d07\u0262\u1d0f\u0280\u028f", "", "{hint}\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d04\u028f\u1d04\u029f\u1d07")).hideTooltip().tag(this.plugin.keyButton(), "next-cat").build());
+
+        this.inventory.setItem(Math.min(lastSlot, gui.slot(MENU, "back", 27, rows)),
+            gui.back(MENU, "back").tag(this.plugin.keyButton(), "kit-back").build());
+        if (pages.size() > 1) {
+            HashMap<String, String> pageTokens = new HashMap<String, String>();
+            pageTokens.put("page", String.valueOf(this.page + 1));
+            pageTokens.put("pages", String.valueOf(pages.size()));
+            this.inventory.setItem(Math.min(lastSlot, gui.slot(MENU, "prev-page", 28, rows)),
+                gui.item(MENU, "prev-page", pageTokens, Material.ARROW, "<yellow>Previous page", "<gray>Page {page} of {pages}")
+                    .hideTooltip().tag(this.plugin.keyButton(), "page-prev").build());
+            this.inventory.setItem(Math.min(lastSlot, gui.slot(MENU, "next-page", 35, rows)),
+                gui.item(MENU, "next-page", pageTokens, Material.ARROW, "<yellow>Next page", "<gray>Page {page} of {pages}")
+                    .hideTooltip().tag(this.plugin.keyButton(), "page-next").build());
         }
         player.openInventory(this.inventory);
     }
 
-    private ItemStack kitIcon(GuiConfigManager guiConfigManager, String string, String string2) {
-        KitCatalog.Entry entry = findEntry(KitCatalog.available(this.plugin), string);
-        if (entry == null) return null;
-        Kit kit = this.plugin.getKitManager().get(entry.kit());
-        if (kit == null) {
-            return null;
-        }
-        HashMap<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("kit", entry.label());
-        Items items = guiConfigManager.toggle(MENU, "kit", kit.getName().equalsIgnoreCase(string2), hashMap, GuiConfigManager.Face.of(guiConfigManager.material(MENU, "kit", kit.getIcon()), "&e{kit}", new String[0]).glow(), GuiConfigManager.Face.of(guiConfigManager.material(MENU, "kit", kit.getIcon()), "&e{kit}", new String[0])).hideTooltip().tag(this.plugin.keyKit(), kit.getName());
-        if (guiConfigManager.name(MENU, "kit", hashMap) == null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            items.miniName(kit.withIcon(kit.getDisplayName()));
-        }
-        return items.build();
+    private ItemStack kitIcon(GuiConfigManager gui, String kitName, String selectedKit) {
+        Kit kit = this.plugin.getKitManager().get(kitName);
+        if (kit == null) return null;
+        String queueLabel = kit.withIcon(kit.getQueueDisplayName());
+        HashMap<String, String> tokens = new HashMap<String, String>();
+        tokens.put("kit", queueLabel);
+        Items item = gui.toggle(MENU, "kit", kit.getName().equalsIgnoreCase(selectedKit), tokens,
+            GuiConfigManager.Face.of(gui.material(MENU, "kit", kit.getIcon()), "{kit}", new String[0]).glow(),
+            GuiConfigManager.Face.of(gui.material(MENU, "kit", kit.getIcon()), "{kit}", new String[0]))
+            .hideTooltip().tag(this.plugin.keyKit(), kit.getName());
+        // Match the queue picker exactly: configured queue prefix and kit icon.
+        item.miniName(queueLabel);
+        return item.build();
     }
 
     @Override
-    public void onClick(Player player, InventoryClickEvent inventoryClickEvent) {
-        ItemStack itemStack = inventoryClickEvent.getCurrentItem();
-        if ("kit-back".equals(Items.readTag(itemStack, this.plugin.keyButton()))) {
-            if (this.mode == PartyMode.DUELS) {
-                new PartyOpponentMenu(this.plugin).open(player);
-            } else {
-                new PartyModeMenu(this.plugin).open(player);
-            }
+    public void onClick(Player player, InventoryClickEvent event) {
+        ItemStack item = event.getCurrentItem();
+        String button = Items.readTag(item, this.plugin.keyButton());
+        if ("kit-back".equals(button)) {
+            if (this.mode == PartyMode.DUELS) new PartyOpponentMenu(this.plugin).open(player);
+            else new PartyModeMenu(this.plugin).open(player);
             return;
         }
-        if ("next-cat".equals(Items.readTag(itemStack, this.plugin.keyButton()))) {
-            int n = this.pages().size();
-            if (n > 0) {
-                this.step = (this.step + 1) % n;
+        if ("page-prev".equals(button) || "page-next".equals(button)) {
+            int count = this.pages().size();
+            if (count > 0) {
+                this.page = "page-prev".equals(button) ? (this.page - 1 + count) % count : (this.page + 1) % count;
                 this.open(player);
             }
             return;
         }
-        String string = Items.readTag(itemStack, this.plugin.keyKit());
-        if (string == null || !this.plugin.getKitManager().exists(string)) {
-            return;
-        }
+        String kitName = Items.readTag(item, this.plugin.keyKit());
+        if (kitName == null || !this.plugin.getKitManager().exists(kitName)) return;
         Party party = this.plugin.getPartyManager().partyOf(player.getUniqueId());
         if (party == null || !party.isLeader(player.getUniqueId())) {
             player.closeInventory();
             return;
         }
-        party.setKit(string);
+        party.setKit(kitName);
         if (this.mode == PartyMode.SPLIT) {
             party.getTeams().clear();
             new PartyTeamMenu(this.plugin).open(player);
-            return;
-        }
-        if (this.mode == PartyMode.DUELS) {
+        } else if (this.mode == PartyMode.DUELS) {
             new PartyDuelsConfirmMenu(this.plugin).open(player);
-            return;
+        } else {
+            new PartyStartConfirmMenu(this.plugin, this.mode).open(player);
         }
-        new PartyStartConfirmMenu(this.plugin, this.mode).open(player);
     }
 
     private static final class Page {
-        private final String title;
         private final List<String> kits;
 
-        private Page(String string, List<String> list) {
-            this.title = string;
-            this.kits = list;
+        private Page(List<String> kits) {
+            this.kits = kits;
         }
     }
 }
-

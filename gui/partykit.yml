@@ -1,6 +1,5 @@
 # -------------------------------------------------------------------------
-# /party start > the kit for the match. Paged by category; kits outside
-# a category are not offered.
+# /party start > choose from the same visible kits and queue names as /queue.
 #
 # Every value here is the one the plugin uses when the key is missing, so you
 # can delete any line, any item, or this whole file: the menu goes back to
@@ -38,7 +37,7 @@
 # the characters are - type ordinary letters if you would rather have them.
 # -------------------------------------------------------------------------
 
-title: "<dark_gray>▏ {mode} {sep}{value}{category}"
+title: "<dark_gray>▏ {mode}"
 rows: 4
 
 # Uncomment to give this one screen a different frame from the rest of the
@@ -58,14 +57,21 @@ items:
       - ""
       - "{hint}ᴄʟɪᴄᴋ ᴛᴏ ɢᴏ ʙᴀᴄᴋ"
 
-  # Pages to the next category.
-  next-category:
-    slot: 35
+  prev-page:
+    slot: 28
     material: ARROW
-    name: "{value}ɴᴇxᴛ ᴄᴀᴛᴇɢᴏʀʏ"
+    name: "{value}ᴘʀᴇᴠɪᴏᴜꜱ ᴘᴀɢᴇ"
     lore:
       - ""
-      - "{hint}ᴄʟɪᴄᴋ ᴛᴏ ᴄʏᴄʟᴇ"
+      - "{hint}ᴘᴀɢᴇ {page} ᴏꜰ {pages}"
+
+  next-page:
+    slot: 35
+    material: ARROW
+    name: "{value}ɴᴇxᴛ ᴘᴀɢᴇ"
+    lore:
+      - ""
+      - "{hint}ᴘᴀɢᴇ {page} ᴏꜰ {pages}"
 
   # One icon per kit. Its on face is the kit currently chosen.
   kit:

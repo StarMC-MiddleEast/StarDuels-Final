@@ -31,9 +31,9 @@
 # the characters are - type ordinary letters if you would rather have them.
 # -------------------------------------------------------------------------
 
-title-global: "&d&lᴋɪᴛ ᴇᴅɪᴛᴏʀ &7- ᴘɪᴄᴋ ᴀ ɢᴀᴍᴇᴍᴏᴅᴇ"
-title-personal: "&d&lʏᴏᴜʀ ᴋɪᴛꜱ &7- ᴘɪᴄᴋ ᴀ ɢᴀᴍᴇᴍᴏᴅᴇ"
-rows: 6
+title-global: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ᴋɪᴛ ᴇᴅɪᴛᴏʀ</bold></gradient>"
+title-personal: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ʏᴏᴜʀ ᴋɪᴛꜱ</bold></gradient>"
+rows: 4
 
 # Uncomment to give this one screen a different frame from the rest of the
 # plugin. Leave it out and it follows theme.filler in config.yml.
@@ -69,3 +69,17 @@ items:
       - "&7ᴄʟɪᴄᴋ ᴛᴏ ᴇᴅɪᴛ ᴛʜɪꜱ ɢᴀᴍᴇᴍᴏᴅᴇ'ꜱ ɪᴛᴇᴍꜱ,"
       - "&7ᴀʀᴍᴏʀ ᴀɴᴅ ᴏꜰꜰʜᴀɴᴅ ɪᴛᴇᴍ."
       - "&cᴄʜᴀɴɢᴇꜱ ᴀᴘᴘʟʏ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
+
+  prev-page:
+    slot: 27
+    material: ARROW
+    name: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ᴘʀᴇᴠɪᴏᴜꜱ ᴘᴀɢᴇ</bold></gradient>"
+    lore:
+      - "<gray>ᴘᴀɢᴇ {page} ᴏꜰ {pages}"
+
+  next-page:
+    slot: 35
+    material: ARROW
+    name: "<gradient:#FFF1B3:#FFFFFF:#E6A700><bold>ɴᴇxᴛ ᴘᴀɢᴇ</bold></gradient>"
+    lore:
+      - "<gray>ᴘᴀɢᴇ {page} ᴏꜰ {pages}"

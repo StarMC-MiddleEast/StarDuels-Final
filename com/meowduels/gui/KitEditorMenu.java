@@ -16,9 +16,10 @@ import org.bukkit.inventory.ItemStack;
 
 public class KitEditorMenu
 extends Menu {
-    private static final int[] SLOTS = new int[]{10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43};
+    private static final int[] SLOTS = new int[]{10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
     private final MeowDuels plugin;
     private final boolean personal;
+    private int page;
     private static final String MENU = "kiteditor";
     private static final int ROWS = 6;
 
@@ -43,26 +44,44 @@ extends Menu {
             this.inventory.setItem(Math.min(n2 - 1, guiConfigManager.slot(MENU, "empty", 22, n)), guiConfigManager.item(MENU, "empty", Material.BARRIER, "&c\u0274\u1d0f \u1d0b\u026a\u1d1b\ua731 \u028f\u1d07\u1d1b", "&7\u1d04\u0280\u1d07\u1d00\u1d1b\u1d07 \u1d0f\u0274\u1d07 \u1d21\u026a\u1d1b\u029c &e/\u1d0b\u026a\u1d1b\u1d04\u0280\u1d07\u1d00\u1d1b\u1d07 <\u0274\u1d00\u1d0d\u1d07>&7.").build());
             return;
         }
-        for (int i = 0; i < SLOTS.length && i < list.size() && SLOTS[i] < n2; ++i) {
-            this.inventory.setItem(SLOTS[i], this.icon(guiConfigManager, list.get(i)));
+        int pageCount = Math.max(1, (list.size() + SLOTS.length - 1) / SLOTS.length);
+        this.page = Math.min(this.page, pageCount - 1);
+        int start = this.page * SLOTS.length;
+        for (int i = 0; i < SLOTS.length && start + i < list.size() && SLOTS[i] < n2; ++i) {
+            this.inventory.setItem(SLOTS[i], this.icon(guiConfigManager, list.get(start + i)));
+        }
+        if (pageCount > 1) {
+            HashMap<String, String> pages = new HashMap<String, String>();
+            pages.put("page", String.valueOf(this.page + 1));
+            pages.put("pages", String.valueOf(pageCount));
+            this.inventory.setItem(guiConfigManager.slot(MENU, "prev-page", 27, n), guiConfigManager.item(MENU, "prev-page", pages, Material.ARROW, "<yellow>Previous page", "<gray>Page {page} of {pages}").tag(this.plugin.keyButton(), "kit-page-prev").build());
+            this.inventory.setItem(guiConfigManager.slot(MENU, "next-page", 35, n), guiConfigManager.item(MENU, "next-page", pages, Material.ARROW, "<yellow>Next page", "<gray>Page {page} of {pages}").tag(this.plugin.keyButton(), "kit-page-next").build());
         }
     }
 
     private ItemStack icon(GuiConfigManager guiConfigManager, Kit kit) {
-        String string;
         HashMap<String, String> hashMap = new HashMap<String, String>();
-        hashMap.put("kit", kit.getName());
+        String label = kit.withIcon(kit.getQueueDisplayName());
+        hashMap.put("kit", label);
         Items items = this.personal ? guiConfigManager.item(MENU, "kit-personal", hashMap, guiConfigManager.material(MENU, "kit-personal", kit.getIcon()), "&d{kit}", "", "&7\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d00\u0280\u0280\u1d00\u0274\u0262\u1d07 \u1d1b\u029c\u026a\ua731 \u1d0b\u026a\u1d1b", "&7\u1d1b\u029c\u1d07 \u1d21\u1d00\u028f \u028f\u1d0f\u1d1c \u1d21\u1d00\u0274\u1d1b \u026a\u1d1b.") : guiConfigManager.item(MENU, "kit-global", hashMap, guiConfigManager.material(MENU, "kit-global", kit.getIcon()), "&d{kit}", "", "&7\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d07\u1d05\u026a\u1d1b \u1d1b\u029c\u026a\ua731 \u0262\u1d00\u1d0d\u1d07\u1d0d\u1d0f\u1d05\u1d07'\ua731 \u026a\u1d1b\u1d07\u1d0d\ua731,", "&7\u1d00\u0280\u1d0d\u1d0f\u0280 \u1d00\u0274\u1d05 \u1d0f\ua730\ua730\u029c\u1d00\u0274\u1d05 \u026a\u1d1b\u1d07\u1d0d.", "&c\u1d04\u029c\u1d00\u0274\u0262\u1d07\ua731 \u1d00\u1d18\u1d18\u029f\u028f \u1d1b\u1d0f \u1d07\u1d20\u1d07\u0280\u028f\u1d0f\u0274\u1d07.");
         items.hideTooltip().tag(this.plugin.keyKit(), kit.getName());
-        String string2 = string = this.personal ? guiConfigManager.name(MENU, "kit-personal", hashMap) : guiConfigManager.name(MENU, "kit-global", hashMap);
-        if (string == null && kit.getDisplayName() != null && !kit.getDisplayName().isEmpty()) {
-            items.miniName(kit.withIcon(kit.getDisplayName()));
-        }
+        items.miniName(label);
         return items.build();
     }
 
     @Override
     public void onClick(Player player, InventoryClickEvent inventoryClickEvent) {
+        String button = Items.readTag(inventoryClickEvent.getCurrentItem(), this.plugin.keyButton());
+        if ("kit-page-prev".equals(button) || "kit-page-next".equals(button)) {
+            int kitCount = KitCatalog.available(this.plugin).size();
+            int pageCount = Math.max(1, (kitCount + SLOTS.length - 1) / SLOTS.length);
+            this.page = "kit-page-prev".equals(button)
+                ? (this.page - 1 + pageCount) % pageCount
+                : (this.page + 1) % pageCount;
+            this.build();
+            player.openInventory(this.inventory);
+            return;
+        }
         String string = Items.readTag(inventoryClickEvent.getCurrentItem(), this.plugin.keyKit());
         if (string == null) {
             return;
