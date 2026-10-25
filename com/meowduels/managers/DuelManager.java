@@ -830,18 +830,17 @@ public class DuelManager {
         if (player != null && playerSnapshot != null) {
             playerSnapshot.restore(player);
             DuelManager.ground(player);
-            if (bl) {
-                Location location = this.plugin.getDuelSpawn();
-                if (location == null || location.getWorld() == null) {
-                    // A duel snapshot is the arena location. Falling back to
-                    // it leaves players inside the match when no custom duel
-                    // spawn was configured, so use the server world spawn.
-                    World world = player.getWorld();
-                    location = world == null ? null : world.getSpawnLocation();
-                }
-                if (location != null && location.getWorld() != null) {
-                    player.teleport(location);
-                }
+        }
+        if (player != null && bl) {
+            Location location = this.plugin.getDuelSpawn();
+            if (location == null || location.getWorld() == null) {
+                // A duel snapshot is the arena location. Falling back to it
+                // leaves players inside the match, so use a server world spawn.
+                World world = player.getWorld();
+                location = world == null ? null : world.getSpawnLocation();
+            }
+            if (location != null && location.getWorld() != null) {
+                player.teleport(location);
             }
         }
     }
@@ -1293,8 +1292,28 @@ public class DuelManager {
     }
 
     private void finishEndMatch(ActiveDuel activeDuel, UUID uUID) {
+        this.returnToSpawn(activeDuel.getPlayer1());
+        this.returnToSpawn(activeDuel.getPlayer2());
         this.openSummary(activeDuel, uUID, activeDuel.getPlayer1());
         this.openSummary(activeDuel, uUID, activeDuel.getPlayer2());
+    }
+
+    private void returnToSpawn(UUID playerId) {
+        Player player = Bukkit.getPlayer(playerId);
+        if (player == null || !player.isOnline() || this.isInDuel(playerId)
+            || this.plugin.getEventManager().isInvolved(playerId)
+            || this.plugin.getPartyManager().inPartyMatch(playerId)
+            || this.plugin.getSpectateManager().isSpectating(playerId)) {
+            return;
+        }
+        Location spawn = this.plugin.getDuelSpawn();
+        if (spawn == null || spawn.getWorld() == null) {
+            World world = player.getWorld();
+            spawn = world == null ? null : world.getSpawnLocation();
+        }
+        if (spawn != null && spawn.getWorld() != null && !player.teleport(spawn)) {
+            this.plugin.getLogger().warning("Could not return " + player.getName() + " to the configured duel spawn.");
+        }
     }
 
     private void finishRoundLoss(ActiveDuel activeDuel, UUID uUID) {

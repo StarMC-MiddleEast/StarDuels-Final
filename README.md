@@ -10,6 +10,8 @@ Run `mvn package` from this directory. The plugin JAR is written to `target/Star
 
 Copy the JAR into the Paper server's `plugins` directory and restart the server. On first start, StarDuels creates its configuration files in `plugins/StarDuels/`.
 
+Use `/starduels setspawn` as an admin to save the current location as the return point after duels. If no return point is configured, players return to the server world spawn.
+
 ## Configuration and reload
 
 Edit the YAML files in `plugins/StarDuels/`, then run `/starduels reload` (permission: `meowduels.admin`) to reload `config.yml`, `messages.yml`, `titles.yml`, kits, categories, queue categories, GUI layouts, and menu configuration. `messages.yml` contains chat and match-result text; `titles.yml` contains match-found, countdown, fight, victory/defeat, party, and event titles. Existing title customizations in `messages.yml` are migrated to `titles.yml` the first time it is created. Arena, match, and player data are saved separately.

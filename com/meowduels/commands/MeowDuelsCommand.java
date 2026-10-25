@@ -1200,6 +1200,10 @@ TabCompleter {
     }
 
     private void root(CommandSender commandSender, String[] stringArray) {
+        if (stringArray.length >= 1 && stringArray[0].equalsIgnoreCase("setspawn")) {
+            this.setDuelSpawn(commandSender);
+            return;
+        }
         if (stringArray.length >= 1 && stringArray[0].equalsIgnoreCase("reload")) {
             if (!this.requireAdmin(commandSender)) {
                 return;
@@ -1254,7 +1258,7 @@ TabCompleter {
             commandSender.sendMessage(Text.color("  &fauto-registers itself, ready to use immediately"));
             commandSender.sendMessage(Text.color("&e/arena <name> regen|snapshot &f- manual regen tools"));
             commandSender.sendMessage(Text.color("&e/deletearena <name> &f- delete an arena"));
-            commandSender.sendMessage(Text.color("&e/meowduelssetspawn &f- set where duels send players when they end"));
+            commandSender.sendMessage(Text.color("&e/starduels setspawn &f- set where duels send players when they end"));
             commandSender.sendMessage(Text.color("&e/kitcreate <name> &f- save a kit from inventory"));
             commandSender.sendMessage(Text.color("&e/kiteditor &f- GUI item editor for every kit/gamemode"));
             commandSender.sendMessage(Text.color("&e/deletekit <name> &f- delete a kit"));
@@ -1290,7 +1294,7 @@ TabCompleter {
         String rootCommand = command.getName().toLowerCase(Locale.ROOT);
         if ((rootCommand.equals("starduels") || rootCommand.equals("sd") || rootCommand.equals("md") || rootCommand.equals("meowduels")) && stringArray.length == 1) {
             ArrayList<String> choices = new ArrayList<String>();
-            for (String option : List.of("createkit", "editkit", "viewkits", "reload", "scoreboardip", "help")) if (this.startsWith(option, stringArray[0])) choices.add(option);
+            for (String option : List.of("createkit", "editkit", "viewkits", "reload", "scoreboardip", "setspawn", "help")) if (this.startsWith(option, stringArray[0])) choices.add(option);
             return choices;
         }
         if ((rootCommand.equals("starduels") || rootCommand.equals("sd") || rootCommand.equals("md") || rootCommand.equals("meowduels")) && stringArray.length >= 2) {

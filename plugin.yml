@@ -12,7 +12,7 @@ softdepend:
 commands:
   starduels:
     description: StarDuels admin commands for kits, arenas, and configuration.
-    usage: /starduels <createkit|editkit|viewkits|reload|scoreboardip|arena>
+    usage: /starduels <createkit|editkit|viewkits|reload|scoreboardip|setspawn|arena>
     aliases: [sd, md, meowduels]
   createarena:
     description: Create a new arena.
