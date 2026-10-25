@@ -6,6 +6,7 @@ import org.bukkit.potion.PotionEffectType;
 public enum StartEffect {
     STRENGTH2_90(PotionEffectType.STRENGTH, 1, 1800, "Strength II (1:30)"),
     SPEED2_90(PotionEffectType.SPEED, 1, 1800, "Speed II (1:30)"),
+    FIRE_RESISTANCE2_90(PotionEffectType.FIRE_RESISTANCE, 1, 1800, "Fire Resistance II (1:30)"),
     SPEED2_INFINITE(PotionEffectType.SPEED, 1, -1, "Speed II (infinite)"),
     REGEN2_90(PotionEffectType.REGENERATION, 1, 1800, "Regeneration II (1:30)");
 
