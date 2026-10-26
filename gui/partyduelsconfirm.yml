@@ -65,7 +65,7 @@ items:
       - ""
       - "{label}{description}"
 
-  # The four round options. Its on face is the one chosen.
+  # Round choices from 1 to 9. The selected count uses the on face.
   rounds:
     material: PAPER
     name-on: "{good}ꜰɪʀꜱᴛ ᴛᴏ {rounds}"

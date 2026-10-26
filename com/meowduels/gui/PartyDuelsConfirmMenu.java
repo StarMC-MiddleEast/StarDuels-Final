@@ -21,8 +21,8 @@ extends Menu {
     private static final String MENU = "partyduelsconfirm";
     private static final int ROWS = 4;
     private static final int SLOT_INFO = 4;
-    private static final int[] ROUND_SLOTS = new int[]{11, 13, 15};
-    private static final int[] ROUND_VALUES = new int[]{1, 3, 5};
+    private static final int[] ROUND_SLOTS = new int[]{10, 11, 12, 13, 14, 15, 16, 19, 20};
+    private static final int[] ROUND_VALUES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
     private static final int SLOT_BACK = 27;
     private static final int SLOT_START = 22;
     private static final String VALUE = "<#E6E8EB>";
