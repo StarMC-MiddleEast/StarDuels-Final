@@ -40,6 +40,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 /** Renders the existing player menu inventory as a native Paper dialog. */
 public final class DialogMenu {
     private static final int PAGE_SIZE = 6;
+    private static final int QUEUE_PAGE_SIZE = 5;
     private static final int CONTROL_PAGE_SIZE = 8;
     private static final AtomicBoolean FALLBACK_WARNED = new AtomicBoolean();
     private static final ClickCallback.Options CALLBACK_OPTIONS = ClickCallback.Options.builder()
@@ -62,14 +63,16 @@ public final class DialogMenu {
 
         boolean kitPicker = !kits.isEmpty();
         if (menu instanceof QueuePickMenu && kits.isEmpty()) controls.clear();
+        boolean queuePicker = menu instanceof QueuePickMenu;
+        int kitPageSize = queuePicker ? QUEUE_PAGE_SIZE : PAGE_SIZE;
         int pages = Math.max(1, kitPicker
-            ? (kits.size() + PAGE_SIZE - 1) / PAGE_SIZE
+            ? (kits.size() + kitPageSize - 1) / kitPageSize
             : (controls.size() + CONTROL_PAGE_SIZE - 1) / CONTROL_PAGE_SIZE);
         int safePage = Math.max(0, Math.min(page, pages - 1));
         List<ActionButton> actions = new ArrayList<>();
         if (kitPicker) {
-            int start = safePage * PAGE_SIZE;
-            for (int i = start; i < Math.min(kits.size(), start + PAGE_SIZE); i++) {
+            int start = safePage * kitPageSize;
+            for (int i = start; i < Math.min(kits.size(), start + kitPageSize); i++) {
                 actions.add(button(plugin, player, menu, view, kits.get(i), safePage));
             }
             for (ButtonEntry entry : controls) {
@@ -95,7 +98,7 @@ public final class DialogMenu {
             .base(base)
             .type((menu instanceof MatchSummaryMenu || emptyActions)
                 ? DialogType.notice(actions.get(0))
-                : DialogType.multiAction(actions).columns(2).build()));
+                : DialogType.multiAction(actions).columns(queuePicker ? 1 : 2).build()));
         try {
             player.showDialog(dialog);
             if (playOpenSound) com.meowduels.util.Sounds.open(player);
@@ -132,6 +135,9 @@ public final class DialogMenu {
                 body.add(head(left));
                 body.add(head(right));
             }
+        } else if (menu instanceof QueuePickMenu) {
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<#66e4dc>Click a kit to queue")));
+            if (pages > 1) body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>Page " + (page + 1) + " of " + pages)));
         } else if (pages > 1) {
             body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>▏ Page " + (page + 1) + " of " + pages)));
         } else if (menu instanceof QueuePickMenu || menu instanceof KitPickMenu) {
@@ -153,6 +159,10 @@ public final class DialogMenu {
             Kit kit = plugin.getKitManager().get(Items.readTag(entry.item, plugin.keyKit()));
             label = kit == null ? (meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey()))
                 : MiniMessage.miniMessage().deserialize(kit.withIcon(kit.getQueueDisplayName()));
+            if (menu instanceof QueuePickMenu && kit != null) {
+                int queued = plugin.getQueueManager().queued(kit.getName());
+                label = label.append(Component.newline()).append(MiniMessage.miniMessage().deserialize("<gray>" + queued + (queued == 1 ? " Player" : " Players")));
+            }
         } else {
             label = meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey());
         }
