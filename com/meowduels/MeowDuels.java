@@ -14,6 +14,7 @@ import com.meowduels.listeners.EventListener;
 import com.meowduels.listeners.GoldenHeadListener;
 import com.meowduels.listeners.GuiListener;
 import com.meowduels.listeners.PvpOverrideListener;
+import com.meowduels.dialog.DialogListener;
 import com.meowduels.listeners.SetupChatListener;
 import com.meowduels.listeners.SpawnItemsListener;
 import com.meowduels.managers.ArenaManager;
@@ -297,6 +298,7 @@ extends JavaPlugin {
 
     private void registerListeners() {
         this.getServer().getPluginManager().registerEvents((Listener)new GuiListener(), (Plugin)this);
+        this.getServer().getPluginManager().registerEvents(new DialogListener(this), this);
         this.getServer().getPluginManager().registerEvents((Listener)new SetupChatListener(this), (Plugin)this);
         this.getServer().getPluginManager().registerEvents((Listener)new ArenaProtectionListener(this), (Plugin)this);
         this.getServer().getPluginManager().registerEvents((Listener)new DuelListener(this), (Plugin)this);

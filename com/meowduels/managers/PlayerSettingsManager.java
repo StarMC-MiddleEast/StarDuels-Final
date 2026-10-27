@@ -16,8 +16,8 @@ public class PlayerSettingsManager {
     private final MeowDuels plugin;
     private final File file;
     private final Map<String, Map<UUID, Boolean>> flags = new ConcurrentHashMap<String, Map<UUID, Boolean>>();
-    private static final String[] KEYS = new String[]{"duel-requests", "scoreboard", "party-invites", "spectators", "sounds", "isolated-chat"};
-    private static final Set<String> OFF_BY_DEFAULT = new HashSet<String>(Arrays.asList("isolated-chat"));
+    private static final String[] KEYS = new String[]{"duel-requests", "scoreboard", "party-invites", "spectators", "sounds", "isolated-chat", "buttons-gui"};
+    private static final Set<String> OFF_BY_DEFAULT = new HashSet<String>(Arrays.asList("isolated-chat", "buttons-gui"));
 
     public PlayerSettingsManager(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -102,6 +102,10 @@ public class PlayerSettingsManager {
 
     public boolean isIsolatedChat(UUID uUID) {
         return this.is("isolated-chat", uUID);
+    }
+
+    public boolean isButtonsGui(UUID uuid) {
+        return this.is("buttons-gui", uuid);
     }
 
     public void toggleDuelRequests(UUID uUID) {

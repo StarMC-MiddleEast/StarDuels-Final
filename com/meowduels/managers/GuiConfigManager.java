@@ -5,6 +5,9 @@ import com.meowduels.gui.Style;
 import com.meowduels.util.Items;
 import com.meowduels.util.Tokens;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -63,6 +66,26 @@ public class GuiConfigManager {
                 this.plugin.saveResource("gui/" + string + ".yml", false);
             }
             catch (Throwable throwable) {}
+        }
+        this.mergeButtonsGuiSetting(new File(this.folder, "settings.yml"));
+    }
+
+    private void mergeButtonsGuiSetting(File settingsFile) {
+        if (!settingsFile.isFile()) return;
+        try (InputStream resource = this.plugin.getResource("gui/settings.yml")) {
+            if (resource == null) return;
+            YamlConfiguration shipped = new YamlConfiguration();
+            shipped.load(new InputStreamReader(resource, StandardCharsets.UTF_8));
+            ConfigurationSection defaults = shipped.getConfigurationSection("items.buttons-gui");
+            if (defaults == null) return;
+            YamlConfiguration current = YamlConfiguration.loadConfiguration(settingsFile);
+            if (current.contains("items.buttons-gui")) return;
+            for (String key : defaults.getKeys(false)) {
+                current.set("items.buttons-gui." + key, defaults.get(key));
+            }
+            current.save(settingsFile);
+        } catch (Exception exception) {
+            this.plugin.getLogger().warning("Could not add the Buttons GUI item to gui/settings.yml: " + exception.getMessage());
         }
     }
 

@@ -47,7 +47,7 @@ public final class QueuePickMenu extends Menu {
         this.viewer = player;
         this.build();
         player.openInventory(this.inventory);
-        OPEN.add(this);
+        if (!this.plugin.getPlayerSettings().isButtonsGui(player.getUniqueId())) OPEN.add(this);
     }
 
     @Override
