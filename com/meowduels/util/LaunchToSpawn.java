@@ -18,13 +18,19 @@ public final class LaunchToSpawn {
     private LaunchToSpawn() {}
 
     public static boolean launch(Player player, MeowDuels plugin, Location destination, Runnable completion) {
+        return launch(player, plugin, null, destination, completion);
+    }
+
+    public static boolean launch(Player player, MeowDuels plugin, Location center, Location destination, Runnable completion) {
         if (player == null || destination == null || destination.getWorld() == null
             || !LAUNCHING.add(player.getUniqueId())) return false;
 
         Location target = destination.clone();
         try {
-            // Preload the destination before the scheduled teleport to avoid a chunk-load hitch.
-            target.getWorld().getChunkAtAsync(target.getBlockX() >> 4, target.getBlockZ() >> 4)
+            Location launchPoint = center == null ? null : center.clone();
+            Location preload = launchPoint != null ? launchPoint : target;
+            // Preload the launch point before the scheduled teleport to avoid a chunk-load hitch.
+            preload.getWorld().getChunkAtAsync(preload.getBlockX() >> 4, preload.getBlockZ() >> 4)
                 .whenComplete((chunk, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) {
                         LAUNCHING.remove(player.getUniqueId());
@@ -37,7 +43,7 @@ public final class LaunchToSpawn {
                         completion.run();
                         return;
                     }
-                    begin(player, plugin, target, completion);
+                    begin(player, plugin, launchPoint, target, completion);
                 }));
         } catch (Throwable error) {
             LAUNCHING.remove(player.getUniqueId());
@@ -46,12 +52,17 @@ public final class LaunchToSpawn {
         return true;
     }
 
-    private static void begin(Player player, MeowDuels plugin, Location destination, Runnable completion) {
+    private static void begin(Player player, MeowDuels plugin, Location center, Location destination, Runnable completion) {
         UUID id = player.getUniqueId();
         boolean originallyInvulnerable = player.isInvulnerable();
-        float yaw = player.getLocation().getYaw();
+        float yaw = destination.getYaw();
         player.setInvulnerable(true);
         player.setFallDistance(0.0f);
+        if (center != null && center.getWorld() != null) {
+            center.setYaw(yaw);
+            center.setPitch(0.0f);
+            player.teleport(center);
+        }
         player.setVelocity(new Vector(0.0, 2.4, 0.0));
         player.playSound(player.getLocation(), "minecraft:block.conduit.deactivate", SoundCategory.PLAYERS, 1.0f, 1.0f);
 

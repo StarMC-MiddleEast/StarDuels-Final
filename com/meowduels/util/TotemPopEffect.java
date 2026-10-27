@@ -16,8 +16,7 @@ public final class TotemPopEffect {
     private TotemPopEffect() {}
 
     public static void play(Player player, Material icon, MeowDuels plugin) {
-        if (player == null || !player.isOnline() || icon == null || icon.isAir()
-            || !plugin.getPlayerSettings().isSounds(player.getUniqueId())) return;
+        if (player == null || !player.isOnline() || icon == null || icon.isAir()) return;
 
         ItemStack oldOffhand = player.getInventory().getItemInOffHand().clone();
         ItemStack visual = new ItemStack(icon, 1);

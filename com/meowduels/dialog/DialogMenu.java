@@ -161,7 +161,11 @@ public final class DialogMenu {
                 : MiniMessage.miniMessage().deserialize(kit.withIcon(kit.getQueueDisplayName()));
             if (menu instanceof QueuePickMenu && kit != null) {
                 int queued = plugin.getQueueManager().queued(kit.getName());
-                label = label.append(Component.newline()).append(MiniMessage.miniMessage().deserialize("<gray>" + queued + (queued == 1 ? " Player" : " Players")));
+                Component arrow = Component.text(" → ", net.kyori.adventure.text.format.NamedTextColor.GRAY)
+                    .decoration(TextDecoration.BOLD, false);
+                Component count = Component.text(queued + (queued == 1 ? " Player" : " Players"), net.kyori.adventure.text.format.NamedTextColor.GRAY)
+                    .decoration(TextDecoration.BOLD, false);
+                label = label.append(arrow).append(count);
             }
         } else {
             label = meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey());
