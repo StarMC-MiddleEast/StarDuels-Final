@@ -2306,7 +2306,7 @@ kits:
     icon: PLAYER_HEAD
     display-name: '<b><gradient:#C9FFE0:#1FB46B>ᴍᴏɴᴇʏ ꜱᴍᴘ</gradient></b>'
     prefix: ''
-    name-icon: item/emerald
+    name-icon: head:MoneySMP
     contents:
     - ==: org.bukkit.inventory.ItemStack
       DataVersion: 4671

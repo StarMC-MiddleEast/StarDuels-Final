@@ -40,6 +40,7 @@ public class KitManager {
         }
         boolean migratedModernSmpShield = false;
         boolean migratedModernSmpIcon = false;
+        boolean migratedMoneySmpHeadIcon = false;
         boolean migratedGuiVisibility = false;
         for (String string : configurationSection.getKeys(false)) {
             ConfigurationSection configurationSection2 = configurationSection.getConfigurationSection(string);
@@ -61,6 +62,11 @@ public class KitManager {
                 kit.setNameIcon("none");
                 migratedModernSmpIcon = true;
             }
+            if (string.equalsIgnoreCase("MoneySMP") && kit.getIcon() == Material.PLAYER_HEAD
+                && "item/emerald".equalsIgnoreCase(kit.getNameIcon())) {
+                kit.setNameIcon("head:MoneySMP");
+                migratedMoneySmpHeadIcon = true;
+            }
             this.kits.put(string.toLowerCase(Locale.ROOT), kit);
         }
         if (!this.exists("SpearMace") && this.exists("Trident")) {
@@ -79,10 +85,11 @@ public class KitManager {
             this.kits.put(spearMace.getName().toLowerCase(Locale.ROOT), spearMace);
             migratedGuiVisibility = true;
         }
-        if (migratedModernSmpShield || migratedModernSmpIcon || migratedGuiVisibility) {
+        if (migratedModernSmpShield || migratedModernSmpIcon || migratedMoneySmpHeadIcon || migratedGuiVisibility) {
             this.save();
             if (migratedModernSmpShield) this.plugin.getLogger().info("Added the missing offhand shield to the ModernSMP kit.");
             if (migratedModernSmpIcon) this.plugin.getLogger().info("Updated the ModernSMP menu icon to a shield.");
+            if (migratedMoneySmpHeadIcon) this.plugin.getLogger().info("Updated the MoneySMP name icon to its configured player-head sprite.");
         }
         this.plugin.getLogger().info("Loaded " + this.kits.size() + " kit(s).");
     }

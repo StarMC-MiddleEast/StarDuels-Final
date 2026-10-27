@@ -19,7 +19,7 @@ public final class MenuRouter {
     public static boolean usesDialog(MeowDuels plugin, Player player, Menu menu) {
         String name = menu.getClass().getSimpleName();
         if (!PLAYER_MENUS.contains(name)) return false;
-        if (name.equals("SettingsMenu") || name.equals("PartySettingsMenu")) return true;
+        if (name.equals("SettingsMenu")) return true;
         return plugin.getPlayerSettings().isButtonsGui(player.getUniqueId());
     }
 }

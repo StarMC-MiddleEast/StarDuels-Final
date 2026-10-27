@@ -7,10 +7,14 @@ import com.meowduels.gui.QueuePickMenu;
 import com.meowduels.gui.DuelConfirmMenu;
 import com.meowduels.gui.KitPickMenu;
 import com.meowduels.gui.MatchSummaryMenu;
+import com.meowduels.gui.PartyDuelsConfirmMenu;
+import com.meowduels.model.Kit;
+import com.meowduels.model.Party;
 import com.meowduels.util.Items;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import java.util.ArrayList;
@@ -20,6 +24,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -53,6 +61,7 @@ public final class DialogMenu {
         }
 
         boolean kitPicker = !kits.isEmpty();
+        if (menu instanceof QueuePickMenu && kits.isEmpty()) controls.clear();
         int pages = Math.max(1, kitPicker
             ? (kits.size() + PAGE_SIZE - 1) / PAGE_SIZE
             : (controls.size() + CONTROL_PAGE_SIZE - 1) / CONTROL_PAGE_SIZE);
@@ -76,13 +85,15 @@ public final class DialogMenu {
             if (safePage > 0) actions.add(nav(plugin, player, menu, view, safePage - 1, "‹ Previous page"));
             if (safePage + 1 < pages) actions.add(nav(plugin, player, menu, view, safePage + 1, "Next page ›"));
         }
-        if (actions.isEmpty()) {
+        boolean emptyActions = actions.isEmpty();
+        if (emptyActions) {
             actions.add(ActionButton.builder(Component.text("Close")).width(150).build());
         }
 
+        DialogBase base = DialogBase.builder(view.title()).body(body(plugin, player, menu, safePage, pages, menu instanceof QueuePickMenu && kits.isEmpty())).canCloseWithEscape(true).pause(false).build();
         Dialog dialog = Dialog.create(builder -> builder.empty()
-            .base(DialogBase.builder(view.title()).canCloseWithEscape(true).pause(false).build())
-            .type(menu instanceof MatchSummaryMenu && actions.size() == 1
+            .base(base)
+            .type((menu instanceof MatchSummaryMenu || emptyActions)
                 ? DialogType.notice(actions.get(0))
                 : DialogType.multiAction(actions).columns(2).build()));
         try {
@@ -97,15 +108,61 @@ public final class DialogMenu {
         }
     }
 
+    private static List<DialogBody> body(MeowDuels plugin, Player viewer, Menu menu, int page, int pages, boolean noQueueKits) {
+        List<DialogBody> body = new ArrayList<>();
+        if (noQueueKits) {
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>▏ No kits available")));
+        } else if (menu instanceof DuelConfirmMenu confirm) {
+            Player sender = confirm.getSender();
+            Player target = confirm.getTarget();
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize(
+                "<gradient:#FFF1B3:#E6A700><bold>" + sender.getName() + "</bold></gradient> <dark_gray>vs</dark_gray> <gradient:#FFF1B3:#E6A700><bold>" + target.getName() + "</bold></gradient>")));
+            body.add(head(sender));
+            body.add(head(target));
+        } else if (menu instanceof PartyDuelsConfirmMenu) {
+            Party ours = plugin.getPartyManager().partyOf(viewer.getUniqueId());
+            Party theirs = ours == null ? null : plugin.getPartyManager().partyLedBy(ours.getDuelTarget());
+            if (ours != null && theirs != null) {
+                OfflinePlayer left = Bukkit.getOfflinePlayer(ours.getLeader());
+                OfflinePlayer right = Bukkit.getOfflinePlayer(theirs.getLeader());
+                String leftName = left.getName() == null ? "Player" : left.getName();
+                String rightName = right.getName() == null ? "Player" : right.getName();
+                body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize(
+                    "<gradient:#FFF1B3:#E6A700><bold>" + leftName + "</bold></gradient> <dark_gray>vs</dark_gray> <gradient:#FFF1B3:#E6A700><bold>" + rightName + "</bold></gradient>")));
+                body.add(head(left));
+                body.add(head(right));
+            }
+        } else if (pages > 1) {
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>▏ Page " + (page + 1) + " of " + pages)));
+        } else if (menu instanceof QueuePickMenu || menu instanceof KitPickMenu) {
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>▏ Select a kit")));
+        } else {
+            body.add(DialogBody.plainMessage(MiniMessage.miniMessage().deserialize("<dark_gray>▏ No options available")));
+        }
+        return body;
+    }
+
+    private static DialogBody head(OfflinePlayer player) {
+        return DialogBody.item(Items.of(Material.PLAYER_HEAD).skull(player).build(), null, false, false, 32, 32);
+    }
+
     private static ActionButton button(MeowDuels plugin, Player player, Menu menu, InventoryView view, ButtonEntry entry, int page) {
         ItemMeta meta = entry.item.getItemMeta();
-        Component label = meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey());
+        Component label;
+        if (entry.kit) {
+            Kit kit = plugin.getKitManager().get(Items.readTag(entry.item, plugin.keyKit()));
+            label = kit == null ? (meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey()))
+                : MiniMessage.miniMessage().deserialize(kit.withIcon(kit.getQueueDisplayName()));
+        } else {
+            label = meta != null && meta.hasDisplayName() ? meta.displayName() : Component.translatable(entry.item.getType().translationKey());
+        }
+        label = label.decoration(TextDecoration.ITALIC, false);
         List<Component> lore = meta == null || meta.lore() == null ? List.of() : meta.lore();
         Component tooltip = lore.isEmpty() ? null : Component.join(JoinConfiguration.separator(Component.newline()), lore);
         final int slot = entry.slot;
         return ActionButton.builder(label)
             .tooltip(tooltip)
-            .width(180)
+            .width(150)
             .action(DialogAction.customClick((response, audience) -> {
                 if (!(audience instanceof Player clicker) || !clicker.getUniqueId().equals(player.getUniqueId())) return;
                 DialogListener.beginAction(clicker);
@@ -122,7 +179,7 @@ public final class DialogMenu {
     }
 
     private static ActionButton nav(MeowDuels plugin, Player player, Menu menu, InventoryView view, int page, String label) {
-        return ActionButton.builder(Component.text(label)).width(180)
+        return ActionButton.builder(MiniMessage.miniMessage().deserialize("<yellow>" + label).decoration(TextDecoration.ITALIC, false)).width(150)
             .action(DialogAction.customClick((response, audience) -> {
                 if (audience instanceof Player clicker && clicker.getUniqueId().equals(player.getUniqueId())) {
                     playClickSound(menu, clicker);

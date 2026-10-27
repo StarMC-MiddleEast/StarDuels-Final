@@ -42,6 +42,10 @@ extends Menu {
         return this.target;
     }
 
+    public Player getSender() {
+        return this.sender;
+    }
+
     public String getSelectedKit() {
         return this.selectedKit;
     }
