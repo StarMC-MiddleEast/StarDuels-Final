@@ -1228,12 +1228,9 @@ public class DuelManager {
         Location center = this.arenaTransitionCenter(arena);
         double horizontalDistance = Math.sqrt(Math.pow(target.getX() - start.getX(), 2.0)
             + Math.pow(target.getZ() - start.getZ(), 2.0));
-        final int flightTicks = Math.max(32, Math.min(60, 36 + (int)Math.ceil(horizontalDistance * 0.35)));
-        double measuredArenaHeight = min != null && max != null && min.getWorld() != null && min.getWorld().equals(max.getWorld())
-            ? Math.max(0.0, max.getY() - min.getY()) : 10.0;
-        double requestedLift = Math.max(6.0, measuredArenaHeight);
-        double safeLift = Math.max(1.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
-        double lift = Math.min(requestedLift, safeLift);
+        final int flightTicks = 80; // Four seconds at Minecraft's 20 ticks per second.
+        double safeLift = Math.max(0.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
+        double lift = Math.min(5.0, safeLift);
         Location control = center != null && center.getWorld() != null && center.getWorld().equals(start.getWorld())
             ? center.clone() : start.clone().add(target).multiply(0.5);
         control.setY(Math.max(start.getY(), target.getY()) + 2.0 * lift);
@@ -1265,13 +1262,17 @@ public class DuelManager {
             double x = inverse * inverse * start.getX() + 2.0 * inverse * progress * control.getX() + progress * progress * target.getX();
             double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
-            float yaw = progress >= 1.0 ? target.getYaw() : start.getYaw();
-            float pitch = progress >= 1.0 ? target.getPitch() : start.getPitch();
+            Location look = player.getLocation();
+            float yaw = look.getYaw();
+            float pitch = look.getPitch();
             player.teleport(new Location(start.getWorld(), x, y, z, yaw, pitch));
             player.setFallDistance(0.0f);
 
             if (elapsed[0] >= flightTicks) {
-                player.teleport(target);
+                Location arrival = target.clone();
+                arrival.setYaw(yaw);
+                arrival.setPitch(pitch);
+                player.teleport(arrival);
                 scheduledTask[0].cancel();
                 this.roundLaunchTasks.remove(id);
                 ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
