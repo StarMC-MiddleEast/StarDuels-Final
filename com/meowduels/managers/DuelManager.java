@@ -1223,11 +1223,7 @@ public class DuelManager {
 
         ActiveDuel duel = this.playerDuels.get(id);
         Arena arena = duel == null ? null : duel.getArena();
-        Location min = arena == null ? null : arena.getMin();
-        Location max = arena == null ? null : arena.getMax();
         Location center = this.arenaTransitionCenter(arena);
-        double horizontalDistance = Math.sqrt(Math.pow(target.getX() - start.getX(), 2.0)
-            + Math.pow(target.getZ() - start.getZ(), 2.0));
         final int flightTicks = 80; // Four seconds at Minecraft's 20 ticks per second.
         double safeLift = Math.max(0.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
         double lift = Math.min(5.0, safeLift);
@@ -1237,12 +1233,14 @@ public class DuelManager {
 
         boolean originallyInvulnerable = player.isInvulnerable();
         boolean originallyNoPhysics = player.hasNoPhysics();
+        boolean originallyGravity = player.hasGravity();
         boolean originallyAllowFlight = player.getAllowFlight();
         boolean originallyFlying = player.isFlying();
         player.setInvulnerable(true);
         player.setFlying(false);
         player.setAllowFlight(false);
         player.setNoPhysics(true);
+        player.setGravity(false);
         player.setFallDistance(0.0f);
         player.setVelocity(new Vector());
         player.playSound(start, "minecraft:block.conduit.deactivate", SoundCategory.PLAYERS, 1.0f, 1.0f);
@@ -1262,21 +1260,20 @@ public class DuelManager {
             double x = inverse * inverse * start.getX() + 2.0 * inverse * progress * control.getX() + progress * progress * target.getX();
             double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
-            Location look = player.getLocation();
-            float yaw = look.getYaw();
-            float pitch = look.getPitch();
-            player.teleport(new Location(start.getWorld(), x, y, z, yaw, pitch));
+            Location current = player.getLocation();
+            Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ()).multiply(20.0);
+            player.setVelocity(steeringVelocity);
             player.setFallDistance(0.0f);
 
             if (elapsed[0] >= flightTicks) {
                 Location arrival = target.clone();
-                arrival.setYaw(yaw);
-                arrival.setPitch(pitch);
+                arrival.setYaw(current.getYaw());
+                arrival.setPitch(current.getPitch());
                 player.teleport(arrival);
                 scheduledTask[0].cancel();
                 this.roundLaunchTasks.remove(id);
                 ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
-                this.restoreRoundLaunch(player, id, scheduledTask[0], originallyNoPhysics, originallyInvulnerable, originallyAllowFlight, originallyFlying);
+                this.restoreRoundLaunch(player, id, scheduledTask[0], originallyNoPhysics, originallyGravity, originallyInvulnerable, originallyAllowFlight, originallyFlying);
             }
         }, 1L, 1L);
         scheduledTask[0] = task;
@@ -1284,13 +1281,14 @@ public class DuelManager {
         return flightTicks;
     }
 
-    private void restoreRoundLaunch(Player player, UUID id, BukkitTask task, boolean noPhysics,
+    private void restoreRoundLaunch(Player player, UUID id, BukkitTask task, boolean noPhysics, boolean gravity,
                                     boolean invulnerable, boolean allowFlight, boolean flying) {
         if (task != null) task.cancel();
         ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
         if (player == null || !player.isOnline()) return;
         player.setVelocity(new Vector());
         player.setNoPhysics(noPhysics);
+        player.setGravity(gravity);
         player.setInvulnerable(invulnerable);
         player.setAllowFlight(allowFlight);
         if (flying && allowFlight) player.setFlying(true);
