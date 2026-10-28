@@ -145,23 +145,6 @@ items:
       - ""
       - "{hint}ᴄʟɪᴄᴋ ᴛᴏ ᴛᴜʀɴ ᴏɴ"
 
-  # Whether player-facing menus use Paper's native Buttons Dialog UI.
-  buttons-gui:
-    slot: 17
-    material: REPEATING_COMMAND_BLOCK
-    name: "<sprite:items:item/repeater> {value}ʙᴜᴛᴛᴏɴꜱ ɢᴜɪ"
-    glow-on: true
-    lore-on:
-      - ""
-      - "{good}{tick}ᴘᴀᴘᴇʀ ᴅɪᴀʟᴏɢꜱ ᴀʀᴇ ᴏɴ"
-      - ""
-      - "{hint}ᴄʟɪᴄᴋ ᴛᴏ ᴛᴜʀɴ ᴏꜰꜰ"
-    lore-off:
-      - ""
-      - "{bad}{cross}ᴄʜᴇꜱᴛ ᴍᴇɴᴜꜱ ᴀʀᴇ ᴏɴ"
-      - ""
-      - "{hint}ᴄʟɪᴄᴋ ᴛᴏ ᴛᴜʀɴ ᴏɴ"
-
   # Opens the per-kit armour trim picker. Only shown to players
   # with meowduels.trims.
   trims:

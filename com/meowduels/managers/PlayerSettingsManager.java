@@ -16,8 +16,8 @@ public class PlayerSettingsManager {
     private final MeowDuels plugin;
     private final File file;
     private final Map<String, Map<UUID, Boolean>> flags = new ConcurrentHashMap<String, Map<UUID, Boolean>>();
-    private static final String[] KEYS = new String[]{"duel-requests", "scoreboard", "party-invites", "spectators", "sounds", "isolated-chat", "buttons-gui", "keep-queuing"};
-    private static final Set<String> OFF_BY_DEFAULT = new HashSet<String>(Arrays.asList("isolated-chat", "buttons-gui", "keep-queuing"));
+    private static final String[] KEYS = new String[]{"duel-requests", "scoreboard", "party-invites", "spectators", "sounds", "isolated-chat", "keep-queuing"};
+    private static final Set<String> OFF_BY_DEFAULT = new HashSet<String>(Arrays.asList("isolated-chat", "keep-queuing"));
 
     public PlayerSettingsManager(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -105,7 +105,8 @@ public class PlayerSettingsManager {
     }
 
     public boolean isButtonsGui(UUID uuid) {
-        return this.is("buttons-gui", uuid);
+        // Native Paper dialogs are the fixed player-facing menu style.
+        return true;
     }
 
     public void toggleDuelRequests(UUID uUID) {

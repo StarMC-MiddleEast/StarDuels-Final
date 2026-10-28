@@ -24,4 +24,4 @@ The command also accepts `/sd reload`, `/md reload`, and `/meowduels reload`.
 
 ## Buttons GUI
 
-Players can opt into Paper's native dialog menus from `/settings` by enabling **Buttons GUI**. Queue, duel, party, trim, map, event-map, and match-summary menus then use the dialog layout; Settings always uses a dialog. The preference defaults to off and is saved per player in `settings.yml`. Admin and arena setup menus remain chest GUIs.
+Player-facing menus use Paper's native dialog layout by default, including the Settings menu. The Settings menu no longer offers a switch between dialogs and chest GUIs. Admin and arena setup menus remain chest GUIs.
