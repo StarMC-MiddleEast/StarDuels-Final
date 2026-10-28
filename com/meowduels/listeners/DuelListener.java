@@ -141,6 +141,7 @@ implements Listener {
         playerDeathEvent.setDeathMessage(null);
         UUID uUID = player.getUniqueId();
         Location location = player.getLocation().clone();
+        this.plugin.getDuelManager().setPendingRoundRespawn(uUID, location);
         Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> {
             player.spigot().respawn();
             this.plugin.getDuelManager().handleRoundLoss(uUID, location);
@@ -184,8 +185,10 @@ implements Listener {
         Player player = playerRespawnEvent.getPlayer();
         ActiveDuel activeDuel = this.plugin.getDuelManager().getDuel(player.getUniqueId());
         if (activeDuel != null) {
-            Location location;
-            Location location2 = location = player.getUniqueId().equals(activeDuel.getPlayer1()) ? activeDuel.getArena().getSpawn1() : activeDuel.getArena().getSpawn2();
+            Location location = this.plugin.getDuelManager().consumePendingRoundRespawn(player.getUniqueId());
+            if (location == null) {
+                location = player.getUniqueId().equals(activeDuel.getPlayer1()) ? activeDuel.getArena().getSpawn1() : activeDuel.getArena().getSpawn2();
+            }
             if (location != null) {
                 playerRespawnEvent.setRespawnLocation(location);
             }

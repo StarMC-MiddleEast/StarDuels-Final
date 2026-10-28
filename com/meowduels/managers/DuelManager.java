@@ -75,6 +75,7 @@ public class DuelManager {
     private final long matchFoundTicks;
     private final Map<UUID, Map<UUID, DuelRequest>> requests = new HashMap<UUID, Map<UUID, DuelRequest>>();
     private final Map<UUID, ActiveDuel> playerDuels = new ConcurrentHashMap<UUID, ActiveDuel>();
+    private final Map<UUID, Location> pendingRoundRespawns = new ConcurrentHashMap<UUID, Location>();
     private final Map<UUID, PlayerSnapshot> snapshots = new HashMap<UUID, PlayerSnapshot>();
     private final Map<UUID, BukkitTask> roundLaunchTasks = new ConcurrentHashMap<UUID, BukkitTask>();
     private static final Set<UUID> ROUND_LAUNCH_FALL_IMMUNITY = ConcurrentHashMap.newKeySet();
@@ -573,8 +574,8 @@ public class DuelManager {
         this.plugin.getStatsManager().save();
         String string = player2 != null ? player2.getName() : "A player";
         String string2 = player != null ? player.getName() : "A player";
-        int n = 1 + ThreadLocalRandom.current().nextInt(5);
-        this.sendResultToParticipants(activeDuel, this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
+        // Round result titles and messages below replace the generic death/defeat
+        // announcement, which otherwise obscures the round score for players.
         object = String.valueOf(activeDuel.getCurrentRound());
         if (player2 != null) {
             this.sendTitle(player2, this.msg("titles.round-won.title", new String[0]), this.msg("titles.round-won.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID2)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID2))));
@@ -617,6 +618,19 @@ public class DuelManager {
                 }, Math.max(this.deathSpectateTicks, 22L));
             }
         }
+    }
+
+    /** Preserve the death position until Bukkit fires PlayerRespawnEvent. */
+    public void setPendingRoundRespawn(UUID playerId, Location location) {
+        if (playerId != null && location != null && location.getWorld() != null) {
+            this.pendingRoundRespawns.put(playerId, location.clone());
+        }
+    }
+
+    /** Consume the saved death position once the player's duel respawn is processed. */
+    public Location consumePendingRoundRespawn(UUID playerId) {
+        Location location = playerId == null ? null : this.pendingRoundRespawns.remove(playerId);
+        return location == null ? null : location.clone();
     }
 
     /**
@@ -1484,9 +1498,9 @@ public class DuelManager {
                 Sounds.victory(winner);
             }
             this.sendResultToParticipants(duel, this.msg("duel.match-result", new String[]{"killer", winnerName, "victim", loserName, "winner", winnerName, "kit", String.valueOf(duel.getKit()), "score", score}));
-        } else {
+        } else if (reason != EndReason.ROUND_WIN) {
             // A round-ending death already sent personalized round-won/round-lost
-            // results. Avoid following it with a contradictory duel defeat line.
+            // results. Do not follow those with a generic match result line.
             int line = 1 + ThreadLocalRandom.current().nextInt(10);
             this.sendResultToParticipants(duel, this.msg("match.toxic." + line, "winner", winnerName, "loser", loserName, "winner_score", String.valueOf(duel.getScoreFor(winnerId)), "loser_score", String.valueOf(duel.getScoreAgainst(winnerId))));
         }

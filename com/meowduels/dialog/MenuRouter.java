@@ -19,6 +19,8 @@ public final class MenuRouter {
     public static boolean usesDialog(MeowDuels plugin, Player player, Menu menu) {
         String name = menu.getClass().getSimpleName();
         if (!PLAYER_MENUS.contains(name)) return false;
+        // Keep the switch reachable even when the player chooses chest menus.
+        if ("SettingsMenu".equals(name)) return true;
         return plugin.getPlayerSettings().isButtonsGui(player.getUniqueId());
     }
 }

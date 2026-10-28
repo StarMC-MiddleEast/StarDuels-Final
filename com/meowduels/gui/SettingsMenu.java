@@ -22,6 +22,7 @@ extends Menu {
     private static final String SOUNDS = "set-sounds";
     private static final String CHAT = "set-chat";
     private static final String TRIMS = "set-trims";
+    private static final String BUTTONS_GUI = "set-buttons-gui";
     private static final int SLOT_DUEL = 10;
     private static final int SLOT_BOARD = 14;
     private static final int SLOT_INVITES = 19;
@@ -29,6 +30,7 @@ extends Menu {
     private static final int SLOT_CHAT = 28;
     private static final int SLOT_SOUNDS = 32;
     private static final int SLOT_TRIMS = 37;
+    private static final int SLOT_BUTTONS_GUI = 41;
     private final MeowDuels plugin;
     private final UUID owner;
     private static final String MENU = "settings";
@@ -58,6 +60,10 @@ extends Menu {
         if (player != null && player.hasPermission("meowduels.trims")) {
             this.put(n, 37, TRIMS, guiConfigManager.item(MENU, "trims", null, Material.LEATHER_CHESTPLATE, "{value}\u1d0b\u026a\u1d1b \u1d1b\u0280\u026a\u1d0d\ua731", "", "{label}\ua731\u1d07\u1d1b \u028f\u1d0f\u1d1c\u0280 \u1d00\u0280\u1d0d\u1d0f\u1d1c\u0280 \u1d1b\u0280\u026a\u1d0d \u1d18\u1d07\u0280 \u1d0b\u026a\u1d1b", "", "{hint}\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d0f\u1d18\u1d07\u0274"));
         }
+        boolean buttonsGui = this.plugin.getPlayerSettings().isButtonsGui(this.owner);
+        GuiConfigManager.Face buttonsOn = GuiConfigManager.Face.of(Material.COMPARATOR, "<green>✓ Buttons GUI", "", "<gray>Other menus use Paper Dialogs", "", "<dark_gray>Settings always stays a dialog", "<yellow>Click to switch to chest menus");
+        GuiConfigManager.Face buttonsOff = GuiConfigManager.Face.of(Material.COMPARATOR, "<red>✗ Buttons GUI", "", "<gray>Other menus use chest menus", "", "<dark_gray>Settings always stays a dialog", "<yellow>Click to switch to Paper Dialogs");
+        this.put(n, SLOT_BUTTONS_GUI, BUTTONS_GUI, guiConfigManager.toggle(MENU, "buttons-gui", buttonsGui, null, buttonsOn, buttonsOff));
     }
 
     private void put(int n, int n2, String string, Items items) {
@@ -75,6 +81,12 @@ extends Menu {
         }
         if (TRIMS.equals(string)) {
             new TrimKitMenu(this.plugin).open(player);
+            return;
+        }
+        if (BUTTONS_GUI.equals(string)) {
+            this.plugin.getPlayerSettings().toggle("buttons-gui", this.owner);
+            this.build();
+            player.openInventory(this.inventory);
             return;
         }
         String string2 = SettingsMenu.keyFor(string);
