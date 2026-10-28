@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 public class PvpOverrideListener
@@ -22,15 +23,20 @@ implements Listener {
         this.plugin = meowDuels;
     }
 
-    @EventHandler(priority=EventPriority.HIGH)
+    // Run after protection plugins that commonly cancel PvP at HIGH priority.
+    @EventHandler(priority=EventPriority.HIGHEST)
     public void onPvp(EntityDamageByEntityEvent entityDamageByEntityEvent) {
         this.revive(entityDamageByEntityEvent);
     }
 
+    @EventHandler(priority=EventPriority.HIGHEST)
+    public void onPrePlayerAttack(PrePlayerAttackEntityEvent event) {
+        if (!this.plugin.getConfig().getBoolean("pvp.force-in-match", true)) return;
+        if (!(event.getAttacked() instanceof Player target) || !event.willAttack()) return;
+        if (this.allowed(event.getPlayer().getUniqueId(), target.getUniqueId())) event.setCancelled(false);
+    }
+
     private void revive(EntityDamageByEntityEvent entityDamageByEntityEvent) {
-        if (!entityDamageByEntityEvent.isCancelled()) {
-            return;
-        }
         if (!this.plugin.getConfig().getBoolean("pvp.force-in-match", true)) {
             return;
         }

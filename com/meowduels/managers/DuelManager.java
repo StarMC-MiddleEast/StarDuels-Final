@@ -17,7 +17,7 @@ import com.meowduels.util.MiniMessageUtil;
 import com.meowduels.util.LaunchToSpawn;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
-import com.meowduels.util.TotemPopEffect;
+import com.meowduels.util.KitIconPopEffect;
 import com.meowduels.util.Text;
 import com.meowduels.util.Trims;
 import java.util.ArrayList;
@@ -270,8 +270,8 @@ public class DuelManager {
         if (queuedMatch) {
             Kit queuedKit = this.plugin.getKitManager().get(activeDuel.getKit());
             if (queuedKit != null) {
-                TotemPopEffect.play(player, queuedKit.getIcon(), this.plugin);
-                TotemPopEffect.play(player2, queuedKit.getIcon(), this.plugin);
+                KitIconPopEffect.play(player, queuedKit.getIcon(), this.plugin);
+                KitIconPopEffect.play(player2, queuedKit.getIcon(), this.plugin);
             }
         }
         this.playMatchFound(player);
@@ -686,8 +686,10 @@ public class DuelManager {
         activeDuel.setFinished(true);
         activeDuel.setState(ActiveDuel.State.ENDING);
         this.regenArena(activeDuel, true);
-        this.restorePlayer(activeDuel.getPlayer1(), true);
-        this.restorePlayer(activeDuel.getPlayer2(), true);
+        // Restore inventories and modes in the arena first; finishEndMatch runs
+        // the flight and then returns both players to the configured duel spawn.
+        this.restorePlayer(activeDuel.getPlayer1(), false);
+        this.restorePlayer(activeDuel.getPlayer2(), false);
         this.giveSpawnItemsTo(activeDuel.getPlayer1());
         this.giveSpawnItemsTo(activeDuel.getPlayer2());
         this.lastOpponent.put(activeDuel.getPlayer1(), activeDuel.getPlayer2());
@@ -1247,8 +1249,13 @@ public class DuelManager {
     private void finishEndMatch(ActiveDuel activeDuel, UUID uUID, EndReason endReason) {
         Arena arena = activeDuel.getArena();
         Location center = this.arenaTransitionCenter(arena);
-        Location firstSpawn = arena == null ? null : arena.getSpawn1();
-        Location secondSpawn = arena == null ? null : arena.getSpawn2();
+        Location configuredSpawn = this.plugin.getDuelSpawn();
+        Player firstPlayer = Bukkit.getPlayer(activeDuel.getPlayer1());
+        Player secondPlayer = Bukkit.getPlayer(activeDuel.getPlayer2());
+        Location firstSpawn = configuredSpawn != null && configuredSpawn.getWorld() != null
+            ? configuredSpawn.clone() : firstPlayer == null ? null : firstPlayer.getWorld().getSpawnLocation();
+        Location secondSpawn = configuredSpawn != null && configuredSpawn.getWorld() != null
+            ? configuredSpawn.clone() : secondPlayer == null ? null : secondPlayer.getWorld().getSpawnLocation();
         double flightCeiling = this.arenaTransitionCeiling(arena);
         java.util.concurrent.atomic.AtomicInteger pendingReturns = new java.util.concurrent.atomic.AtomicInteger(2);
         Runnable completed = () -> {
