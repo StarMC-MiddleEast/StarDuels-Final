@@ -277,9 +277,9 @@ public class MessageManager {
         DEFAULTS.put("titles.countdown.subtitle", COUNTDOWN_SUBTITLE);
         DEFAULTS.put("titles.fight.title", FIGHT_TITLE);
         DEFAULTS.put("titles.fight.subtitle", "<white>⚔ <bold><#FFFF00>{yourScore}</#FFFF00></bold> <gray>-</gray> <bold><#FF3030>{theirScore}</#FF3030></bold>");
-        DEFAULTS.put("titles.round-won.title", "&a&lVICTORY");
+        DEFAULTS.put("titles.round-won.title", "&a&lROUND WON");
         DEFAULTS.put("titles.round-won.subtitle", "&7Score &8\u00bb &a{yourScore} &7- &c{theirScore}");
-        DEFAULTS.put("titles.round-lost.title", "&c&lDEFEAT");
+        DEFAULTS.put("titles.round-lost.title", "&c&lROUND LOST");
         DEFAULTS.put("titles.round-lost.subtitle", "&7Score &8\u00bb &a{yourScore} &7- &c{theirScore}");
         DEFAULTS.put("round.won-chat", "&6\u2604 &aRound {round} won &8\u00bb &f{score} &7- &f{opponent_score}");
         DEFAULTS.put("round.lost-chat", "&4\u2620 &cRound {round} lost &8\u00bb &f{score} &7- &f{opponent_score}");

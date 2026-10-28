@@ -15,10 +15,10 @@ titles:
     subtitle: <white>⚔ <bold><#FFFF00>{yourScore}</#FFFF00></bold> <gray>-</gray>
       <bold><#FF3030>{theirScore}</#FF3030></bold>
   round-won:
-    title: '&a&lVICTORY'
+    title: '&a&lROUND WON'
     subtitle: '&7Score &8» &a{yourScore} &7- &c{theirScore}'
   round-lost:
-    title: '&c&lDEFEAT'
+    title: '&c&lROUND LOST'
     subtitle: '&7Score &8» &a{yourScore} &7- &c{theirScore}'
   victory:
     title: <bold><#FFFF00>VICTORY</#FFFF00></bold>

@@ -569,6 +569,16 @@ public class DuelManager {
         String string2 = player != null ? player.getName() : "A player";
         int n = 1 + ThreadLocalRandom.current().nextInt(5);
         this.sendResultToParticipants(activeDuel, this.msg("death.duel." + n, "killer", string, "victim", string2, "killer_score", String.valueOf(activeDuel.getScoreFor(uUID2)), "victim_score", String.valueOf(activeDuel.getScoreFor(uUID))));
+        object = String.valueOf(activeDuel.getCurrentRound());
+        if (player2 != null) {
+            this.sendTitle(player2, this.msg("titles.round-won.title", new String[0]), this.msg("titles.round-won.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID2)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID2))));
+            player2.sendMessage(this.msg("round.won-chat", new String[]{"round", String.valueOf(object), "score", String.valueOf(activeDuel.getScoreFor(uUID2)), "opponent_score", String.valueOf(activeDuel.getScoreAgainst(uUID2))}));
+            Sounds.roundWon(player2);
+        }
+        if (player != null) {
+            this.sendTitle(player, this.msg("titles.round-lost.title", new String[0]), this.msg("titles.round-lost.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID))));
+            player.sendMessage(this.msg("round.lost-chat", new String[]{"round", String.valueOf(object), "score", String.valueOf(activeDuel.getScoreFor(uUID)), "opponent_score", String.valueOf(activeDuel.getScoreAgainst(uUID))}));
+        }
         if (bl) {
             object = activeDuel.getKit() == null ? "Unknown" : activeDuel.getKit();
             this.sendResultToParticipants(activeDuel, this.msg("duel.match-result", new String[]{"killer", string, "victim", string2, "winner", string, "kit", String.valueOf(object), "score", activeDuel.getScoreFor(uUID2) + " - " + activeDuel.getScoreFor(uUID)}));
@@ -581,17 +591,6 @@ public class DuelManager {
             UUID winner = uUID2;
             Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.finishRoundLoss(activeDuel, winner), this.winEndTicks);
         } else {
-            object = String.valueOf(activeDuel.getCurrentRound());
-            if (player2 != null) {
-                this.sendTitle(player2, this.msg("titles.round-won.title", new String[0]), this.msg("titles.round-won.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID2)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID2))));
-                player2.sendMessage(this.msg("round.won-chat", new String[]{"round", String.valueOf(object), "score", String.valueOf(activeDuel.getScoreFor(uUID2)), "opponent_score", String.valueOf(activeDuel.getScoreAgainst(uUID2))}));
-                Sounds.roundWon(player2);
-            }
-            if (player != null) {
-                this.sendTitle(player, this.msg("titles.round-lost.title", new String[0]), this.msg("titles.round-lost.subtitle", "yourScore", String.valueOf(activeDuel.getScoreFor(uUID)), "theirScore", String.valueOf(activeDuel.getScoreAgainst(uUID))));
-                player.sendMessage(this.msg("round.lost-chat", new String[]{"round", String.valueOf(object), "score", String.valueOf(activeDuel.getScoreFor(uUID)), "opponent_score", String.valueOf(activeDuel.getScoreAgainst(uUID))}));
-                Sounds.roundLost(player);
-            }
             Arena roundArena = activeDuel.getArena();
             Location center = this.arenaTransitionCenter(roundArena);
             if (roundArena != null && center != null) {
@@ -1319,8 +1318,8 @@ public class DuelManager {
             }
             this.sendResultToParticipants(duel, this.msg("duel.match-result", new String[]{"killer", winnerName, "victim", loserName, "winner", winnerName, "kit", String.valueOf(duel.getKit()), "score", score}));
         } else {
-            if (winner != null) winner.sendMessage(this.msg("duel.victory", "yourScore", String.valueOf(duel.getScoreFor(winnerId)), "theirScore", String.valueOf(duel.getScoreAgainst(winnerId))));
-            if (loser != null) loser.sendMessage(this.msg("duel.defeat", "winner", winnerName));
+            // A round-ending death already sent personalized round-won/round-lost
+            // results. Avoid following it with a contradictory duel defeat line.
             int line = 1 + ThreadLocalRandom.current().nextInt(10);
             this.sendResultToParticipants(duel, this.msg("match.toxic." + line, "winner", winnerName, "loser", loserName, "winner_score", String.valueOf(duel.getScoreFor(winnerId)), "loser_score", String.valueOf(duel.getScoreAgainst(winnerId))));
         }
