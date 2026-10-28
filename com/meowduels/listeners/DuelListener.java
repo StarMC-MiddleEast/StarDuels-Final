@@ -1,6 +1,7 @@
 package com.meowduels.listeners;
 
 import com.meowduels.MeowDuels;
+import com.meowduels.managers.DuelManager;
 import com.meowduels.model.ActiveDuel;
 import com.meowduels.model.Arena;
 import com.meowduels.model.Party;
@@ -82,6 +83,7 @@ implements Listener {
 
     @EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled=true)
     public void onDamage(EntityDamageEvent entityDamageEvent) {
+        if (DuelManager.cancelRoundLaunchFallDamage(entityDamageEvent)) return;
         Entity entity = entityDamageEvent.getEntity();
         if (!(entity instanceof Player)) {
             return;

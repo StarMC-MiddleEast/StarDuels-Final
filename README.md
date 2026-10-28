@@ -18,7 +18,7 @@ Edit the YAML files in `plugins/StarDuels/`, then run `/starduels reload` (permi
 
 ## Lobby and match behavior
 
-The lobby wind charge is placed in the offhand, protected from dropping, swapping, and inventory removal, and refilled after use. The tagged lobby elytra does not take durability damage. Water and lava are allowed to flow during active duel and party matches, and their block changes are tracked for arena restoration. Falling, downward-aimed wind-charge throws reset downward velocity in Mace, ModernMace, and SpearMace kits. Queued matches show a private totem-pop visual using the queued kit icon. Match losses play a server-wide sting; duel endings launch players back to their respective arena spawns when sounds are enabled.
+The lobby wind charge is placed in the offhand, protected from dropping, swapping, and inventory removal, and refilled after use. The tagged lobby elytra does not take durability damage. Water and lava are allowed to flow during active duel and party matches, and their block changes are tracked for arena restoration. Falling, downward-aimed wind-charge throws reset downward velocity in Mace, ModernMace, and SpearMace kits. Queued matches use first-to-two rounds. Between rounds, players glide by velocity to their arena spawns with no particles and one launch sound; the landing fall is protected. Queued matches show a private totem-pop visual using the queued kit icon. Match losses play a server-wide sting; match endings return players to their configured destinations.
 
 The command also accepts `/sd reload`, `/md reload`, and `/meowduels reload`.
 
