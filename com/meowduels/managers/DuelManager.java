@@ -1221,15 +1221,13 @@ public class DuelManager {
         if (this.roundLaunchTasks.containsKey(id)) return 40L;
         ROUND_LAUNCH_FALL_IMMUNITY.add(id);
 
-        ActiveDuel duel = this.playerDuels.get(id);
-        Arena arena = duel == null ? null : duel.getArena();
-        Location center = this.arenaTransitionCenter(arena);
-        final int flightTicks = 80; // Four seconds at Minecraft's 20 ticks per second.
+        final double maxStepPerTick = 0.45;
         double safeLift = Math.max(0.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
         double lift = Math.min(5.0, safeLift);
-        Location control = center != null && center.getWorld() != null && center.getWorld().equals(start.getWorld())
-            ? center.clone() : start.clone().add(target).multiply(0.5);
+        Location control = start.clone().add(target).multiply(0.5);
         control.setY(Math.max(start.getY(), target.getY()) + 2.0 * lift);
+        double pathLengthEstimate = start.distance(control) + control.distance(target);
+        final int flightTicks = Math.max(80, (int)Math.ceil(pathLengthEstimate / maxStepPerTick));
 
         boolean originallyInvulnerable = player.isInvulnerable();
         boolean originallyNoPhysics = player.hasNoPhysics();
@@ -1238,7 +1236,9 @@ public class DuelManager {
         boolean originallyFlying = player.isFlying();
         player.setInvulnerable(true);
         player.setFlying(false);
-        player.setAllowFlight(false);
+        // Prevent the server's flight detector from kicking the player while
+        // gravity and block collision are deliberately disabled for this arc.
+        player.setAllowFlight(true);
         player.setNoPhysics(true);
         player.setGravity(false);
         player.setFallDistance(0.0f);
@@ -1254,6 +1254,7 @@ public class DuelManager {
                 ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
                 return;
             }
+            if (player.isFlying()) player.setFlying(false);
             elapsed[0]++;
             double progress = Math.min(1.0, (double)elapsed[0] / flightTicks);
             double inverse = 1.0 - progress;
@@ -1262,6 +1263,9 @@ public class DuelManager {
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
             Location current = player.getLocation();
             Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ()).multiply(20.0);
+            if (steeringVelocity.length() > maxStepPerTick * 20.0) {
+                steeringVelocity.normalize().multiply(maxStepPerTick * 20.0);
+            }
             player.setVelocity(steeringVelocity);
             player.setFallDistance(0.0f);
 
