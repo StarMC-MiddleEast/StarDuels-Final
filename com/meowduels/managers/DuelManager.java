@@ -1202,7 +1202,7 @@ public class DuelManager {
         return this.isInDuel(player.getUniqueId()) && this.isInDuel(player2.getUniqueId());
     }
 
-    /** Launches a duelist toward their next-round spawn using normal entity velocity. */
+    /** Carries a duelist through a smooth, collision-free arc to their next-round spawn. */
     private long launchPlayerToTarget(Player player, Location target) {
         if (player == null || !player.isOnline() || target == null || target.getWorld() == null) return 0L;
         UUID id = player.getUniqueId();
@@ -1216,29 +1216,27 @@ public class DuelManager {
             return 0L;
         }
 
-        BukkitTask oldTask = this.roundLaunchTasks.remove(id);
-        if (oldTask != null) oldTask.cancel();
+        // A previous transition is already driving this player. Let it finish
+        // instead of stacking teleports or changing the saved player flags.
+        if (this.roundLaunchTasks.containsKey(id)) return 40L;
         ROUND_LAUNCH_FALL_IMMUNITY.add(id);
 
         ActiveDuel duel = this.playerDuels.get(id);
         Arena arena = duel == null ? null : duel.getArena();
         Location min = arena == null ? null : arena.getMin();
         Location max = arena == null ? null : arena.getMax();
-        double arenaHeight = min != null && max != null && min.getWorld() != null && min.getWorld().equals(max.getWorld())
-            ? Math.max(1.0, max.getY() - min.getY())
-            : Math.max(10.0, Math.abs(target.getY() - start.getY()) + 1.0);
-        // A 10-block-tall arena gives a 9.5-block apex. If the destination is
-        // higher than that apex, extend only enough to make the target reachable.
-        double desiredApex = Math.max(arenaHeight * 0.95, Math.max(0.0, target.getY() - start.getY()) + 0.5);
-        desiredApex = Math.min(desiredApex, Math.max(0.5, start.getWorld().getMaxHeight() - start.getY() - 2.0));
-        double initialY = this.velocityForApex(desiredApex);
-        final int flightTicks = Math.max(1, this.descendingTicksToHeight(initialY, target.getY() - start.getY()));
-
-        Vector delta = target.toVector().subtract(start.toVector());
-        double horizontalDistance = Math.sqrt(delta.getX() * delta.getX() + delta.getZ() * delta.getZ());
-        Vector initial = horizontalDistance < 0.01
-            ? new Vector(0.0, initialY, 0.0)
-            : new Vector(delta.getX() / flightTicks, initialY, delta.getZ() / flightTicks);
+        Location center = this.arenaTransitionCenter(arena);
+        double horizontalDistance = Math.sqrt(Math.pow(target.getX() - start.getX(), 2.0)
+            + Math.pow(target.getZ() - start.getZ(), 2.0));
+        final int flightTicks = Math.max(32, Math.min(60, 36 + (int)Math.ceil(horizontalDistance * 0.35)));
+        double measuredArenaHeight = min != null && max != null && min.getWorld() != null && min.getWorld().equals(max.getWorld())
+            ? Math.max(0.0, max.getY() - min.getY()) : 10.0;
+        double requestedLift = Math.max(6.0, measuredArenaHeight);
+        double safeLift = Math.max(1.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
+        double lift = Math.min(requestedLift, safeLift);
+        Location control = center != null && center.getWorld() != null && center.getWorld().equals(start.getWorld())
+            ? center.clone() : start.clone().add(target).multiply(0.5);
+        control.setY(Math.max(start.getY(), target.getY()) + 2.0 * lift);
 
         boolean originallyInvulnerable = player.isInvulnerable();
         boolean originallyNoPhysics = player.hasNoPhysics();
@@ -1249,11 +1247,10 @@ public class DuelManager {
         player.setAllowFlight(false);
         player.setNoPhysics(true);
         player.setFallDistance(0.0f);
-        player.setVelocity(initial);
-        player.playSound(start, Sound.ENTITY_BAT_TAKEOFF, SoundCategory.PLAYERS, 0.8f, 1.0f);
+        player.setVelocity(new Vector());
+        player.playSound(start, "minecraft:block.conduit.deactivate", SoundCategory.PLAYERS, 1.0f, 1.0f);
 
         final int[] elapsed = {0};
-        final boolean[] collisionsRestored = {false};
         final BukkitTask[] scheduledTask = {null};
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(this.plugin, (Runnable)() -> {
             if (!player.isOnline()) {
@@ -1262,52 +1259,23 @@ public class DuelManager {
                 ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
                 return;
             }
-            Location here = player.getLocation();
-            double dx = target.getX() - here.getX();
-            double dz = target.getZ() - here.getZ();
-            double dy = target.getY() - here.getY();
-            if (dx * dx + dy * dy + dz * dz < 0.25) {
+            elapsed[0]++;
+            double progress = Math.min(1.0, (double)elapsed[0] / flightTicks);
+            double inverse = 1.0 - progress;
+            double x = inverse * inverse * start.getX() + 2.0 * inverse * progress * control.getX() + progress * progress * target.getX();
+            double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
+            double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
+            float yaw = progress >= 1.0 ? target.getYaw() : start.getYaw();
+            float pitch = progress >= 1.0 ? target.getPitch() : start.getPitch();
+            player.teleport(new Location(start.getWorld(), x, y, z, yaw, pitch));
+            player.setFallDistance(0.0f);
+
+            if (elapsed[0] >= flightTicks) {
                 player.teleport(target);
                 scheduledTask[0].cancel();
                 this.roundLaunchTasks.remove(id);
                 ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
-                player.setVelocity(new Vector());
-                player.setNoPhysics(originallyNoPhysics);
-                player.setInvulnerable(originallyInvulnerable);
-                player.setAllowFlight(originallyAllowFlight);
-                if (originallyFlying && originallyAllowFlight) player.setFlying(true);
-                player.setFallDistance(0.0f);
-                return;
-            }
-
-            if (!collisionsRestored[0] && dx * dx + dz * dz < 9.0 && here.getY() <= target.getY() + 3.0
-                && player.getVelocity().getY() <= 0.0) {
-                player.setNoPhysics(originallyNoPhysics);
-                collisionsRestored[0] = true;
-            }
-
-            elapsed[0]++;
-            int remainingTicks = Math.max(1, flightTicks - elapsed[0]);
-            double vx = dx / remainingTicks;
-            double vz = dz / remainingTicks;
-            double horizontalSpeed = Math.sqrt(vx * vx + vz * vz);
-            if (horizontalSpeed > 2.0) {
-                vx *= 2.0 / horizontalSpeed;
-                vz *= 2.0 / horizontalSpeed;
-            }
-            player.setVelocity(new Vector(vx, player.getVelocity().getY(), vz));
-
-            // If server tick variation leaves the player just short of the spawn,
-            // keep steering without teleporting until the close-arrival threshold.
-            if (elapsed[0] > flightTicks + 20) {
-                scheduledTask[0].cancel();
-                this.roundLaunchTasks.remove(id);
-                ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
-                player.setNoPhysics(originallyNoPhysics);
-                player.setInvulnerable(originallyInvulnerable);
-                player.setAllowFlight(originallyAllowFlight);
-                if (originallyFlying && originallyAllowFlight) player.setFlying(true);
-                player.setFallDistance(0.0f);
+                this.restoreRoundLaunch(player, id, scheduledTask[0], originallyNoPhysics, originallyInvulnerable, originallyAllowFlight, originallyFlying);
             }
         }, 1L, 1L);
         scheduledTask[0] = task;
@@ -1315,41 +1283,18 @@ public class DuelManager {
         return flightTicks;
     }
 
-    private double velocityForApex(double apex) {
-        double low = 0.0;
-        double high = 0.1;
-        while (this.simulatedApex(high) < apex && high < 16.0) high *= 2.0;
-        for (int i = 0; i < 48; i++) {
-            double mid = (low + high) * 0.5;
-            if (this.simulatedApex(mid) < apex) low = mid;
-            else high = mid;
-        }
-        return (low + high) * 0.5;
-    }
-
-    private double simulatedApex(double initialVelocity) {
-        double height = 0.0;
-        double apex = 0.0;
-        double velocity = initialVelocity;
-        for (int tick = 0; tick < 200 && velocity > 0.0; tick++) {
-            height += velocity;
-            apex = Math.max(apex, height);
-            velocity = (velocity - 0.08) * 0.98;
-        }
-        return apex;
-    }
-
-    private int descendingTicksToHeight(double initialVelocity, double targetDeltaY) {
-        double height = 0.0;
-        double velocity = initialVelocity;
-        boolean descending = false;
-        for (int tick = 1; tick <= 400; tick++) {
-            height += velocity;
-            velocity = (velocity - 0.08) * 0.98;
-            if (velocity <= 0.0) descending = true;
-            if (descending && height <= targetDeltaY) return tick;
-        }
-        return 1;
+    private void restoreRoundLaunch(Player player, UUID id, BukkitTask task, boolean noPhysics,
+                                    boolean invulnerable, boolean allowFlight, boolean flying) {
+        if (task != null) task.cancel();
+        ROUND_LAUNCH_FALL_IMMUNITY.remove(id);
+        if (player == null || !player.isOnline()) return;
+        player.setVelocity(new Vector());
+        player.setNoPhysics(noPhysics);
+        player.setInvulnerable(invulnerable);
+        player.setAllowFlight(allowFlight);
+        if (flying && allowFlight) player.setFlying(true);
+        player.setFallDistance(0.0f);
+        player.setNoDamageTicks(0);
     }
 
     public static boolean cancelRoundLaunchFallDamage(EntityDamageEvent event) {
