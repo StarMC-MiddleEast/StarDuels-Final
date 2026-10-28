@@ -26,6 +26,9 @@ public class QueueManager {
     private final MeowDuels plugin;
     private final Map<String, LinkedHashSet<UUID>> queues = new LinkedHashMap<String, LinkedHashSet<UUID>>();
     private final Map<UUID, Long> waitingSince = new HashMap<UUID, Long>();
+    private final Map<UUID, Set<String>> requeue = new HashMap<UUID, Set<String>>();
+    private final Map<UUID, Long> requeueAt = new HashMap<UUID, Long>();
+    public static final String KEEP_QUEUING = "keep-queuing";
 
     public QueueManager(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -98,7 +101,58 @@ public class QueueManager {
         }
     }
 
+    /** Join each visible queue, or leave all of them when already queued for all. */
+    public void queueAll(Player player, java.util.List<String> kits) {
+        if (kits.isEmpty() || this.plugin.getPartyManager().busy(player)) return;
+        UUID id = player.getUniqueId();
+        if (this.plugin.getDuelManager().isInDuel(id)) return;
+        boolean allQueued = true;
+        for (String kit : kits) {
+            if (this.isQueuedFor(id, kit)) continue;
+            allQueued = false;
+            break;
+        }
+        if (allQueued) {
+            for (String kit : kits) this.leaveKit(player, kit, false);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>You left the queue for <yellow>all</yellow> visible kits.</gray>"));
+            Sounds.queueLeave(player);
+            return;
+        }
+        int joined = 0;
+        for (String kit : kits) {
+            if (this.plugin.getDuelManager().isInDuel(id)) return;
+            if (this.isQueuedFor(id, kit) || !this.plugin.getKitManager().exists(kit)
+                || !this.plugin.getDuelManager().hasUsableArena(kit)) continue;
+            this.join(player, kit, false);
+            if (this.isQueuedFor(id, kit)) joined++;
+        }
+        if (this.plugin.getDuelManager().isInDuel(id)) return;
+        if (joined == 0) {
+            Sounds.deny(player);
+            player.sendMessage(this.msg("queue.no-arena", new String[0]));
+            return;
+        }
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>You joined the queue for <yellow>" + joined + "</yellow> kits.</gray>"));
+        Sounds.queueJoin(player);
+    }
+
+    public boolean isKeepQueuing(UUID id) {
+        return this.plugin.getPlayerSettings().is(KEEP_QUEUING, id);
+    }
+
+    public void toggleKeepQueuing(UUID id) {
+        this.plugin.getPlayerSettings().toggle(KEEP_QUEUING, id);
+        if (!this.isKeepQueuing(id)) {
+            this.requeue.remove(id);
+            this.requeueAt.remove(id);
+        }
+    }
+
     public void join(Player player, String string2) {
+        this.join(player, string2, true);
+    }
+
+    private void join(Player player, String string2, boolean announce) {
         if (this.plugin.getPartyManager().busy(player)) {
             return;
         }
@@ -129,13 +183,19 @@ public class QueueManager {
         }
         this.tryMatch(QueueManager.key(string2));
         if (this.isQueued(uUID) && player.isOnline()) {
-            player.sendMessage(this.queuedLine("queue.joined-text", string2));
-            Sounds.queueJoin(player);
+            if (announce) {
+                player.sendMessage(this.queuedLine("queue.joined-text", string2));
+                Sounds.queueJoin(player);
+            }
             SpawnItems.setLeaveQueue(this.plugin, player, true);
         }
     }
 
     public void leaveKit(Player player, String string) {
+        this.leaveKit(player, string, true);
+    }
+
+    private void leaveKit(Player player, String string, boolean announce) {
         LinkedHashSet<UUID> linkedHashSet = this.queues.get(QueueManager.key(string));
         if (linkedHashSet == null || !linkedHashSet.remove(player.getUniqueId())) {
             return;
@@ -143,8 +203,10 @@ public class QueueManager {
         if (linkedHashSet.isEmpty()) {
             this.queues.remove(QueueManager.key(string));
         }
-        player.sendMessage(this.queuedLine("queue.left-text", string));
-        Sounds.queueLeave(player);
+        if (announce) {
+            player.sendMessage(this.queuedLine("queue.left-text", string));
+            Sounds.queueLeave(player);
+        }
         if (!this.isQueued(player.getUniqueId())) {
             this.waitingSince.remove(player.getUniqueId());
             SpawnItems.setLeaveQueue(this.plugin, player, false);
@@ -206,7 +268,13 @@ public class QueueManager {
                 this.remove(arrayList.get(1));
                 continue;
             }
-            if (!this.plugin.getDuelManager().startQueuedDuel(player2, player, string)) break;
+            this.rememberForRequeue(player2.getUniqueId());
+            this.rememberForRequeue(player.getUniqueId());
+            if (!this.plugin.getDuelManager().startQueuedDuel(player2, player, string)) {
+                this.requeue.remove(player2.getUniqueId());
+                this.requeue.remove(player.getUniqueId());
+                break;
+            }
         }
         if (bl) {
             player2.sendMessage(this.msg("queue.no-arena", new String[0]));
@@ -215,6 +283,7 @@ public class QueueManager {
     }
 
     public void tickMatch() {
+        this.tickRequeue();
         if (this.queues.isEmpty()) {
             return;
         }
@@ -222,6 +291,57 @@ public class QueueManager {
             LinkedHashSet<UUID> linkedHashSet = this.queues.get(string);
             if (linkedHashSet == null || linkedHashSet.size() < 2) continue;
             this.tryMatch(string, false);
+        }
+    }
+
+    private void rememberForRequeue(UUID id) {
+        if (!this.isKeepQueuing(id)) return;
+        Set<String> kits = this.queuedKits(id);
+        if (!kits.isEmpty()) {
+            this.requeue.put(id, kits);
+            this.requeueAt.remove(id);
+        }
+    }
+
+    private void tickRequeue() {
+        if (this.requeue.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        for (Map.Entry<UUID, Set<String>> entry : new ArrayList<>(this.requeue.entrySet())) {
+            UUID id = entry.getKey();
+            Player player = Bukkit.getPlayer(id);
+            if (player == null || !this.isKeepQueuing(id)) {
+                this.requeue.remove(id);
+                this.requeueAt.remove(id);
+                continue;
+            }
+            boolean busy = this.plugin.getDuelManager().isInDuel(id)
+                || this.plugin.getPartyManager().partyOf(id) != null
+                || this.plugin.getEventManager().isInvolved(id)
+                || this.plugin.getSpectateManager().isSpectating(id);
+            if (busy) {
+                this.requeueAt.remove(id);
+                continue;
+            }
+            Long at = this.requeueAt.get(id);
+            if (at == null) {
+                this.requeueAt.put(id, now + 2000L);
+                continue;
+            }
+            if (now < at) continue;
+            this.requeue.remove(id);
+            this.requeueAt.remove(id);
+            if (this.isQueued(id)) continue;
+            int joined = 0;
+            for (String kit : entry.getValue()) {
+                if (this.plugin.getDuelManager().isInDuel(id)) break;
+                if (!this.plugin.getKitManager().exists(kit) || !this.plugin.getDuelManager().hasUsableArena(kit)) continue;
+                this.join(player, kit, false);
+                if (this.isQueuedFor(id, kit)) joined++;
+            }
+            if (joined > 0 && !this.plugin.getDuelManager().isInDuel(id)) {
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<dark_gray>[<yellow>ⓘ</yellow>]</dark_gray> <gray>Keep Queuing put you back in the queue for <yellow>" + joined + "</yellow> " + (joined == 1 ? "kit" : "kits") + ".</gray>"));
+                Sounds.queueJoin(player);
+            }
         }
     }
 

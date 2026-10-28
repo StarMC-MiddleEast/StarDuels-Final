@@ -1,6 +1,7 @@
 package com.meowduels.gui;
 
 import com.meowduels.MeowDuels;
+import com.meowduels.dialog.QueueDialog;
 import com.meowduels.gui.Menu;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.model.Kit;
@@ -44,10 +45,15 @@ public final class QueuePickMenu extends Menu {
 
     @Override
     public void open(Player player) {
+        try {
+            if (QueueDialog.open(this.plugin, player, 0)) return;
+        } catch (LinkageError | RuntimeException error) {
+            this.plugin.getLogger().warning("Could not open the queue dialog; using the chest menu: " + error.getMessage());
+        }
         this.viewer = player;
         this.build();
         player.openInventory(this.inventory);
-        if (!this.plugin.getPlayerSettings().isButtonsGui(player.getUniqueId())) OPEN.add(this);
+        OPEN.add(this);
     }
 
     @Override

@@ -1,0 +1,35 @@
+# Settings for the /queue dialog only. Kits come from the normal queue kit list.
+# This screen has no category tabs; it lists every visible queue kit.
+enabled: true
+
+title: "<gradient:#FFF1B3:#E6A700><b>ǫᴜᴇᴜᴇ</b></gradient>"
+header: "<gray>ᴄʟɪᴄᴋ ᴀ ᴋɪᴛ ᴛᴏ ǫᴜᴇᴜᴇ"
+close: "<white>ᴄʟᴏꜱᴇ"
+width: 300
+row-width: 260
+close-width: 200
+page-size: 6
+empty: "<gray>ɴᴏ ǫᴜᴇᴜᴇ ᴋɪᴛꜱ ᴀᴠᴀɪʟᴀʙʟᴇ"
+page-label: "<gray>Page {page} of {pages}</gray>"
+previous-page: "<yellow>‹ Previous page</yellow>"
+next-page: "<yellow>Next page ›</yellow>"
+
+toggles:
+  on: "<green>☑</green>"
+  off: "<gray>☐</gray>"
+  queue-all: "{box} <white>Queue All"
+  queue-all-hover-off: "<gray>Join every visible kit queue"
+  queue-all-hover-on: "<gray>Leave every visible kit queue"
+  keep-queuing: "{box} <white>Keep Queuing"
+  keep-queuing-hover: "<gray>Rejoin the same queues after your match"
+  gap: "      "
+
+kit:
+  # {name} uses each kit's existing display name and prefix.
+  # Player counts include queued players and players currently fighting.
+  line: "{name} <dark_gray>→</dark_gray> <gray>{players} {players_word}"
+  queued: "{name} <dark_gray>→</dark_gray> <gray>{players} {players_word}"
+  player-word: "Player"
+  players-word: "Players"
+  hover: "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴊᴏɪɴ ᴛʜᴇ ǫᴜᴇᴜᴇ<newline><gray>ꜰɪɢʜᴛɪɴɢ <white>{fighting}</white> <dark_gray>·</dark_gray> <gray>ᴡᴀɪᴛɪɴɢ <white>{queued}"
+  hover-queued: "<red>ᴄʟɪᴄᴋ ᴛᴏ ʟᴇᴀᴠᴇ ᴛʜᴇ ǫᴜᴇᴜᴇ<newline><gray>ꜰɪɢʜᴛɪɴɢ <white>{fighting}</white> <dark_gray>·</dark_gray> <gray>ᴡᴀɪᴛɪɴɢ <white>{queued}"

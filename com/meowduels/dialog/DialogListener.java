@@ -2,6 +2,7 @@ package com.meowduels.dialog;
 
 import com.meowduels.MeowDuels;
 import com.meowduels.gui.Menu;
+import com.meowduels.gui.QueuePickMenu;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +31,21 @@ public final class DialogListener implements Listener {
         InventoryView view = event.getView();
         event.setCancelled(true);
         Bukkit.getScheduler().runTask(plugin, () -> {
-            if (player.isOnline()) DialogMenu.open(plugin, player, menu, view, 0, false);
+            if (!player.isOnline()) return;
+            if (menu instanceof QueuePickMenu) {
+                boolean opened = false;
+                try {
+                    opened = QueueDialog.open(plugin, player, 0);
+                } catch (LinkageError | RuntimeException error) {
+                    plugin.getLogger().warning("Could not open the queue dialog; using the chest menu: " + error.getMessage());
+                }
+                if (!opened) {
+                    allowNextChest(player);
+                    player.openInventory(view.getTopInventory());
+                }
+                return;
+            }
+            DialogMenu.open(plugin, player, menu, view, 0, false);
         });
     }
 
