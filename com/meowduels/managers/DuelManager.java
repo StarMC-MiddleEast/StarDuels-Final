@@ -406,6 +406,7 @@ public class DuelManager {
         player.teleport(location);
         player.setVelocity(new Vector(0.0, 0.0, 0.0));
         player.setFallDistance(0.0f);
+        player.setNoDamageTicks(0);
         GameModeGuard.pin(player, GameMode.SURVIVAL);
         try {
             player.setHealth(player.getMaxHealth());
@@ -589,10 +590,11 @@ public class DuelManager {
             Arena roundArena = activeDuel.getArena();
             Location center = this.arenaTransitionCenter(roundArena);
             if (roundArena != null && center != null) {
+                double flightCeiling = this.arenaTransitionCeiling(roundArena);
                 Player teamOne = Bukkit.getPlayer(activeDuel.getPlayer1());
                 Player teamTwo = Bukkit.getPlayer(activeDuel.getPlayer2());
-                if (teamOne != null) LaunchToSpawn.launch(teamOne, this.plugin, center, roundArena.getSpawn1(), () -> {});
-                if (teamTwo != null) LaunchToSpawn.launch(teamTwo, this.plugin, center, roundArena.getSpawn2(), () -> {});
+                if (teamOne != null) LaunchToSpawn.launch(teamOne, this.plugin, center, roundArena.getSpawn1(), flightCeiling, () -> {});
+                if (teamTwo != null) LaunchToSpawn.launch(teamTwo, this.plugin, center, roundArena.getSpawn2(), flightCeiling, () -> {});
             }
             activeDuel.nextRound();
             Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.regenArena(activeDuel, false), 2L);
@@ -1247,6 +1249,7 @@ public class DuelManager {
         Location center = this.arenaTransitionCenter(arena);
         Location firstSpawn = arena == null ? null : arena.getSpawn1();
         Location secondSpawn = arena == null ? null : arena.getSpawn2();
+        double flightCeiling = this.arenaTransitionCeiling(arena);
         java.util.concurrent.atomic.AtomicInteger pendingReturns = new java.util.concurrent.atomic.AtomicInteger(2);
         Runnable completed = () -> {
             if (pendingReturns.decrementAndGet() != 0) return;
@@ -1254,8 +1257,8 @@ public class DuelManager {
             this.openSummary(activeDuel, uUID, activeDuel.getPlayer1());
             this.openSummary(activeDuel, uUID, activeDuel.getPlayer2());
         };
-        this.returnToSpawn(activeDuel.getPlayer1(), center, firstSpawn, completed);
-        this.returnToSpawn(activeDuel.getPlayer2(), center, secondSpawn, completed);
+        this.returnToSpawn(activeDuel.getPlayer1(), center, firstSpawn, flightCeiling, completed);
+        this.returnToSpawn(activeDuel.getPlayer2(), center, secondSpawn, flightCeiling, completed);
     }
 
     private Location arenaTransitionCenter(Arena arena) {
@@ -1269,6 +1272,14 @@ public class DuelManager {
         y = Math.min(y, first.getWorld().getMaxHeight() - 2.0);
         float yaw = first.getYaw();
         return new Location(first.getWorld(), x, y, z, yaw, 0.0f);
+    }
+
+    private double arenaTransitionCeiling(Arena arena) {
+        Location max = arena == null ? null : arena.getMax();
+        Location first = arena == null ? null : arena.getSpawn1();
+        Location second = arena == null ? null : arena.getSpawn2();
+        double fallback = first == null || second == null ? 0.0 : Math.max(first.getY(), second.getY()) + 5.0;
+        return max == null ? fallback : max.getY() + 1.0;
     }
 
     private void sendEndMessages(ActiveDuel duel, UUID winnerId, EndReason reason) {
@@ -1303,7 +1314,7 @@ public class DuelManager {
         }
     }
 
-    private void returnToSpawn(UUID playerId, Location center, Location spawn, Runnable completed) {
+    private void returnToSpawn(UUID playerId, Location center, Location spawn, double flightCeiling, Runnable completed) {
         Player player = Bukkit.getPlayer(playerId);
         if (player == null || !player.isOnline() || this.isInDuel(playerId)
             || this.plugin.getEventManager().isInvolved(playerId)
@@ -1316,7 +1327,7 @@ public class DuelManager {
             completed.run();
             return;
         }
-        if (!LaunchToSpawn.launch(player, this.plugin, center, spawn, completed)) {
+        if (!LaunchToSpawn.launch(player, this.plugin, center, spawn, flightCeiling, completed)) {
             player.teleport(spawn);
             completed.run();
         }
