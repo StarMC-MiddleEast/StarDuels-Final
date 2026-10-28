@@ -45,10 +45,14 @@ public final class QueuePickMenu extends Menu {
 
     @Override
     public void open(Player player) {
-        try {
-            if (QueueDialog.open(this.plugin, player, 0)) return;
-        } catch (LinkageError | RuntimeException error) {
-            this.plugin.getLogger().warning("Could not open the queue dialog; using the chest menu: " + error.getMessage());
+        // The dialog queue has its own fast path, so respect the player's
+        // Buttons GUI preference here instead of always opening it.
+        if (this.plugin.getPlayerSettings().isButtonsGui(player.getUniqueId())) {
+            try {
+                if (QueueDialog.open(this.plugin, player, 0)) return;
+            } catch (LinkageError | RuntimeException error) {
+                this.plugin.getLogger().warning("Could not open the queue dialog; using the chest menu: " + error.getMessage());
+            }
         }
         this.viewer = player;
         this.build();
