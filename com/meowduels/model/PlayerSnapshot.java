@@ -28,8 +28,8 @@ public class PlayerSnapshot {
     private PlayerSnapshot(Player player) {
         this.location = player.getLocation().clone();
         this.gameMode = player.getGameMode();
-        this.contents = (ItemStack[])player.getInventory().getStorageContents().clone();
-        this.armor = (ItemStack[])player.getInventory().getArmorContents().clone();
+        this.contents = cloneItems(player.getInventory().getStorageContents());
+        this.armor = cloneItems(player.getInventory().getArmorContents());
         this.offhand = player.getInventory().getItemInOffHand().clone();
         this.health = player.getHealth();
         this.foodLevel = player.getFoodLevel();
@@ -40,6 +40,15 @@ public class PlayerSnapshot {
         this.allowFlight = player.getAllowFlight();
         this.flying = player.isFlying();
         this.effects = new ArrayList<PotionEffect>(player.getActivePotionEffects());
+    }
+
+    private static ItemStack[] cloneItems(ItemStack[] items) {
+        if (items == null) return null;
+        ItemStack[] copy = new ItemStack[items.length];
+        for (int i = 0; i < items.length; i++) {
+            copy[i] = items[i] == null ? null : items[i].clone();
+        }
+        return copy;
     }
 
     public static PlayerSnapshot capture(Player player) {

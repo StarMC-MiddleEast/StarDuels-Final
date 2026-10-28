@@ -1221,13 +1221,14 @@ public class DuelManager {
         if (this.roundLaunchTasks.containsKey(id)) return 40L;
         ROUND_LAUNCH_FALL_IMMUNITY.add(id);
 
-        final double maxStepPerTick = 0.45;
         double safeLift = Math.max(0.0, start.getWorld().getMaxHeight() - Math.max(start.getY(), target.getY()) - 2.0);
         double lift = Math.min(5.0, safeLift);
         Location control = start.clone().add(target).multiply(0.5);
         control.setY(Math.max(start.getY(), target.getY()) + 2.0 * lift);
         double pathLengthEstimate = start.distance(control) + control.distance(target);
-        final int flightTicks = Math.max(80, (int)Math.ceil(pathLengthEstimate / maxStepPerTick));
+        final int targetFlightTicks = 80; // About four seconds on ordinary arenas.
+        final double maxStepPerTick = Math.min(0.8, Math.max(0.45, pathLengthEstimate / targetFlightTicks));
+        final int flightTicks = Math.max(targetFlightTicks, (int)Math.ceil(pathLengthEstimate / maxStepPerTick));
 
         boolean originallyInvulnerable = player.isInvulnerable();
         boolean originallyNoPhysics = player.hasNoPhysics();
