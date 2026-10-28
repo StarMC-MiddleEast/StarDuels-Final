@@ -1263,20 +1263,23 @@ public class DuelManager {
             double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
             Location current = player.getLocation();
-            // Bukkit velocity is measured in blocks per tick, so use the
-            // per-tick path delta directly. Multiplying it by 20 causes huge
-            // corrections and server kicks on longer paths.
-            Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ());
-            if (steeringVelocity.length() > maxStepPerTick) {
-                steeringVelocity.normalize().multiply(maxStepPerTick);
+            Vector step = new Vector(x - current.getX(), y - current.getY(), z - current.getZ());
+            if (step.length() > maxStepPerTick) {
+                step.normalize().multiply(maxStepPerTick);
             }
-            player.setVelocity(steeringVelocity);
+            // Player velocity is subject to movement collision checks. Small
+            // server teleports follow the same controlled arc but can pass
+            // through solid blocks without leaving the player wedged inside.
+            Location next = new Location(start.getWorld(), current.getX() + step.getX(),
+                current.getY() + step.getY(), current.getZ() + step.getZ(), current.getYaw(), current.getPitch());
+            player.teleport(next);
+            player.setVelocity(new Vector());
             player.setFallDistance(0.0f);
 
             if (elapsed[0] >= flightTicks) {
                 Location arrival = target.clone();
-                arrival.setYaw(current.getYaw());
-                arrival.setPitch(current.getPitch());
+                arrival.setYaw(next.getYaw());
+                arrival.setPitch(next.getPitch());
                 player.teleport(arrival);
                 scheduledTask[0].cancel();
                 this.roundLaunchTasks.remove(id);
