@@ -1262,9 +1262,12 @@ public class DuelManager {
             double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
             Location current = player.getLocation();
-            Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ()).multiply(20.0);
-            if (steeringVelocity.length() > maxStepPerTick * 20.0) {
-                steeringVelocity.normalize().multiply(maxStepPerTick * 20.0);
+            // Bukkit velocity is measured in blocks per tick, so use the
+            // per-tick path delta directly. Multiplying it by 20 causes huge
+            // corrections and server kicks on longer paths.
+            Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ());
+            if (steeringVelocity.length() > maxStepPerTick) {
+                steeringVelocity.normalize().multiply(maxStepPerTick);
             }
             player.setVelocity(steeringVelocity);
             player.setFallDistance(0.0f);
