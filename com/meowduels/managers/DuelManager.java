@@ -407,6 +407,7 @@ public class DuelManager {
         player.setVelocity(new Vector(0.0, 0.0, 0.0));
         player.setFallDistance(0.0f);
         player.setNoDamageTicks(0);
+        player.setInvulnerable(false);
         GameModeGuard.pin(player, GameMode.SURVIVAL);
         try {
             player.setHealth(player.getMaxHealth());
@@ -492,6 +493,10 @@ public class DuelManager {
         }
         activeDuel.setState(ActiveDuel.State.FIGHTING);
         activeDuel.markFightStart();
+        player.setNoDamageTicks(0);
+        player2.setNoDamageTicks(0);
+        player.setInvulnerable(false);
+        player2.setInvulnerable(false);
         this.giveStartEffects(activeDuel, player, player2);
         Component component = DuelManager.mm("");
         player.sendActionBar(component);

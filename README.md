@@ -4,7 +4,7 @@ StarDuels is a Paper plugin for player duels, parties, queues, arenas, and event
 
 ## Build
 
-Run `mvn package` from this directory. The plugin JAR is written to `target/StarDuels-5.1.9.jar`.
+Run `mvn package` from this directory. The plugin JAR is written to `target/StarDuels-5.1.10.jar`.
 
 ## Install
 

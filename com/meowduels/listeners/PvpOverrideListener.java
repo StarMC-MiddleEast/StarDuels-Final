@@ -23,17 +23,21 @@ implements Listener {
         this.plugin = meowDuels;
     }
 
-    // Run after protection plugins that commonly cancel PvP at HIGH priority.
-    @EventHandler(priority=EventPriority.HIGHEST)
+    // Apply the configured in-match PvP policy after region/protection handlers.
+    @EventHandler(priority=EventPriority.MONITOR)
     public void onPvp(EntityDamageByEntityEvent entityDamageByEntityEvent) {
         this.revive(entityDamageByEntityEvent);
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
     public void onPrePlayerAttack(PrePlayerAttackEntityEvent event) {
-        if (!this.plugin.getConfig().getBoolean("pvp.force-in-match", true)) return;
         if (!(event.getAttacked() instanceof Player target) || !event.willAttack()) return;
-        if (this.allowed(event.getPlayer().getUniqueId(), target.getUniqueId())) event.setCancelled(false);
+        UUID attackerId = event.getPlayer().getUniqueId();
+        UUID targetId = target.getUniqueId();
+        if (this.isActiveDuel(attackerId, targetId)
+            || this.plugin.getConfig().getBoolean("pvp.force-in-match", true) && this.allowed(attackerId, targetId)) {
+            event.setCancelled(false);
+        }
     }
 
     private void revive(EntityDamageByEntityEvent entityDamageByEntityEvent) {
@@ -48,9 +52,17 @@ implements Listener {
         if (player2 == null || player2.getUniqueId().equals(player.getUniqueId())) {
             return;
         }
-        if (this.allowed(player2.getUniqueId(), player.getUniqueId())) {
+        UUID attackerId = player2.getUniqueId();
+        UUID targetId = player.getUniqueId();
+        if (this.isActiveDuel(attackerId, targetId)
+            || this.plugin.getConfig().getBoolean("pvp.force-in-match", true) && this.allowed(attackerId, targetId)) {
             entityDamageByEntityEvent.setCancelled(false);
         }
+    }
+
+    private boolean isActiveDuel(UUID attacker, UUID target) {
+        ActiveDuel duel = this.plugin.getDuelManager().getDuel(target);
+        return duel != null && duel.getState() == ActiveDuel.State.FIGHTING && duel.involves(attacker);
     }
 
     private static Player shooter(Entity entity) {
