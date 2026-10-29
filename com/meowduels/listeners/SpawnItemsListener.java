@@ -15,10 +15,12 @@ import com.meowduels.util.SpawnItems;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -29,7 +31,6 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Vector;
 
 public class SpawnItemsListener
 implements Listener {
@@ -119,23 +120,6 @@ implements Listener {
             return;
         }
         Player player = playerInteractEvent.getPlayer();
-        if (playerInteractEvent.getItem().getType() == org.bukkit.Material.WIND_CHARGE
-                && bl && playerInteractEvent.getHand() == EquipmentSlot.HAND && this.isMaceMode(player)
-                && !player.isOnGround() && player.getVelocity().getY() < -0.1
-                && player.getLocation().getPitch() >= 75.0f) {
-            this.plugin.getServer().getScheduler().runTaskLater((Plugin)this.plugin, () -> {
-                if (!player.isOnline() || !this.isMaceMode(player)) return;
-                Vector velocity = player.getVelocity();
-                // Brake only a fall that is still in progress. If a real hit
-                // supplied upward knockback after the throw, preserve it.
-                if (velocity.getY() < -0.05) {
-                    player.setVelocity(new Vector(velocity.getX(), 0.0, velocity.getZ()));
-                }
-                player.setFallDistance(0.0f);
-                player.getWorld().spawnParticle(org.bukkit.Particle.CLOUD,
-                        player.getLocation().add(0.0, 0.9, 0.0), 12, 0.22, 0.28, 0.22, 0.02);
-            }, 1L);
-        }
         String string = Items.readTag(playerInteractEvent.getItem(), this.plugin.keyButton());
         if (string == null) {
             return;
@@ -223,6 +207,21 @@ implements Listener {
             }
             this.plugin.getDuelManager().requestRematch(player);
         }
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onMaceWindChargeImpact(EntityExplodeEvent event) {
+        if (!(event.getEntity() instanceof AbstractWindCharge charge)
+                || !(charge.getShooter() instanceof Player player)
+                || !this.isMaceMode(player)
+                || !player.isOnline()
+                || player.getWorld() != event.getLocation().getWorld()
+                || player.getLocation().distanceSquared(event.getLocation()) > 36.0) {
+            return;
+        }
+        // Only clear accumulated fall damage when this player's charge actually
+        // detonates close enough to connect. Keep all velocity handling vanilla.
+        player.setFallDistance(0.0f);
     }
 
     private boolean isMaceMode(Player player) {

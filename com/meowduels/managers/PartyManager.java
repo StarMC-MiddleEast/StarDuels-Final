@@ -26,8 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.Duration;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -553,18 +551,15 @@ public class PartyManager {
                     kit.applyStartEffects(player);
                 }
                 this.showTitle(player, this.msg("party.countdown-go", new String[0]), "", 0, 20, 10);
-                player.sendActionBar(this.deserialize(""));
                 Sounds.fight(player);
             }
             return;
         }
         int n3 = (n2 + 19) / 20;
         boolean bl = n2 % 20 == 0;
-        String string = "<#6B7079>" + Cooldowns.bar((long)n2 * 50L, (long)Math.max(1, n) * 1000L, 20);
         for (UUID uUID : party.getAlive()) {
             Player player = Bukkit.getPlayer((UUID)uUID);
             if (player == null) continue;
-            player.sendActionBar(this.deserialize(string));
             if (!bl) continue;
             this.showTitle(player, this.msg("party.countdown-title", "seconds", String.valueOf(n3)), this.countdownSubtitle(party, uUID), 0, 25, 0);
             Sounds.tick(player, n3, n);
@@ -574,15 +569,6 @@ public class PartyManager {
                 this.countdownTick(party, n, n2 - 10);
             }
         }, 10L);
-    }
-
-    private Component deserialize(String string) {
-        try {
-            return MiniMessage.miniMessage().deserialize(string);
-        }
-        catch (Throwable throwable) {
-            return MiniMessage.miniMessage().deserialize("");
-        }
     }
 
     private String countdownSubtitle(Party party, UUID uUID) {
