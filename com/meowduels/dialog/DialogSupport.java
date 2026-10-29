@@ -1,6 +1,7 @@
 package com.meowduels.dialog;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -13,6 +14,16 @@ public final class DialogSupport {
 
     public static boolean isAvailable(Plugin plugin, Player player) {
         if (player == null || !paperDialogApiPresent(plugin)) return false;
+
+        // VulkanMod is a client-side Fabric renderer, so the server cannot
+        // detect that mod by name. Fabric/Quilt clients can fail to render
+        // Paper's native dialog screen; use the equivalent inventory menu.
+        String brand = player.getClientBrandName();
+        if (brand != null) {
+            String normalizedBrand = brand.toLowerCase(Locale.ROOT);
+            if (normalizedBrand.contains("fabric") || normalizedBrand.contains("quilt")
+                || normalizedBrand.contains("vulkan")) return false;
+        }
 
         Plugin via = plugin.getServer().getPluginManager().getPlugin("ViaVersion");
         if (via == null || !via.isEnabled()) return true;
