@@ -203,13 +203,20 @@ public class EventManager {
     }
 
     private Location eventSpawnLoc() {
-        if (this.arena == null) {
+        if (this.arena == null || this.arena.getMin() == null || this.arena.getMax() == null) {
             return null;
         }
-        if (this.arena.getEventSpawn() != null) {
-            return this.arena.getEventSpawn();
-        }
-        return this.arena.getSpawn1() != null ? this.arena.getSpawn1() : this.arena.getSpawn2();
+        World world = this.arena.getWorld();
+        if (world == null) return null;
+        Location min = this.arena.getMin();
+        Location max = this.arena.getMax();
+        Location configured = this.arena.getEventSpawn();
+        int x = (min.getBlockX() + max.getBlockX()) / 2;
+        int z = (min.getBlockZ() + max.getBlockZ()) / 2;
+        int y = configured == null ? (min.getBlockY() + max.getBlockY()) / 2 : configured.getBlockY();
+        return new Location(world, x + 0.5, y, z + 0.5,
+                configured == null ? 0.0f : configured.getYaw(),
+                configured == null ? 0.0f : configured.getPitch());
     }
 
     public boolean isSpectating(UUID uUID) {

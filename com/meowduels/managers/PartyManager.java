@@ -467,6 +467,29 @@ public class PartyManager {
         return new Location(world, (double)n + 0.5, (double)(n3 + 1), (double)n2 + 0.5);
     }
 
+    private Location partyFfaSpawn(Arena arena) {
+        World world = arena.getWorld();
+        Location min = arena.getMin();
+        Location max = arena.getMax();
+        if (world == null || min == null || max == null) return null;
+        int x = (min.getBlockX() + max.getBlockX()) / 2;
+        int z = (min.getBlockZ() + max.getBlockZ()) / 2;
+        Location configured = arena.getEventSpawn();
+        int floorY = Math.min(min.getBlockY(), max.getBlockY());
+        for (int y = Math.max(min.getBlockY(), max.getBlockY()); y >= floorY; y--) {
+            if (world.getBlockAt(x, y, z).getType() == Material.AIR) continue;
+            Location center = new Location(world, x + 0.5, y + 1.0, z + 0.5);
+            if (configured != null) {
+                center.setYaw(configured.getYaw());
+                center.setPitch(configured.getPitch());
+            }
+            return center;
+        }
+        return new Location(world, x + 0.5, floorY + 1.0, z + 0.5,
+                configured == null ? 0.0f : configured.getYaw(),
+                configured == null ? 0.0f : configured.getPitch());
+    }
+
     private void sendIn(Party party, Player player, Kit kit, Arena arena) {
         this.sendIn(party, player, kit, arena, true);
     }
@@ -480,7 +503,10 @@ public class PartyManager {
             party.getSnapshots().put(uUID, PlayerSnapshot.capture(player));
         }
         Party.Team team2 = team = party.isTeamMode() ? party.teamOf(player.getUniqueId()) : null;
-        Location location = team == null ? (n % 2 == 0 ? arena.getSpawn1() : arena.getSpawn2()) : (team == Party.Team.AQUA ? arena.getSpawn1() : arena.getSpawn2());
+        Location location = party.getMode() == PartyMode.FFA
+                ? this.partyFfaSpawn(arena)
+                : (team == null ? (n % 2 == 0 ? arena.getSpawn1() : arena.getSpawn2())
+                : (team == Party.Team.AQUA ? arena.getSpawn1() : arena.getSpawn2()));
         if (location == null) {
             location = this.partySpawn(arena);
         }

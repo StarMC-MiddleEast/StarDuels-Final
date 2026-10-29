@@ -17,7 +17,6 @@ import com.meowduels.util.MiniMessageUtil;
 import com.meowduels.util.LaunchToSpawn;
 import com.meowduels.util.Sounds;
 import com.meowduels.util.SpawnItems;
-import com.meowduels.util.KitIconPopEffect;
 import com.meowduels.util.Text;
 import com.meowduels.util.Trims;
 import java.util.ArrayList;
@@ -273,13 +272,6 @@ public class DuelManager {
         if (player == null || player2 == null) {
             this.handleDisconnect(player == null ? activeDuel.getPlayer1() : activeDuel.getPlayer2());
             return;
-        }
-        if (queuedMatch) {
-            Kit queuedKit = this.plugin.getKitManager().get(activeDuel.getKit());
-            if (queuedKit != null) {
-                KitIconPopEffect.play(player, queuedKit.getIcon(), this.plugin);
-                KitIconPopEffect.play(player2, queuedKit.getIcon(), this.plugin);
-            }
         }
         this.playMatchFound(player);
         this.playMatchFound(player2);
@@ -1125,13 +1117,19 @@ public class DuelManager {
     }
 
     public void tickWorldLocks() {
-        if (this.playerDuels.isEmpty()) {
-            return;
+        Set<World> worlds = Collections.newSetFromMap(new IdentityHashMap<World, Boolean>());
+        for (Arena arena : this.plugin.getArenaManager().all()) {
+            World world = arena == null ? null : arena.getWorld();
+            if (world != null && worlds.add(world)) {
+                DuelManager.applyWorldLocks(arena);
+            }
         }
-        Set set = Collections.newSetFromMap(new IdentityHashMap());
         for (ActiveDuel activeDuel : this.playerDuels.values()) {
-            if (activeDuel.getArena() == null || !set.add(activeDuel.getArena())) continue;
-            DuelManager.applyWorldLocks(activeDuel.getArena());
+            Arena arena = activeDuel.getArena();
+            World world = arena == null ? null : arena.getWorld();
+            if (world != null && worlds.add(world)) {
+                DuelManager.applyWorldLocks(arena);
+            }
         }
     }
 
@@ -1161,7 +1159,10 @@ public class DuelManager {
                     world.setWeatherDuration(Integer.MAX_VALUE);
                 }
             }
-            if (arena.isLockDayTime() && Math.abs(world.getTime() - 6000L) > 200L) {
+            if (world.getGameRuleValue(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE)) {
+                world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
+            }
+            if (Math.abs(world.getTime() - 6000L) > 200L) {
                 world.setTime(6000L);
             }
         }
