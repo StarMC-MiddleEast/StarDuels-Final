@@ -357,10 +357,10 @@ kit-names:
 # ============================================================================
 #  ARENA REGENERATION
 # ----------------------------------------------------------------------------
-#  Blocks players placed/broke are put back the moment a match ends. The
-#  full snapshot check (water, lava, fire, cobble) then runs in the
-#  background, this many milliseconds per tick, and the arena is not reused
-#  until it finishes. Higher = arenas come back faster, but more MSPT.
+#  Blocks players placed/broke are put back the moment a match ends. Full
+#  post-match snapshots use FastAsyncWorldEdit when it is installed. Without
+#  FAWE, the restore is spread across ticks using this budget. The arena stays
+#  unavailable until its snapshot is fully restored.
 # ============================================================================
 regen:
   ms-per-tick: 3

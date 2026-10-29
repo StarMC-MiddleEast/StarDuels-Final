@@ -66,6 +66,8 @@ public class ArenaManager {
      * finishes, with when they were held - see {@link #sweepStaleHolds}.
      */
     private final Map<String, Long> regenerating = new HashMap<String, Long>();
+    /** Async FAWE passes are not represented in regenJobs, so exclude them from stale-hold cleanup. */
+    private final Set<String> asyncRegen = new HashSet<String>();
     private int sweepCountdown = 20;
     private volatile Set<String> arenaWorlds = new HashSet<String>();
 
@@ -409,8 +411,113 @@ public class ArenaManager {
         }
         this.regenerating.put(key, System.currentTimeMillis());
         Location min = arena.getMin();
+        if (this.tryFastAsyncRegen(key, arena.getName(), arena.getWorld(), regionClipboard,
+                min.getBlockX(), min.getBlockY(), min.getBlockZ(), whenDone)) {
+            return;
+        }
         this.regenJobs.addLast(new RegenJob(key, arena.getName(), arena.getWorld(), regionClipboard,
                 min.getBlockX(), min.getBlockY(), min.getBlockZ(), true, whenDone));
+    }
+
+    /**
+     * Uses FAWE's edit queue for the large, post-match snapshot pass. FAWE is
+     * optional; without it the existing tick-budgeted Bukkit restore is used.
+     * The Bukkit world and palette are adapted on the server thread, and the
+     * edit session is only used from the async task (FAWE's supported queue).
+     */
+    private boolean tryFastAsyncRegen(String key, String name, World world, RegionClipboard clip,
+                                      int ox, int oy, int oz, Runnable whenDone) {
+        org.bukkit.plugin.Plugin fawe = Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit");
+        if (fawe == null || !fawe.isEnabled()) {
+            return false;
+        }
+        try {
+            Class<?> adapterClass = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
+            Object adaptedWorld = invokeStaticCompatible(adapterClass, "adapt", world);
+            Object[] states = new Object[clip.palette.length];
+            for (int i = 0; i < states.length; i++) {
+                states[i] = invokeStaticCompatible(adapterClass, "adapt", clip.resolvedState(i));
+            }
+            this.asyncRegen.add(key);
+            Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+                boolean success = false;
+                try {
+                    Class<?> worldEditClass = Class.forName("com.sk89q.worldedit.WorldEdit");
+                    Object worldEdit = worldEditClass.getMethod("getInstance").invoke(null);
+                    Object builder = worldEditClass.getMethod("newEditSessionBuilder").invoke(worldEdit);
+                    invokeCompatible(builder, "world", adaptedWorld);
+                    try {
+                        invokeCompatible(builder, "fastMode", true);
+                    } catch (NoSuchMethodException ignored) { }
+                    Object session = builder.getClass().getMethod("build").invoke(builder);
+                    try {
+                        Class<?> vectorClass = Class.forName("com.sk89q.worldedit.math.BlockVector3");
+                        java.lang.reflect.Method at = vectorClass.getMethod("at", int.class, int.class, int.class);
+                        java.lang.reflect.Method setBlock = null;
+                        for (java.lang.reflect.Method method : session.getClass().getMethods()) {
+                            if (method.getName().equals("setBlock") && method.getParameterCount() == 2
+                                    && method.getParameterTypes()[0].isAssignableFrom(vectorClass)) {
+                                setBlock = method;
+                                break;
+                            }
+                        }
+                        if (setBlock == null) throw new NoSuchMethodException("EditSession.setBlock(BlockVector3, BlockState)");
+                        int layer = clip.sizeX * clip.sizeZ;
+                        for (int cursor = 0; cursor < clip.indices.length; cursor++) {
+                            int paletteIndex = clip.indices[cursor];
+                            if (paletteIndex < 0) continue;
+                            int y = cursor / layer;
+                            int rem = cursor - y * layer;
+                            int x = rem / clip.sizeZ;
+                            int z = rem - x * clip.sizeZ;
+                            Object vector = at.invoke(null, ox + x, oy + y, oz + z);
+                            setBlock.invoke(session, vector, states[paletteIndex]);
+                        }
+                        success = true;
+                    } finally {
+                        try { session.getClass().getMethod("close").invoke(session); }
+                        catch (NoSuchMethodException ignored) { }
+                    }
+                } catch (Throwable failure) {
+                    this.plugin.getLogger().warning("FAWE regeneration for arena '" + name + "' failed; using the tick-based restore: " + failure);
+                }
+                final boolean pasted = success;
+                Bukkit.getScheduler().runTask(this.plugin, () -> {
+                    this.asyncRegen.remove(key);
+                    if (!pasted) {
+                        this.regenJobs.addLast(new RegenJob(key, name, world, clip, ox, oy, oz, true, whenDone));
+                    } else {
+                        this.finish(new RegenJob(key, name, world, clip, ox, oy, oz, true, whenDone));
+                    }
+                });
+            });
+            return true;
+        } catch (Throwable unavailable) {
+            this.asyncRegen.remove(key);
+            this.plugin.getLogger().warning("Could not initialize FAWE regeneration for arena '" + name + "'; using the tick-based restore: " + unavailable);
+            return false;
+        }
+    }
+
+    private static Object invokeStaticCompatible(Class<?> type, String name, Object argument) throws Exception {
+        for (java.lang.reflect.Method method : type.getMethods()) {
+            if (method.getName().equals(name) && method.getParameterCount() == 1
+                    && method.getParameterTypes()[0].isInstance(argument)) {
+                return method.invoke(null, argument);
+            }
+        }
+        throw new NoSuchMethodException(type.getName() + "." + name);
+    }
+
+    private static Object invokeCompatible(Object receiver, String name, Object argument) throws Exception {
+        for (java.lang.reflect.Method method : receiver.getClass().getMethods()) {
+            if (method.getName().equals(name) && method.getParameterCount() == 1
+                    && (argument == null || method.getParameterTypes()[0].isInstance(argument)
+                    || method.getParameterTypes()[0] == boolean.class && argument instanceof Boolean)) {
+                return method.invoke(receiver, argument);
+            }
+        }
+        throw new NoSuchMethodException(receiver.getClass().getName() + "." + name);
     }
 
     /**
@@ -523,6 +630,7 @@ public class ArenaManager {
         java.util.Iterator<Map.Entry<String, Long>> iterator = this.regenerating.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Long> entry = iterator.next();
+            if (this.asyncRegen.contains(entry.getKey())) continue;
             if (entry.getValue() > cutoff) continue;
             boolean queued = false;
             for (RegenJob job : this.regenJobs) {
@@ -907,6 +1015,12 @@ public class ArenaManager {
             this.materials = mats;
             this.stateful = states;
             this.resolved = blockDatas;
+        }
+
+        /** Resolve a palette entry on the server thread before passing it to FAWE. */
+        private BlockData resolvedState(int index) {
+            this.resolve();
+            return this.resolved[index];
         }
 
         /**
