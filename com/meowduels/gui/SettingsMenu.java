@@ -5,6 +5,7 @@ import com.meowduels.gui.Menu;
 import com.meowduels.gui.TrimKitMenu;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.util.Items;
+import com.meowduels.util.Trims;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -57,7 +58,7 @@ extends Menu {
         this.put(n, 14, BOARD, guiConfigManager.toggle(MENU, "scoreboard", this.plugin.getPlayerSettings().isScoreboard(this.owner), null, GuiConfigManager.Face.of(Material.LIGHT_GRAY_STAINED_GLASS_PANE, "{good}{tick} \u25a4 \ua731\u1d04\u1d0f\u0280\u1d07\u0299\u1d0f\u1d00\u0280\u1d05", "", "{good}{tick}\u1d1b\u029c\u1d07 \ua731\u026a\u1d05\u1d07\u0299\u1d00\u0280 \u026a\ua731 \u1d0f\u0274", "", ON_HINT).glow(), GuiConfigManager.Face.of(Material.LIGHT_GRAY_STAINED_GLASS_PANE, "{bad}{cross} \u25a4 \ua731\u1d04\u1d0f\u0280\u1d07\u0299\u1d0f\u1d00\u0280\u1d05", "", "{bad}{cross}\u1d1b\u029c\u1d07 \ua731\u026a\u1d05\u1d07\u0299\u1d00\u0280 \u026a\ua731 \u029c\u026a\u1d05\u1d05\u1d07\u0274", "", OFF_HINT)));
         this.put(n, 32, SOUNDS, guiConfigManager.toggle(MENU, "sounds", this.plugin.getPlayerSettings().isSounds(this.owner), null, GuiConfigManager.Face.of(Material.LIGHT_GRAY_STAINED_GLASS_PANE, "{good}{tick} \u266a \u1d0d\u1d07\u0274\u1d1c \ua731\u1d0f\u1d1c\u0274\u1d05\ua731", "", "{good}{tick}\u1d04\u029f\u026a\u1d04\u1d0b\ua731, \u1d04\u1d0f\u1d1c\u0274\u1d1b\u1d05\u1d0f\u1d21\u0274\ua731 \u1d00\u0274\u1d05 \u1d04\u1d1c\u1d07\ua731", "", ON_HINT).glow(), GuiConfigManager.Face.of(Material.LIGHT_GRAY_STAINED_GLASS_PANE, "{bad}{cross} \u266a \u1d0d\u1d07\u0274\u1d1c \ua731\u1d0f\u1d1c\u0274\u1d05\ua731", "", "{bad}{cross}\u1d0d\u1d07\u1d0f\u1d21\u1d05\u1d1c\u1d07\u029f\ua731 \u1d0d\u1d00\u1d0b\u1d07\ua731 \u0274\u1d0f \ua731\u1d0f\u1d1c\u0274\u1d05", "", OFF_HINT)));
         Player player = Bukkit.getPlayer((UUID)this.owner);
-        if (player != null && player.hasPermission("meowduels.trims")) {
+        if (Trims.canEdit(player)) {
             this.put(n, 37, TRIMS, guiConfigManager.item(MENU, "trims", null, Material.LEATHER_CHESTPLATE, "{value}\u1d0b\u026a\u1d1b \u1d1b\u0280\u026a\u1d0d\ua731", "", "{label}\ua731\u1d07\u1d1b \u028f\u1d0f\u1d1c\u0280 \u1d00\u0280\u1d0d\u1d0f\u1d1c\u0280 \u1d1b\u0280\u026a\u1d0d \u1d18\u1d07\u0280 \u1d0b\u026a\u1d1b", "", "{hint}\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u1d0f\u1d18\u1d07\u0274"));
         }
         boolean buttonsGui = this.plugin.getPlayerSettings().isButtonsGui(this.owner);

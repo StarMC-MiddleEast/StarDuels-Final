@@ -19,6 +19,9 @@ public final class MenuRouter {
     public static boolean usesDialog(MeowDuels plugin, Player player, Menu menu) {
         String name = menu.getClass().getSimpleName();
         if (!PLAYER_MENUS.contains(name)) return false;
+        // Native dialogs require Paper 1.21.6+ and a client protocol that can
+        // display them. Older server/client versions keep using the chest GUI.
+        if (!DialogSupport.isAvailable(plugin, player)) return false;
         // Keep the switch reachable even when the player chooses chest menus.
         if ("SettingsMenu".equals(name)) return true;
         return plugin.getPlayerSettings().isButtonsGui(player.getUniqueId());

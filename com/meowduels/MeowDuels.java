@@ -106,6 +106,7 @@ extends JavaPlugin {
     public void onEnable() {
         this.migrateLegacyDataFolder();
         this.saveDefaultConfig();
+        this.saveResource("permissions.yml", false);
         this.mergeConfigDefaults();
         this.migrateDuelMarker();
         this.migrateBoardMarker();

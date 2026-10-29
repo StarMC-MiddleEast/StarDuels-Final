@@ -6,6 +6,7 @@ import com.meowduels.gui.TrimMenu;
 import com.meowduels.managers.GuiConfigManager;
 import com.meowduels.model.Kit;
 import com.meowduels.util.Items;
+import com.meowduels.util.Trims;
 import com.meowduels.util.Text;
 import java.util.HashMap;
 import org.bukkit.entity.Player;
@@ -49,6 +50,10 @@ extends Menu {
 
     @Override
     public void onClick(Player player, InventoryClickEvent inventoryClickEvent) {
+        if (!Trims.canEdit(player)) {
+            player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+            return;
+        }
         String string = Items.readTag(inventoryClickEvent.getCurrentItem(), this.plugin.keyKit());
         if (string != null && this.plugin.getKitManager().exists(string)) {
             new TrimMenu(this.plugin, string, player.getUniqueId()).open(player);

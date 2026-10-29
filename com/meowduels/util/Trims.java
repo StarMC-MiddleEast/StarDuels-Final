@@ -8,6 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.inventory.meta.trim.TrimMaterial;
 import org.bukkit.inventory.meta.trim.TrimPattern;
+import org.bukkit.entity.Player;
 
 public final class Trims {
     public static final String[] PATTERN_KEYS = new String[]{"sentry", "dune", "coast", "wild", "ward", "eye", "vex", "tide", "snout", "rib", "spire", "wayfinder", "shaper", "silence", "raiser", "host", "flow", "bolt"};
@@ -36,6 +37,28 @@ public final class Trims {
 
     public static boolean available() {
         return Trims.pattern("sentry") != null && Trims.material("quartz") != null;
+    }
+
+    public static boolean canEdit(Player player) {
+        return player != null && (player.hasPermission("starduels.trims") || player.hasPermission("meowduels.trims"));
+    }
+
+    public static boolean canUse(Player player, String pattern, String material) {
+        if (player == null || pattern == null || material == null) return false;
+        return player.hasPermission("starduels.trims.all")
+            || player.hasPermission("starduels.trim." + pattern.toLowerCase(java.util.Locale.ROOT)
+                + "." + material.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    public static boolean hasAnyPermission(Player player) {
+        if (player == null) return false;
+        if (player.hasPermission("starduels.trims.all")) return true;
+        for (String pattern : PATTERN_KEYS) {
+            for (String material : MATERIAL_KEYS) {
+                if (canUse(player, pattern, material)) return true;
+            }
+        }
+        return false;
     }
 
     public static boolean apply(ItemStack itemStack, String string, String string2) {

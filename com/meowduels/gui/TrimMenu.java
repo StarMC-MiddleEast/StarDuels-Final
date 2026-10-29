@@ -10,6 +10,7 @@ import com.meowduels.util.Trims;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -54,6 +55,8 @@ extends Menu {
         if (kit == null) {
             return;
         }
+        Player viewer = Bukkit.getPlayer(this.owner);
+        if (viewer != null) this.selectFirstAllowed(viewer);
         ItemStack[] itemStackArray = kit.getArmor();
         this.inventory.setItem(20, this.armorDisplay(guiConfigManager, itemStackArray, 3, guiConfigManager.line(MENU, "armor", "piece-helmet", "\u029c\u1d07\u029f\u1d0d\u1d07\u1d1b", null)));
         this.inventory.setItem(21, this.armorDisplay(guiConfigManager, itemStackArray, 2, guiConfigManager.line(MENU, "armor", "piece-chestplate", "\u1d04\u029c\u1d07\ua731\u1d1b\u1d18\u029f\u1d00\u1d1b\u1d07", null)));
@@ -146,17 +149,27 @@ extends Menu {
 
     @Override
     public void onClick(Player player, InventoryClickEvent inventoryClickEvent) {
+        if (!Trims.canEdit(player)) {
+            player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+            return;
+        }
         ItemStack itemStack = inventoryClickEvent.getCurrentItem();
         String string = Items.readTag(itemStack, this.plugin.keyButton());
         if ("trim-pattern".equals(string)) {
             int n = inventoryClickEvent.isRightClick() ? -1 : 1;
-            this.patternIndex = (this.patternIndex + n + Trims.PATTERN_KEYS.length) % Trims.PATTERN_KEYS.length;
+            if (!this.cyclePattern(player, n)) {
+                player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+                return;
+            }
             this.reopen(player);
             return;
         }
         if ("trim-material".equals(string)) {
             int n = inventoryClickEvent.isRightClick() ? -1 : 1;
-            this.materialIndex = (this.materialIndex + n + Trims.MATERIAL_KEYS.length) % Trims.MATERIAL_KEYS.length;
+            if (!this.cycleMaterial(player, n)) {
+                player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+                return;
+            }
             this.reopen(player);
             return;
         }
@@ -193,6 +206,10 @@ extends Menu {
     }
 
     private void applyOne(Player player, int n) {
+        if (!Trims.canUse(player, Trims.PATTERN_KEYS[this.patternIndex], Trims.MATERIAL_KEYS[this.materialIndex])) {
+            player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+            return;
+        }
         Kit kit = this.plugin.getKitManager().get(this.kitName);
         if (kit == null) {
             return;
@@ -212,6 +229,10 @@ extends Menu {
     }
 
     private void applyAll(Player player) {
+        if (!Trims.canUse(player, Trims.PATTERN_KEYS[this.patternIndex], Trims.MATERIAL_KEYS[this.materialIndex])) {
+            player.sendMessage(this.plugin.messages().get("general.no-permission", new String[0]));
+            return;
+        }
         Kit kit = this.plugin.getKitManager().get(this.kitName);
         if (kit == null) {
             return;
@@ -234,6 +255,46 @@ extends Menu {
     private void reopen(Player player) {
         this.build();
         player.openInventory(this.inventory);
+    }
+
+    private boolean cyclePattern(Player player, int direction) {
+        for (int patternStep = 1; patternStep <= Trims.PATTERN_KEYS.length; patternStep++) {
+            int pattern = Math.floorMod(this.patternIndex + direction * patternStep, Trims.PATTERN_KEYS.length);
+            for (int materialStep = 0; materialStep < Trims.MATERIAL_KEYS.length; materialStep++) {
+                int material = Math.floorMod(this.materialIndex + direction * materialStep, Trims.MATERIAL_KEYS.length);
+                if (!Trims.canUse(player, Trims.PATTERN_KEYS[pattern], Trims.MATERIAL_KEYS[material])) continue;
+                this.patternIndex = pattern;
+                this.materialIndex = material;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean cycleMaterial(Player player, int direction) {
+        for (int materialStep = 1; materialStep <= Trims.MATERIAL_KEYS.length; materialStep++) {
+            int material = Math.floorMod(this.materialIndex + direction * materialStep, Trims.MATERIAL_KEYS.length);
+            for (int patternStep = 0; patternStep < Trims.PATTERN_KEYS.length; patternStep++) {
+                int pattern = Math.floorMod(this.patternIndex + direction * patternStep, Trims.PATTERN_KEYS.length);
+                if (!Trims.canUse(player, Trims.PATTERN_KEYS[pattern], Trims.MATERIAL_KEYS[material])) continue;
+                this.patternIndex = pattern;
+                this.materialIndex = material;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void selectFirstAllowed(Player player) {
+        if (Trims.canUse(player, Trims.PATTERN_KEYS[this.patternIndex], Trims.MATERIAL_KEYS[this.materialIndex])) return;
+        for (int pattern = 0; pattern < Trims.PATTERN_KEYS.length; pattern++) {
+            for (int material = 0; material < Trims.MATERIAL_KEYS.length; material++) {
+                if (!Trims.canUse(player, Trims.PATTERN_KEYS[pattern], Trims.MATERIAL_KEYS[material])) continue;
+                this.patternIndex = pattern;
+                this.materialIndex = material;
+                return;
+            }
+        }
     }
 }
 

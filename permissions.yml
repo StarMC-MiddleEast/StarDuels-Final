@@ -1,0 +1,650 @@
+# StarDuels permission reference (copy the nodes into your permissions plugin).
+# VIP bundle: starduels.vip
+# It grants lobby elytra, the full trim set, and party size 10.
+# To grant trim access individually, grant starduels.trims and one or more
+# starduels.trim.<pattern>.<material> nodes below. starduels.trims.all grants every trim.
+# Add starduels.elytra.false to explicitly deny lobby elytra.
+permissions:
+  starduels.vip:
+    description: Standard VIP bundle.
+    children:
+      starduels.trims: true
+      starduels.trims.all: true
+      starduels.elytra.true: true
+      starduels.party.size.10: true
+  starduels.admin:
+    description: Access to StarDuels administration.
+    default: op
+    children:
+      meowduels.admin: true
+      starduels.trims: true
+      starduels.trims.all: true
+      starduels.event.host: true
+      starduels.vip: true
+  starduels.use:
+    description: Access to StarDuels player features.
+    default: true
+  starduels.trims:
+    description: Open the trim editor.
+  starduels.trims.all:
+    description: Use every trim combination.
+  starduels.elytra.true:
+    description: Use the lobby elytra.
+  starduels.elytra.false:
+    description: Deny the lobby elytra.
+  starduels.event.host:
+    description: Host events.
+    default: op
+  starduels.party.size.2:
+    description: Allow a party size of 2.
+    default: true
+  meowduels.admin:
+    description: Admin commands.
+    default: op
+  meowduels.use:
+    description: Access to duel features.
+    default: true
+  meowduels.trims:
+    description: Legacy trim editor permission.
+    default: op
+  meowduels.event.host:
+    description: Legacy event hosting permission.
+    default: op
+  meowduels.bypass.commands:
+    description: Bypass match command restrictions.
+    default: op
+  uhc.admin.givehead:
+    description: Give Golden Heads with the admin command.
+    default: op
+  starduels.party.size.3:
+    description: Allow a maximum party size of 3.
+  starduels.party.size.4:
+    description: Allow a maximum party size of 4.
+  starduels.party.size.5:
+    description: Allow a maximum party size of 5.
+  starduels.party.size.6:
+    description: Allow a maximum party size of 6.
+  starduels.party.size.7:
+    description: Allow a maximum party size of 7.
+  starduels.party.size.8:
+    description: Allow a maximum party size of 8.
+  starduels.party.size.9:
+    description: Allow a maximum party size of 9.
+  starduels.party.size.10:
+    description: Allow a maximum party size of 10.
+  starduels.party.size.11:
+    description: Allow a maximum party size of 11.
+  starduels.party.size.12:
+    description: Allow a maximum party size of 12.
+  starduels.party.size.13:
+    description: Allow a maximum party size of 13.
+  starduels.party.size.14:
+    description: Allow a maximum party size of 14.
+  starduels.party.size.15:
+    description: Allow a maximum party size of 15.
+  starduels.party.size.16:
+    description: Allow a maximum party size of 16.
+  starduels.party.size.17:
+    description: Allow a maximum party size of 17.
+  starduels.party.size.18:
+    description: Allow a maximum party size of 18.
+  starduels.party.size.19:
+    description: Allow a maximum party size of 19.
+  starduels.party.size.20:
+    description: Allow a maximum party size of 20.
+  starduels.party.size.21:
+    description: Allow a maximum party size of 21.
+  starduels.party.size.22:
+    description: Allow a maximum party size of 22.
+  starduels.party.size.23:
+    description: Allow a maximum party size of 23.
+  starduels.party.size.24:
+    description: Allow a maximum party size of 24.
+  starduels.party.size.25:
+    description: Allow a maximum party size of 25.
+  starduels.party.size.26:
+    description: Allow a maximum party size of 26.
+  starduels.party.size.27:
+    description: Allow a maximum party size of 27.
+  starduels.party.size.28:
+    description: Allow a maximum party size of 28.
+  starduels.party.size.29:
+    description: Allow a maximum party size of 29.
+  starduels.party.size.30:
+    description: Allow a maximum party size of 30.
+  starduels.party.size.31:
+    description: Allow a maximum party size of 31.
+  starduels.party.size.32:
+    description: Allow a maximum party size of 32.
+  starduels.party.size.33:
+    description: Allow a maximum party size of 33.
+  starduels.party.size.34:
+    description: Allow a maximum party size of 34.
+  starduels.party.size.35:
+    description: Allow a maximum party size of 35.
+  starduels.party.size.36:
+    description: Allow a maximum party size of 36.
+  starduels.party.size.37:
+    description: Allow a maximum party size of 37.
+  starduels.party.size.38:
+    description: Allow a maximum party size of 38.
+  starduels.party.size.39:
+    description: Allow a maximum party size of 39.
+  starduels.party.size.40:
+    description: Allow a maximum party size of 40.
+  starduels.party.size.41:
+    description: Allow a maximum party size of 41.
+  starduels.party.size.42:
+    description: Allow a maximum party size of 42.
+  starduels.party.size.43:
+    description: Allow a maximum party size of 43.
+  starduels.party.size.44:
+    description: Allow a maximum party size of 44.
+  starduels.party.size.45:
+    description: Allow a maximum party size of 45.
+  starduels.party.size.46:
+    description: Allow a maximum party size of 46.
+  starduels.party.size.47:
+    description: Allow a maximum party size of 47.
+  starduels.party.size.48:
+    description: Allow a maximum party size of 48.
+  starduels.party.size.49:
+    description: Allow a maximum party size of 49.
+  starduels.party.size.50:
+    description: Allow a maximum party size of 50.
+  starduels.party.size.51:
+    description: Allow a maximum party size of 51.
+  starduels.party.size.52:
+    description: Allow a maximum party size of 52.
+  starduels.party.size.53:
+    description: Allow a maximum party size of 53.
+  starduels.party.size.54:
+    description: Allow a maximum party size of 54.
+  starduels.party.size.55:
+    description: Allow a maximum party size of 55.
+  starduels.party.size.56:
+    description: Allow a maximum party size of 56.
+  starduels.party.size.57:
+    description: Allow a maximum party size of 57.
+  starduels.party.size.58:
+    description: Allow a maximum party size of 58.
+  starduels.party.size.59:
+    description: Allow a maximum party size of 59.
+  starduels.party.size.60:
+    description: Allow a maximum party size of 60.
+  starduels.party.size.61:
+    description: Allow a maximum party size of 61.
+  starduels.party.size.62:
+    description: Allow a maximum party size of 62.
+  starduels.party.size.63:
+    description: Allow a maximum party size of 63.
+  starduels.party.size.64:
+    description: Allow a maximum party size of 64.
+  starduels.party.size.65:
+    description: Allow a maximum party size of 65.
+  starduels.party.size.66:
+    description: Allow a maximum party size of 66.
+  starduels.party.size.67:
+    description: Allow a maximum party size of 67.
+  starduels.party.size.68:
+    description: Allow a maximum party size of 68.
+  starduels.party.size.69:
+    description: Allow a maximum party size of 69.
+  starduels.party.size.70:
+    description: Allow a maximum party size of 70.
+  starduels.party.size.71:
+    description: Allow a maximum party size of 71.
+  starduels.party.size.72:
+    description: Allow a maximum party size of 72.
+  starduels.party.size.73:
+    description: Allow a maximum party size of 73.
+  starduels.party.size.74:
+    description: Allow a maximum party size of 74.
+  starduels.party.size.75:
+    description: Allow a maximum party size of 75.
+  starduels.party.size.76:
+    description: Allow a maximum party size of 76.
+  starduels.party.size.77:
+    description: Allow a maximum party size of 77.
+  starduels.party.size.78:
+    description: Allow a maximum party size of 78.
+  starduels.party.size.79:
+    description: Allow a maximum party size of 79.
+  starduels.party.size.80:
+    description: Allow a maximum party size of 80.
+  starduels.party.size.81:
+    description: Allow a maximum party size of 81.
+  starduels.party.size.82:
+    description: Allow a maximum party size of 82.
+  starduels.party.size.83:
+    description: Allow a maximum party size of 83.
+  starduels.party.size.84:
+    description: Allow a maximum party size of 84.
+  starduels.party.size.85:
+    description: Allow a maximum party size of 85.
+  starduels.party.size.86:
+    description: Allow a maximum party size of 86.
+  starduels.party.size.87:
+    description: Allow a maximum party size of 87.
+  starduels.party.size.88:
+    description: Allow a maximum party size of 88.
+  starduels.party.size.89:
+    description: Allow a maximum party size of 89.
+  starduels.party.size.90:
+    description: Allow a maximum party size of 90.
+  starduels.party.size.91:
+    description: Allow a maximum party size of 91.
+  starduels.party.size.92:
+    description: Allow a maximum party size of 92.
+  starduels.party.size.93:
+    description: Allow a maximum party size of 93.
+  starduels.party.size.94:
+    description: Allow a maximum party size of 94.
+  starduels.party.size.95:
+    description: Allow a maximum party size of 95.
+  starduels.party.size.96:
+    description: Allow a maximum party size of 96.
+  starduels.party.size.97:
+    description: Allow a maximum party size of 97.
+  starduels.party.size.98:
+    description: Allow a maximum party size of 98.
+  starduels.party.size.99:
+    description: Allow a maximum party size of 99.
+  starduels.party.size.100:
+    description: Allow a maximum party size of 100.
+  starduels.trim.sentry.quartz:
+    description: Use the quartz sentry armor trim.
+  starduels.trim.sentry.iron:
+    description: Use the iron sentry armor trim.
+  starduels.trim.sentry.gold:
+    description: Use the gold sentry armor trim.
+  starduels.trim.sentry.copper:
+    description: Use the copper sentry armor trim.
+  starduels.trim.sentry.netherite:
+    description: Use the netherite sentry armor trim.
+  starduels.trim.sentry.redstone:
+    description: Use the redstone sentry armor trim.
+  starduels.trim.sentry.emerald:
+    description: Use the emerald sentry armor trim.
+  starduels.trim.sentry.diamond:
+    description: Use the diamond sentry armor trim.
+  starduels.trim.sentry.lapis:
+    description: Use the lapis sentry armor trim.
+  starduels.trim.sentry.amethyst:
+    description: Use the amethyst sentry armor trim.
+  starduels.trim.sentry.resin:
+    description: Use the resin sentry armor trim.
+  starduels.trim.dune.quartz:
+    description: Use the quartz dune armor trim.
+  starduels.trim.dune.iron:
+    description: Use the iron dune armor trim.
+  starduels.trim.dune.gold:
+    description: Use the gold dune armor trim.
+  starduels.trim.dune.copper:
+    description: Use the copper dune armor trim.
+  starduels.trim.dune.netherite:
+    description: Use the netherite dune armor trim.
+  starduels.trim.dune.redstone:
+    description: Use the redstone dune armor trim.
+  starduels.trim.dune.emerald:
+    description: Use the emerald dune armor trim.
+  starduels.trim.dune.diamond:
+    description: Use the diamond dune armor trim.
+  starduels.trim.dune.lapis:
+    description: Use the lapis dune armor trim.
+  starduels.trim.dune.amethyst:
+    description: Use the amethyst dune armor trim.
+  starduels.trim.dune.resin:
+    description: Use the resin dune armor trim.
+  starduels.trim.coast.quartz:
+    description: Use the quartz coast armor trim.
+  starduels.trim.coast.iron:
+    description: Use the iron coast armor trim.
+  starduels.trim.coast.gold:
+    description: Use the gold coast armor trim.
+  starduels.trim.coast.copper:
+    description: Use the copper coast armor trim.
+  starduels.trim.coast.netherite:
+    description: Use the netherite coast armor trim.
+  starduels.trim.coast.redstone:
+    description: Use the redstone coast armor trim.
+  starduels.trim.coast.emerald:
+    description: Use the emerald coast armor trim.
+  starduels.trim.coast.diamond:
+    description: Use the diamond coast armor trim.
+  starduels.trim.coast.lapis:
+    description: Use the lapis coast armor trim.
+  starduels.trim.coast.amethyst:
+    description: Use the amethyst coast armor trim.
+  starduels.trim.coast.resin:
+    description: Use the resin coast armor trim.
+  starduels.trim.wild.quartz:
+    description: Use the quartz wild armor trim.
+  starduels.trim.wild.iron:
+    description: Use the iron wild armor trim.
+  starduels.trim.wild.gold:
+    description: Use the gold wild armor trim.
+  starduels.trim.wild.copper:
+    description: Use the copper wild armor trim.
+  starduels.trim.wild.netherite:
+    description: Use the netherite wild armor trim.
+  starduels.trim.wild.redstone:
+    description: Use the redstone wild armor trim.
+  starduels.trim.wild.emerald:
+    description: Use the emerald wild armor trim.
+  starduels.trim.wild.diamond:
+    description: Use the diamond wild armor trim.
+  starduels.trim.wild.lapis:
+    description: Use the lapis wild armor trim.
+  starduels.trim.wild.amethyst:
+    description: Use the amethyst wild armor trim.
+  starduels.trim.wild.resin:
+    description: Use the resin wild armor trim.
+  starduels.trim.ward.quartz:
+    description: Use the quartz ward armor trim.
+  starduels.trim.ward.iron:
+    description: Use the iron ward armor trim.
+  starduels.trim.ward.gold:
+    description: Use the gold ward armor trim.
+  starduels.trim.ward.copper:
+    description: Use the copper ward armor trim.
+  starduels.trim.ward.netherite:
+    description: Use the netherite ward armor trim.
+  starduels.trim.ward.redstone:
+    description: Use the redstone ward armor trim.
+  starduels.trim.ward.emerald:
+    description: Use the emerald ward armor trim.
+  starduels.trim.ward.diamond:
+    description: Use the diamond ward armor trim.
+  starduels.trim.ward.lapis:
+    description: Use the lapis ward armor trim.
+  starduels.trim.ward.amethyst:
+    description: Use the amethyst ward armor trim.
+  starduels.trim.ward.resin:
+    description: Use the resin ward armor trim.
+  starduels.trim.eye.quartz:
+    description: Use the quartz eye armor trim.
+  starduels.trim.eye.iron:
+    description: Use the iron eye armor trim.
+  starduels.trim.eye.gold:
+    description: Use the gold eye armor trim.
+  starduels.trim.eye.copper:
+    description: Use the copper eye armor trim.
+  starduels.trim.eye.netherite:
+    description: Use the netherite eye armor trim.
+  starduels.trim.eye.redstone:
+    description: Use the redstone eye armor trim.
+  starduels.trim.eye.emerald:
+    description: Use the emerald eye armor trim.
+  starduels.trim.eye.diamond:
+    description: Use the diamond eye armor trim.
+  starduels.trim.eye.lapis:
+    description: Use the lapis eye armor trim.
+  starduels.trim.eye.amethyst:
+    description: Use the amethyst eye armor trim.
+  starduels.trim.eye.resin:
+    description: Use the resin eye armor trim.
+  starduels.trim.vex.quartz:
+    description: Use the quartz vex armor trim.
+  starduels.trim.vex.iron:
+    description: Use the iron vex armor trim.
+  starduels.trim.vex.gold:
+    description: Use the gold vex armor trim.
+  starduels.trim.vex.copper:
+    description: Use the copper vex armor trim.
+  starduels.trim.vex.netherite:
+    description: Use the netherite vex armor trim.
+  starduels.trim.vex.redstone:
+    description: Use the redstone vex armor trim.
+  starduels.trim.vex.emerald:
+    description: Use the emerald vex armor trim.
+  starduels.trim.vex.diamond:
+    description: Use the diamond vex armor trim.
+  starduels.trim.vex.lapis:
+    description: Use the lapis vex armor trim.
+  starduels.trim.vex.amethyst:
+    description: Use the amethyst vex armor trim.
+  starduels.trim.vex.resin:
+    description: Use the resin vex armor trim.
+  starduels.trim.tide.quartz:
+    description: Use the quartz tide armor trim.
+  starduels.trim.tide.iron:
+    description: Use the iron tide armor trim.
+  starduels.trim.tide.gold:
+    description: Use the gold tide armor trim.
+  starduels.trim.tide.copper:
+    description: Use the copper tide armor trim.
+  starduels.trim.tide.netherite:
+    description: Use the netherite tide armor trim.
+  starduels.trim.tide.redstone:
+    description: Use the redstone tide armor trim.
+  starduels.trim.tide.emerald:
+    description: Use the emerald tide armor trim.
+  starduels.trim.tide.diamond:
+    description: Use the diamond tide armor trim.
+  starduels.trim.tide.lapis:
+    description: Use the lapis tide armor trim.
+  starduels.trim.tide.amethyst:
+    description: Use the amethyst tide armor trim.
+  starduels.trim.tide.resin:
+    description: Use the resin tide armor trim.
+  starduels.trim.snout.quartz:
+    description: Use the quartz snout armor trim.
+  starduels.trim.snout.iron:
+    description: Use the iron snout armor trim.
+  starduels.trim.snout.gold:
+    description: Use the gold snout armor trim.
+  starduels.trim.snout.copper:
+    description: Use the copper snout armor trim.
+  starduels.trim.snout.netherite:
+    description: Use the netherite snout armor trim.
+  starduels.trim.snout.redstone:
+    description: Use the redstone snout armor trim.
+  starduels.trim.snout.emerald:
+    description: Use the emerald snout armor trim.
+  starduels.trim.snout.diamond:
+    description: Use the diamond snout armor trim.
+  starduels.trim.snout.lapis:
+    description: Use the lapis snout armor trim.
+  starduels.trim.snout.amethyst:
+    description: Use the amethyst snout armor trim.
+  starduels.trim.snout.resin:
+    description: Use the resin snout armor trim.
+  starduels.trim.rib.quartz:
+    description: Use the quartz rib armor trim.
+  starduels.trim.rib.iron:
+    description: Use the iron rib armor trim.
+  starduels.trim.rib.gold:
+    description: Use the gold rib armor trim.
+  starduels.trim.rib.copper:
+    description: Use the copper rib armor trim.
+  starduels.trim.rib.netherite:
+    description: Use the netherite rib armor trim.
+  starduels.trim.rib.redstone:
+    description: Use the redstone rib armor trim.
+  starduels.trim.rib.emerald:
+    description: Use the emerald rib armor trim.
+  starduels.trim.rib.diamond:
+    description: Use the diamond rib armor trim.
+  starduels.trim.rib.lapis:
+    description: Use the lapis rib armor trim.
+  starduels.trim.rib.amethyst:
+    description: Use the amethyst rib armor trim.
+  starduels.trim.rib.resin:
+    description: Use the resin rib armor trim.
+  starduels.trim.spire.quartz:
+    description: Use the quartz spire armor trim.
+  starduels.trim.spire.iron:
+    description: Use the iron spire armor trim.
+  starduels.trim.spire.gold:
+    description: Use the gold spire armor trim.
+  starduels.trim.spire.copper:
+    description: Use the copper spire armor trim.
+  starduels.trim.spire.netherite:
+    description: Use the netherite spire armor trim.
+  starduels.trim.spire.redstone:
+    description: Use the redstone spire armor trim.
+  starduels.trim.spire.emerald:
+    description: Use the emerald spire armor trim.
+  starduels.trim.spire.diamond:
+    description: Use the diamond spire armor trim.
+  starduels.trim.spire.lapis:
+    description: Use the lapis spire armor trim.
+  starduels.trim.spire.amethyst:
+    description: Use the amethyst spire armor trim.
+  starduels.trim.spire.resin:
+    description: Use the resin spire armor trim.
+  starduels.trim.wayfinder.quartz:
+    description: Use the quartz wayfinder armor trim.
+  starduels.trim.wayfinder.iron:
+    description: Use the iron wayfinder armor trim.
+  starduels.trim.wayfinder.gold:
+    description: Use the gold wayfinder armor trim.
+  starduels.trim.wayfinder.copper:
+    description: Use the copper wayfinder armor trim.
+  starduels.trim.wayfinder.netherite:
+    description: Use the netherite wayfinder armor trim.
+  starduels.trim.wayfinder.redstone:
+    description: Use the redstone wayfinder armor trim.
+  starduels.trim.wayfinder.emerald:
+    description: Use the emerald wayfinder armor trim.
+  starduels.trim.wayfinder.diamond:
+    description: Use the diamond wayfinder armor trim.
+  starduels.trim.wayfinder.lapis:
+    description: Use the lapis wayfinder armor trim.
+  starduels.trim.wayfinder.amethyst:
+    description: Use the amethyst wayfinder armor trim.
+  starduels.trim.wayfinder.resin:
+    description: Use the resin wayfinder armor trim.
+  starduels.trim.shaper.quartz:
+    description: Use the quartz shaper armor trim.
+  starduels.trim.shaper.iron:
+    description: Use the iron shaper armor trim.
+  starduels.trim.shaper.gold:
+    description: Use the gold shaper armor trim.
+  starduels.trim.shaper.copper:
+    description: Use the copper shaper armor trim.
+  starduels.trim.shaper.netherite:
+    description: Use the netherite shaper armor trim.
+  starduels.trim.shaper.redstone:
+    description: Use the redstone shaper armor trim.
+  starduels.trim.shaper.emerald:
+    description: Use the emerald shaper armor trim.
+  starduels.trim.shaper.diamond:
+    description: Use the diamond shaper armor trim.
+  starduels.trim.shaper.lapis:
+    description: Use the lapis shaper armor trim.
+  starduels.trim.shaper.amethyst:
+    description: Use the amethyst shaper armor trim.
+  starduels.trim.shaper.resin:
+    description: Use the resin shaper armor trim.
+  starduels.trim.silence.quartz:
+    description: Use the quartz silence armor trim.
+  starduels.trim.silence.iron:
+    description: Use the iron silence armor trim.
+  starduels.trim.silence.gold:
+    description: Use the gold silence armor trim.
+  starduels.trim.silence.copper:
+    description: Use the copper silence armor trim.
+  starduels.trim.silence.netherite:
+    description: Use the netherite silence armor trim.
+  starduels.trim.silence.redstone:
+    description: Use the redstone silence armor trim.
+  starduels.trim.silence.emerald:
+    description: Use the emerald silence armor trim.
+  starduels.trim.silence.diamond:
+    description: Use the diamond silence armor trim.
+  starduels.trim.silence.lapis:
+    description: Use the lapis silence armor trim.
+  starduels.trim.silence.amethyst:
+    description: Use the amethyst silence armor trim.
+  starduels.trim.silence.resin:
+    description: Use the resin silence armor trim.
+  starduels.trim.raiser.quartz:
+    description: Use the quartz raiser armor trim.
+  starduels.trim.raiser.iron:
+    description: Use the iron raiser armor trim.
+  starduels.trim.raiser.gold:
+    description: Use the gold raiser armor trim.
+  starduels.trim.raiser.copper:
+    description: Use the copper raiser armor trim.
+  starduels.trim.raiser.netherite:
+    description: Use the netherite raiser armor trim.
+  starduels.trim.raiser.redstone:
+    description: Use the redstone raiser armor trim.
+  starduels.trim.raiser.emerald:
+    description: Use the emerald raiser armor trim.
+  starduels.trim.raiser.diamond:
+    description: Use the diamond raiser armor trim.
+  starduels.trim.raiser.lapis:
+    description: Use the lapis raiser armor trim.
+  starduels.trim.raiser.amethyst:
+    description: Use the amethyst raiser armor trim.
+  starduels.trim.raiser.resin:
+    description: Use the resin raiser armor trim.
+  starduels.trim.host.quartz:
+    description: Use the quartz host armor trim.
+  starduels.trim.host.iron:
+    description: Use the iron host armor trim.
+  starduels.trim.host.gold:
+    description: Use the gold host armor trim.
+  starduels.trim.host.copper:
+    description: Use the copper host armor trim.
+  starduels.trim.host.netherite:
+    description: Use the netherite host armor trim.
+  starduels.trim.host.redstone:
+    description: Use the redstone host armor trim.
+  starduels.trim.host.emerald:
+    description: Use the emerald host armor trim.
+  starduels.trim.host.diamond:
+    description: Use the diamond host armor trim.
+  starduels.trim.host.lapis:
+    description: Use the lapis host armor trim.
+  starduels.trim.host.amethyst:
+    description: Use the amethyst host armor trim.
+  starduels.trim.host.resin:
+    description: Use the resin host armor trim.
+  starduels.trim.flow.quartz:
+    description: Use the quartz flow armor trim.
+  starduels.trim.flow.iron:
+    description: Use the iron flow armor trim.
+  starduels.trim.flow.gold:
+    description: Use the gold flow armor trim.
+  starduels.trim.flow.copper:
+    description: Use the copper flow armor trim.
+  starduels.trim.flow.netherite:
+    description: Use the netherite flow armor trim.
+  starduels.trim.flow.redstone:
+    description: Use the redstone flow armor trim.
+  starduels.trim.flow.emerald:
+    description: Use the emerald flow armor trim.
+  starduels.trim.flow.diamond:
+    description: Use the diamond flow armor trim.
+  starduels.trim.flow.lapis:
+    description: Use the lapis flow armor trim.
+  starduels.trim.flow.amethyst:
+    description: Use the amethyst flow armor trim.
+  starduels.trim.flow.resin:
+    description: Use the resin flow armor trim.
+  starduels.trim.bolt.quartz:
+    description: Use the quartz bolt armor trim.
+  starduels.trim.bolt.iron:
+    description: Use the iron bolt armor trim.
+  starduels.trim.bolt.gold:
+    description: Use the gold bolt armor trim.
+  starduels.trim.bolt.copper:
+    description: Use the copper bolt armor trim.
+  starduels.trim.bolt.netherite:
+    description: Use the netherite bolt armor trim.
+  starduels.trim.bolt.redstone:
+    description: Use the redstone bolt armor trim.
+  starduels.trim.bolt.emerald:
+    description: Use the emerald bolt armor trim.
+  starduels.trim.bolt.diamond:
+    description: Use the diamond bolt armor trim.
+  starduels.trim.bolt.lapis:
+    description: Use the lapis bolt armor trim.
+  starduels.trim.bolt.amethyst:
+    description: Use the amethyst bolt armor trim.
+  starduels.trim.bolt.resin:
+    description: Use the resin bolt armor trim.

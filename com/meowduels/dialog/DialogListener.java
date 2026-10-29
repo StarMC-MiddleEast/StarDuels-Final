@@ -45,7 +45,13 @@ public final class DialogListener implements Listener {
                 }
                 return;
             }
-            DialogMenu.open(plugin, player, menu, view, 0, false);
+            try {
+                DialogMenu.open(plugin, player, menu, view, 0, false);
+            } catch (LinkageError | RuntimeException error) {
+                plugin.getLogger().warning("Could not open the Paper dialog; using the chest menu: " + error.getMessage());
+                allowNextChest(player);
+                player.openInventory(view.getTopInventory());
+            }
         });
     }
 

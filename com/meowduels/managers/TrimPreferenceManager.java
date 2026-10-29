@@ -11,6 +11,8 @@ import java.util.UUID;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class TrimPreferenceManager {
     private final MeowDuels plugin;
@@ -137,10 +139,15 @@ public class TrimPreferenceManager {
         if (stringArray == null || itemStackArray == null) {
             return;
         }
+        Player player = Bukkit.getPlayer(uUID);
         for (int i = 0; i < 4 && i < itemStackArray.length; ++i) {
             int n;
             if (stringArray[i] == null || itemStackArray[i] == null || (n = stringArray[i].indexOf(58)) < 0) continue;
-            Trims.apply(itemStackArray[i], stringArray[i].substring(0, n), stringArray[i].substring(n + 1));
+            String pattern = stringArray[i].substring(0, n);
+            String material = stringArray[i].substring(n + 1);
+            if (player != null && Trims.canUse(player, pattern, material)) {
+                Trims.apply(itemStackArray[i], pattern, material);
+            }
         }
     }
 }

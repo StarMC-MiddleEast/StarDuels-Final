@@ -502,7 +502,7 @@ TabCompleter {
             return;
         }
         Player player = (Player)commandSender;
-        if (!player.hasPermission("meowduels.trims")) {
+        if (!Trims.canEdit(player)) {
             player.sendMessage(this.plugin.messages().get("notice.admin.don-t-have-permission-2", new String[0]));
             return;
         }

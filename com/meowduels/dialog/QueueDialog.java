@@ -38,7 +38,7 @@ public final class QueueDialog {
 
     /** Returns false when disabled or unavailable so the caller can open the chest menu. */
     public static boolean open(MeowDuels plugin, Player player, int page) {
-        if (player == null || !player.isOnline() || !apiPresent()) return false;
+        if (player == null || !player.isOnline() || !DialogSupport.isAvailable(plugin, player) || !apiPresent()) return false;
         YamlConfiguration cfg = load(plugin);
         if (!cfg.getBoolean("enabled", true)) return false;
 
