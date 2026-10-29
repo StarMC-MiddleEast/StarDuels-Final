@@ -45,13 +45,20 @@ public final class KitIconPopEffect {
 
             final int[] tick = {0};
             Bukkit.getScheduler().runTaskTimer((Plugin) plugin, task -> {
-                if (!player.isOnline() || !display.isValid() || tick[0] >= 9) {
+                if (!player.isOnline() || !display.isValid() || tick[0] >= 60) {
                     task.cancel();
                     if (display.isValid()) display.remove();
                     return;
                 }
                 tick[0]++;
-                float scale = tick[0] <= 3 ? 0.15f + tick[0] * 0.48f : Math.max(0.1f, 1.59f - (tick[0] - 3) * 0.25f);
+                float scale;
+                if (tick[0] <= 6) {
+                    scale = 0.15f + tick[0] * 0.2f;
+                } else if (tick[0] <= 12) {
+                    scale = 1.35f - (tick[0] - 6) * (0.35f / 6.0f);
+                } else {
+                    scale = 1.0f;
+                }
                 Location view = player.getEyeLocation();
                 display.teleport(view.add(view.getDirection().multiply(1.5)));
                 display.setTransformation(transformation(scale));

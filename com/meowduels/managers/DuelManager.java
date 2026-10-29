@@ -1263,17 +1263,18 @@ public class DuelManager {
             double y = inverse * inverse * start.getY() + 2.0 * inverse * progress * control.getY() + progress * progress * target.getY();
             double z = inverse * inverse * start.getZ() + 2.0 * inverse * progress * control.getZ() + progress * progress * target.getZ();
             Location current = player.getLocation();
-            Vector step = new Vector(x - current.getX(), y - current.getY(), z - current.getZ());
-            if (step.length() > maxStepPerTick) {
-                step.normalize().multiply(maxStepPerTick);
+            Location next = new Location(start.getWorld(), x, y, z, current.getYaw(), current.getPitch());
+            Vector steeringVelocity = new Vector(x - current.getX(), y - current.getY(), z - current.getZ());
+            if (steeringVelocity.length() > maxStepPerTick) steeringVelocity.normalize().multiply(maxStepPerTick);
+            // Let normal movement packets carry the player smoothly through
+            // open air. When a solid block would trap them, step over that
+            // collision with a short plugin teleport instead.
+            if (this.insideSolidBlock(current) || this.insideSolidBlock(next)) {
+                player.teleport(next);
+                player.setVelocity(new Vector());
+            } else {
+                player.setVelocity(steeringVelocity);
             }
-            // Player velocity is subject to movement collision checks. Small
-            // server teleports follow the same controlled arc but can pass
-            // through solid blocks without leaving the player wedged inside.
-            Location next = new Location(start.getWorld(), current.getX() + step.getX(),
-                current.getY() + step.getY(), current.getZ() + step.getZ(), current.getYaw(), current.getPitch());
-            player.teleport(next);
-            player.setVelocity(new Vector());
             player.setFallDistance(0.0f);
 
             if (elapsed[0] >= flightTicks) {
@@ -1290,6 +1291,24 @@ public class DuelManager {
         scheduledTask[0] = task;
         this.roundLaunchTasks.put(id, task);
         return flightTicks;
+    }
+
+    private boolean insideSolidBlock(Location feet) {
+        if (feet == null || feet.getWorld() == null) return false;
+        int minX = (int)Math.floor(feet.getX() - 0.3);
+        int maxX = (int)Math.floor(feet.getX() + 0.3);
+        int minY = (int)Math.floor(feet.getY() + 0.05);
+        int maxY = (int)Math.floor(feet.getY() + 1.75);
+        int minZ = (int)Math.floor(feet.getZ() - 0.3);
+        int maxZ = (int)Math.floor(feet.getZ() + 0.3);
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    if (feet.getWorld().getBlockAt(x, y, z).getType().isSolid()) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void restoreRoundLaunch(Player player, UUID id, BukkitTask task, boolean noPhysics, boolean gravity,
