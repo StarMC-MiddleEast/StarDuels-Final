@@ -841,6 +841,13 @@ public class DuelManager {
     }
 
     public void markArenaInUse(String string) {
+        Arena arena = this.plugin.getArenaManager().get(string);
+        if (arena != null && arena.isConfigured() && !this.plugin.getArenaManager().hasSnapshot(arena)) {
+            if (this.plugin.getArenaManager().snapshotArena(arena)) {
+                this.plugin.getLogger().warning("Arena '" + arena.getName()
+                        + "' had no saved snapshot. Captured its current state so future matches can restore it.");
+            }
+        }
         this.arenasInUse.add(string.toLowerCase());
         this.plugin.getArenaManager().markDirty(string);
     }

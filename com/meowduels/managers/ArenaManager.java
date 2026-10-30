@@ -380,13 +380,10 @@ public class ArenaManager {
      * cheap list of blocks players actually changed only when there was no
      * snapshot. Backwards on both counts.
      *
-     * <p>Now: the tracked changes are put back immediately, which is what
-     * players built and broke and is usually a few hundred blocks. Then the
-     * snapshot is checked across the following ticks, a few milliseconds at a
-     * time, to catch what tracking cannot see - flowing water and lava, fire
-     * spread, cobble and obsidian forming. The arena is not handed to another
-     * match until that pass finishes, so a new fight never starts in a
-     * half-restored arena or has its own blocks reverted underneath it.
+     * <p>Tracked changes are restored immediately. The full snapshot is then
+     * sent through FAWE's async edit queue when available; servers without
+     * FAWE use the tick-budgeted Bukkit fallback. In either case the arena is
+     * kept out of rotation until the entire restore has completed.
      */
     public void regenAfterMatch(Arena arena, Map<Location, BlockData> changed, Runnable whenDone) {
         if (arena == null) {
@@ -456,7 +453,8 @@ public class ArenaManager {
                         java.lang.reflect.Method setBlock = null;
                         for (java.lang.reflect.Method method : session.getClass().getMethods()) {
                             if (method.getName().equals("setBlock") && method.getParameterCount() == 2
-                                    && method.getParameterTypes()[0].isAssignableFrom(vectorClass)) {
+                                    && method.getParameterTypes()[0].isAssignableFrom(vectorClass)
+                                    && method.getParameterTypes()[1].isInstance(states.length == 0 ? null : states[0])) {
                                 setBlock = method;
                                 break;
                             }
@@ -473,11 +471,11 @@ public class ArenaManager {
                             Object vector = at.invoke(null, ox + x, oy + y, oz + z);
                             setBlock.invoke(session, vector, states[paletteIndex]);
                         }
-                        success = true;
                     } finally {
                         try { session.getClass().getMethod("close").invoke(session); }
                         catch (NoSuchMethodException ignored) { }
                     }
+                    success = true;
                 } catch (Throwable failure) {
                     this.plugin.getLogger().warning("FAWE regeneration for arena '" + name + "' failed; using the tick-based restore: " + failure);
                 }

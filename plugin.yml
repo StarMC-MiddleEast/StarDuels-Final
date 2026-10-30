@@ -133,7 +133,7 @@ permissions:
       starduels.event.host: true
       starduels.vip: true
   starduels.vip:
-    description: "Standard VIP bundle: lobby elytra, all armor trims, and party size up to 10."
+    description: "Standard VIP bundle: lobby elytra and wind charge, all armor trims, and party size up to 10."
     default: false
     children:
       starduels.trims: true
@@ -157,10 +157,10 @@ permissions:
     children:
       meowduels.event.host: true
   starduels.elytra.true:
-    description: Use the lobby elytra.
+    description: Use the lobby elytra and lobby wind charge.
     default: false
   starduels.elytra.false:
-    description: Deny the lobby elytra even if another permission grants it.
+    description: Deny the lobby elytra and lobby wind charge even if another permission grants them.
     default: false
   starduels.party.size.2:
     description: Allow a party size of 2.

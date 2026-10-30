@@ -56,9 +56,8 @@ implements Listener {
         if (!(event.getEntity() instanceof Player player)) {
             return;
         }
-        ItemStack chestItem = player.getInventory().getChestplate();
         if (event.isGliding() && !SpawnItems.canUseLobbyElytra(player)
-                && SpawnItems.LOBBY_ELYTRA.equals(Items.readTag(chestItem, this.plugin.keyButton()))) {
+                && !SpawnItems.isPlaying(this.plugin, player)) {
             event.setCancelled(true);
         }
     }
@@ -120,6 +119,11 @@ implements Listener {
             return;
         }
         Player player = playerInteractEvent.getPlayer();
+        if (playerInteractEvent.getItem().getType() == org.bukkit.Material.WIND_CHARGE
+                && !SpawnItems.canUseLobbyElytra(player) && !SpawnItems.isPlaying(this.plugin, player)) {
+            playerInteractEvent.setCancelled(true);
+            return;
+        }
         String string = Items.readTag(playerInteractEvent.getItem(), this.plugin.keyButton());
         if (string == null) {
             return;

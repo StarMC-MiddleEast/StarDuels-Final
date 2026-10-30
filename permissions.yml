@@ -1,9 +1,10 @@
 # StarDuels permission reference (copy the nodes into your permissions plugin).
 # VIP bundle: starduels.vip
-# It grants lobby elytra, the full trim set, and party size 10.
+# It grants lobby elytra and wind charge, the full trim set, and party size 10.
 # To grant trim access individually, grant starduels.trims and one or more
 # starduels.trim.<pattern>.<material> nodes below. starduels.trims.all grants every trim.
-# Add starduels.elytra.false to explicitly deny lobby elytra.
+# Grant starduels.elytra.true for both lobby elytra and wind charge.
+# Add starduels.elytra.false to explicitly deny both lobby items.
 permissions:
   starduels.vip:
     description: Standard VIP bundle.
@@ -29,9 +30,9 @@ permissions:
   starduels.trims.all:
     description: Use every trim combination.
   starduels.elytra.true:
-    description: Use the lobby elytra.
+    description: Use the lobby elytra and lobby wind charge.
   starduels.elytra.false:
-    description: Deny the lobby elytra.
+    description: Deny the lobby elytra and lobby wind charge.
   starduels.event.host:
     description: Host events.
     default: op

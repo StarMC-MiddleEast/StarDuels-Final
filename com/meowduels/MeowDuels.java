@@ -171,6 +171,7 @@ extends JavaPlugin {
                 this.eventManager.tickBorderDamage();
             }
             for (Player player : this.getServer().getOnlinePlayers()) {
+                SpawnItems.updateLobbyPerks(this, player);
                 Cooldowns.tick(player);
             }
             this.tipService.tick();
