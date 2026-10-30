@@ -11,7 +11,7 @@ public final class MenuRouter {
         "QueuePickMenu", "QueueCategoriesMenu", "KitPickMenu", "MapSelectMenu", "DuelConfirmMenu",
         "PartyConfirmMenu", "PartyDuelsConfirmMenu", "PartyInviteMenu", "PartyKitMenu", "PartyMenu", "PartyModeMenu",
         "PartyOpponentMenu", "PartySettingsMenu", "PartyStartConfirmMenu", "PartyTeamMenu", "TrimKitMenu", "TrimMenu",
-        "EventMapMenu", "MatchSummaryMenu", "SettingsMenu", "KitEditorMenu"
+        "EventMapMenu", "SettingsMenu", "KitEditorMenu"
     );
 
     private MenuRouter() {}

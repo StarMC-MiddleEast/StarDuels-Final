@@ -23,7 +23,7 @@ public class GuiConfigManager {
     private final Map<String, YamlConfiguration> files = new LinkedHashMap<String, YamlConfiguration>();
     public static final String BACK_NAME = "{value}\u0299\u1d00\u1d04\u1d0b";
     public static final String[] BACK_LORE = new String[]{"", "{hint}\u1d04\u029f\u026a\u1d04\u1d0b \u1d1b\u1d0f \u0262\u1d0f \u0299\u1d00\u1d04\u1d0b"};
-    public static final List<String> MENUS = Arrays.asList("arena", "duelconfirm", "editkiteffects", "editkitlist", "eventmap", "guieditor", "kiteditor", "kititems", "kitpick", "kitselect", "mapselect", "matchsummary", "partyconfirm", "partyduelsconfirm", "partyinvite", "partykit", "party", "partymode", "partyopponent", "partysettings", "partystartconfirm", "partyteam", "queuepick", "settings", "trimkit", "trim");
+    public static final List<String> MENUS = Arrays.asList("arena", "duelconfirm", "editkiteffects", "editkitlist", "eventmap", "guieditor", "kiteditor", "kititems", "kitpick", "kitselect", "mapselect", "partyconfirm", "partyduelsconfirm", "partyinvite", "partykit", "party", "partymode", "partyopponent", "partysettings", "partystartconfirm", "partyteam", "queuepick", "settings", "trimkit", "trim");
 
     public GuiConfigManager(MeowDuels meowDuels) {
         this.plugin = meowDuels;

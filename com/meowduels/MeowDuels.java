@@ -119,6 +119,7 @@ extends JavaPlugin {
         this.keyKit = new NamespacedKey((Plugin)this, "kit");
         this.keyButton = new NamespacedKey((Plugin)this, "button");
         this.keyArena = new NamespacedKey((Plugin)this, "arena");
+        this.tabHook = new TabHook();
         this.scoreboardIp = this.getConfig().getString("scoreboard-ip", "play.starpvp.fun");
         this.serverName = this.getConfig().getString("server-name", "server");
         this.loadDuelSpawn();
@@ -148,7 +149,6 @@ extends JavaPlugin {
         Style.load(this.getConfig().getConfigurationSection("theme"));
         com.meowduels.util.KitIcons.load(this.getConfig().getConfigurationSection("kit-names"));
         this.tipService = new TipService(this);
-        this.tabHook = new TabHook();
         if (this.tabHook.isAvailable()) {
             this.getLogger().info("Hooked into TAB - ranks hidden and health shown on nametags during duels.");
         } else {

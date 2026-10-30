@@ -88,7 +88,8 @@ public class ScoreboardService {
         }
         this.masterEnabled = configurationSection.getBoolean("enabled", true);
         this.rankNametags = false;
-        this.externalNametags = configurationSection.getBoolean("external-nametags", true);
+        this.externalNametags = configurationSection.getBoolean("external-nametags", true)
+            && this.plugin.getTabHook() != null && this.plugin.getTabHook().isAvailable();
         this.tabPluginPresent = this.plugin.getServer().getPluginManager().getPlugin("TAB") != null;
         this.healthBelowName = configurationSection.getBoolean("health-below-name", true);
         if (Bukkit.getScoreboardManager() != null) {
@@ -558,7 +559,7 @@ public class ScoreboardService {
         hashMap.put("party_status", party == null ? "" : (party.isFighting() ? "Fighting" : "Waiting"));
         hashMap.put("party_alive", party == null ? "0" : String.valueOf(party.getAlive().size()));
         hashMap.put("party_spectators", party == null ? "0" : String.valueOf(party.getWatching().size()));
-        hashMap.put("party_mode", party == null || party.getMode() == null ? "FFA" : party.getMode().name());
+        hashMap.put("party_mode", party == null || !party.isFighting() || party.getMode() == null ? "" : party.getMode().name());
         hashMap.put("party_access", party == null ? "" : (party.isOpenToAll() ? "Public" : "Private"));
         hashMap.put("party_role", party == null ? "" : (party.isLeader(uUID2) ? "Leader" : "Member"));
         hashMap.put("party_kills", party == null ? "0" : String.valueOf(party.killsOf(uUID2)));
@@ -781,6 +782,7 @@ public class ScoreboardService {
         private Team partyAqua;
         private Team partyRed;
         private Team partyOut;
+        private Team partyNeutral;
         private final Map<String, Team> partyEntries = new HashMap<String, Team>();
 
         /**
@@ -808,13 +810,22 @@ public class ScoreboardService {
                 this.partyAqua = this.teamFor("md_paqua", ChatColor.AQUA, Marks.tag(Marks.AQUA));
                 this.partyRed = this.teamFor("md_pred", ChatColor.RED, Marks.tag(Marks.RED));
                 this.partyOut = this.teamFor("md_pout", ChatColor.DARK_GRAY, Marks.tagOut());
+                this.partyNeutral = this.teamFor("md_pneutral", ChatColor.WHITE, "");
             }
             HashMap<String, Team> want = new HashMap<String, Team>();
-            for (Map.Entry<UUID, Party.Team> entry : party.getTeams().entrySet()) {
-                String name = ScoreboardService.this.nameOf(entry.getKey());
-                if (name.isEmpty() || entry.getValue() == null) continue;
-                Team team = party.getWatching().contains(entry.getKey()) ? this.partyOut : (entry.getValue() == Party.Team.AQUA ? this.partyAqua : this.partyRed);
-                want.put(name, team);
+            if (party.isFighting() && party.isTeamMode()) {
+                for (Map.Entry<UUID, Party.Team> entry : party.getTeams().entrySet()) {
+                    String name = ScoreboardService.this.nameOf(entry.getKey());
+                    if (name.isEmpty() || entry.getValue() == null) continue;
+                    Team team = party.getWatching().contains(entry.getKey()) ? this.partyOut : (entry.getValue() == Party.Team.AQUA ? this.partyAqua : this.partyRed);
+                    want.put(name, team);
+                }
+            } else {
+                Set<UUID> members = party.isFighting() ? party.involved() : party.getMembers();
+                for (UUID id : members) {
+                    String name = ScoreboardService.this.nameOf(id);
+                    if (!name.isEmpty()) want.put(name, this.partyNeutral);
+                }
             }
             for (Map.Entry<String, Team> entry : want.entrySet()) {
                 if (this.partyEntries.get(entry.getKey()) == entry.getValue()) continue;
@@ -842,6 +853,7 @@ public class ScoreboardService {
             }
             team.setColor(chatColor);
             team.setPrefix(prefix);
+            team.setSuffix("");
             return team;
         }
 
@@ -865,6 +877,8 @@ public class ScoreboardService {
             this.enemyTeam.setColor(ChatColor.WHITE);
             this.allyTeam.prefix(ScoreboardService.this.deserialize(""));
             this.enemyTeam.prefix(ScoreboardService.this.deserialize(""));
+            this.allyTeam.suffix(ScoreboardService.this.deserialize(""));
+            this.enemyTeam.suffix(ScoreboardService.this.deserialize(""));
         }
     }
 }

@@ -49,6 +49,9 @@ implements Listener {
                 }
             }
             catch (UnsupportedOperationException unsupportedOperationException) {
+                // If another chat plugin supplied an immutable audience set,
+                // fail closed instead of accidentally broadcasting match chat.
+                asyncChatEvent.setCancelled(true);
                 return;
             }
         }
@@ -63,14 +66,11 @@ implements Listener {
         if (player2.getUniqueId().equals(player.getUniqueId())) {
             return true;
         }
-        if (set.contains(player2.getUniqueId())) {
-            return true;
-        }
         Object object2 = this.matchOf(player2.getUniqueId());
-        if (object != null && object2 != object && this.isolated(player.getUniqueId())) {
-            return false;
-        }
-        return object2 == null || object2 == object || !this.isolated(player2.getUniqueId());
+        // Match, party, and lobby are separate chat scopes. Explicitly naming
+        // someone does not bypass this boundary; all recipients must share the
+        // sender's exact scope (including the null lobby scope).
+        return object == object2;
     }
 
     private Object matchOf(UUID uUID) {
@@ -90,8 +90,8 @@ implements Listener {
         return activeDuel2 != null ? activeDuel2 : this.plugin.getPartyManager().matchOf(uUID2);
     }
 
-    private boolean isolated(UUID uUID) {
-        return this.plugin.getPlayerSettings().isIsolatedChat(uUID);
+    private boolean isolated(UUID id) {
+        return this.plugin.getPlayerSettings().isIsolatedChat(id);
     }
 
     private Set<UUID> namedIn(Component component, Player player) {

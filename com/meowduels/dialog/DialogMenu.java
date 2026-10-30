@@ -6,7 +6,6 @@ import com.meowduels.gui.QueueCategoriesMenu;
 import com.meowduels.gui.QueuePickMenu;
 import com.meowduels.gui.DuelConfirmMenu;
 import com.meowduels.gui.KitPickMenu;
-import com.meowduels.gui.MatchSummaryMenu;
 import com.meowduels.gui.PartyDuelsConfirmMenu;
 import com.meowduels.model.Kit;
 import com.meowduels.model.Party;
@@ -96,7 +95,7 @@ public final class DialogMenu {
         DialogBase base = DialogBase.builder(view.title()).body(body(plugin, player, menu, safePage, pages, menu instanceof QueuePickMenu && kits.isEmpty())).canCloseWithEscape(true).pause(false).build();
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(base)
-            .type((menu instanceof MatchSummaryMenu || emptyActions)
+            .type((emptyActions)
                 ? DialogType.notice(actions.get(0))
                 : DialogType.multiAction(actions).columns(queuePicker ? 1 : 2).build()));
         try {

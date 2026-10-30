@@ -120,7 +120,7 @@ implements Listener {
         ActiveDuel activeDuel = this.plugin.getDuelManager().getDuel(player.getUniqueId());
         if (activeDuel == null) {
             if (this.plugin.getPartyManager().inPartyMatch(player.getUniqueId())) {
-                this.dropEverything(playerDeathEvent, player);
+                this.suppressMatchDrops(playerDeathEvent);
                 Player player2 = player.getKiller();
                 UUID uUID = player2 == null ? null : player2.getUniqueId();
                 UUID uUID2 = player.getUniqueId();
@@ -129,15 +129,13 @@ implements Listener {
                     this.plugin.getPartyManager().onDeath(uUID2, uUID);
                 });
             } else if (this.plugin.getEventManager().isPlaying(player.getUniqueId())) {
-                this.dropEverything(playerDeathEvent, player);
+                this.suppressMatchDrops(playerDeathEvent);
             } else {
                 this.applyNormalDeathMessage(playerDeathEvent, player);
             }
             return;
         }
-        playerDeathEvent.setKeepInventory(true);
-        playerDeathEvent.getDrops().clear();
-        playerDeathEvent.setDroppedExp(0);
+        this.suppressMatchDrops(playerDeathEvent);
         playerDeathEvent.setDeathMessage(null);
         UUID uUID = player.getUniqueId();
         Location location = player.getLocation().clone();
@@ -148,27 +146,10 @@ implements Listener {
         });
     }
 
-    private void dropEverything(PlayerDeathEvent playerDeathEvent, Player player) {
-        playerDeathEvent.setKeepInventory(false);
+    private void suppressMatchDrops(PlayerDeathEvent playerDeathEvent) {
+        playerDeathEvent.setKeepInventory(true);
+        playerDeathEvent.getDrops().clear();
         playerDeathEvent.setDroppedExp(0);
-        if (playerDeathEvent.getDrops().isEmpty()) {
-            this.addDrops(playerDeathEvent, player.getInventory().getStorageContents());
-            this.addDrops(playerDeathEvent, player.getInventory().getArmorContents());
-            this.addDrops(playerDeathEvent, new ItemStack[]{player.getInventory().getItemInOffHand()});
-        }
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(new ItemStack[4]);
-        player.getInventory().setItemInOffHand(null);
-    }
-
-    private void addDrops(PlayerDeathEvent playerDeathEvent, ItemStack[] itemStackArray) {
-        if (itemStackArray == null) {
-            return;
-        }
-        for (ItemStack itemStack : itemStackArray) {
-            if (itemStack == null || itemStack.getType() == Material.AIR) continue;
-            playerDeathEvent.getDrops().add(itemStack.clone());
-        }
     }
 
     private void applyNormalDeathMessage(PlayerDeathEvent playerDeathEvent, Player player) {

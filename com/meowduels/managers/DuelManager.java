@@ -3,7 +3,6 @@ package com.meowduels.managers;
 import com.meowduels.MeowDuels;
 import com.meowduels.gui.DuelConfirmMenu;
 import com.meowduels.gui.KitPickMenu;
-import com.meowduels.gui.MatchSummaryMenu;
 import com.meowduels.model.ActiveDuel;
 import com.meowduels.model.Arena;
 import com.meowduels.model.DuelRequest;
@@ -90,7 +89,7 @@ public class DuelManager {
         this.requestTtlMs = (long)Math.max(1, meowDuels.getConfig().getInt("duel.request-expiry-seconds", 60)) * 1000L;
         this.countdownSeconds = Math.max(1, meowDuels.getConfig().getInt("rounds.countdown-seconds", 5));
         this.transitionTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.transition-seconds", 3.5) * 20.0);
-        this.matchEndTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.end-seconds", 3.5) * 20.0);
+        this.matchEndTicks = (long)(Math.max(2.0, Math.min(3.0, meowDuels.getConfig().getDouble("rounds.end-seconds", 3.0))) * 20.0);
         this.deathSpectateTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.death-spectate-seconds", 2.0) * 20.0);
         this.winEndTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.win-teleport-seconds", 2.0) * 20.0);
         this.matchFoundTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.match-found-seconds", 4.0) * 20.0);
@@ -692,8 +691,6 @@ public class DuelManager {
     }
 
     private void endMatch(ActiveDuel activeDuel, UUID uUID, EndReason endReason) {
-        Player player;
-        Object object;
         if (activeDuel.isFinished()) {
             return;
         }
@@ -704,56 +701,54 @@ public class DuelManager {
         }
         activeDuel.setFinished(true);
         activeDuel.setState(ActiveDuel.State.ENDING);
-        this.regenArena(activeDuel, true);
-        // Restore inventories and modes in the arena first; finishEndMatch runs
-        // the flight and then returns both players to the configured duel spawn.
-        this.restorePlayer(activeDuel.getPlayer1(), false);
-        this.restorePlayer(activeDuel.getPlayer2(), false);
-        this.giveSpawnItemsTo(activeDuel.getPlayer1());
-        this.giveSpawnItemsTo(activeDuel.getPlayer2());
-        this.lastOpponent.put(activeDuel.getPlayer1(), activeDuel.getPlayer2());
-        this.lastOpponent.put(activeDuel.getPlayer2(), activeDuel.getPlayer1());
-        this.addRematchItem(activeDuel.getPlayer1());
-        this.addRematchItem(activeDuel.getPlayer2());
-        UUID endedPlayer = uUID;
-        ActiveDuel endedDuel = activeDuel;
-        EndReason endedReason = endReason;
-        Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.finishEndMatch(endedDuel, endedPlayer, endedReason), 2L);
-        this.plugin.getTabService().detach(activeDuel.getPlayer1());
-        this.plugin.getTabService().detach(activeDuel.getPlayer2());
-        this.plugin.getScoreboardService().detach(activeDuel.getPlayer1());
-        this.plugin.getScoreboardService().detach(activeDuel.getPlayer2());
-        if (activeDuel.getArena().isGlowingOpponent()) {
-            object = Bukkit.getPlayer((UUID)activeDuel.getPlayer1());
-            player = Bukkit.getPlayer((UUID)activeDuel.getPlayer2());
-            if (object != null) {
-                try {
-                    ((Player)object).setGlowing(false);
-                }
-                catch (Throwable throwable) {
-                    // empty catch block
-                }
-            }
-            if (player != null) {
-                try {
-                    player.setGlowing(false);
-                }
-                catch (Throwable throwable) {
-                    // empty catch block
-                }
-            }
+        this.showClosingArenaCountdown(activeDuel, uUID, endReason, (int)(this.matchEndTicks / 20L));
+    }
+
+    private void showClosingArenaCountdown(ActiveDuel duel, UUID winner, EndReason reason, int seconds) {
+        for (UUID id : new UUID[]{duel.getPlayer1(), duel.getPlayer2()}) {
+            Player player = Bukkit.getPlayer(id);
+            if (player == null || !player.isOnline()) continue;
+            player.setInvulnerable(true);
+            this.sendTitle(player, "<yellow>Closing the arena...", "<gray>Returning to the lobby in <white>" + seconds + "</white>...", 0, 25, 0);
         }
-        if (activeDuel.getArena() != null) {
-            this.arenasInUse.remove(activeDuel.getArena().getName().toLowerCase());
+        if (seconds <= 1) {
+            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.closeDuelArena(duel, winner, reason), 20L);
+        } else {
+            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.showClosingArenaCountdown(duel, winner, reason, seconds - 1), 20L);
         }
-        this.playerDuels.remove(activeDuel.getPlayer1());
-        this.playerDuels.remove(activeDuel.getPlayer2());
-        object = activeDuel.getOpponent(uUID);
-        this.plugin.getStatsManager().addDuelWin(uUID);
-        this.plugin.getStatsManager().addDuelLoss((UUID)object);
+    }
+
+    private void closeDuelArena(ActiveDuel duel, UUID winner, EndReason reason) {
+        if (!duel.isFinished() || this.playerDuels.get(duel.getPlayer1()) != duel) return;
+        this.regenArena(duel, true);
+        // Keep the match and arena reserved through the closing countdown. Only
+        // now restore inventories, detach teams, and make the arena reusable.
+        this.restorePlayer(duel.getPlayer1(), false);
+        this.restorePlayer(duel.getPlayer2(), false);
+        this.lastOpponent.put(duel.getPlayer1(), duel.getPlayer2());
+        this.lastOpponent.put(duel.getPlayer2(), duel.getPlayer1());
+        this.plugin.getTabService().detach(duel.getPlayer1());
+        this.plugin.getTabService().detach(duel.getPlayer2());
+        this.plugin.getScoreboardService().detach(duel.getPlayer1());
+        this.plugin.getScoreboardService().detach(duel.getPlayer2());
+        if (duel.getArena() != null && duel.getArena().isGlowingOpponent()) {
+            Player first = Bukkit.getPlayer(duel.getPlayer1());
+            Player second = Bukkit.getPlayer(duel.getPlayer2());
+            if (first != null) first.setGlowing(false);
+            if (second != null) second.setGlowing(false);
+        }
+        if (duel.getArena() != null) this.arenasInUse.remove(duel.getArena().getName().toLowerCase(Locale.ROOT));
+        this.playerDuels.remove(duel.getPlayer1());
+        this.playerDuels.remove(duel.getPlayer2());
+        UUID loser = duel.getOpponent(winner);
+        if (winner != null && loser != null) {
+            this.plugin.getStatsManager().addDuelWin(winner);
+            this.plugin.getStatsManager().addDuelLoss(loser);
+        }
         this.plugin.getStatsManager().save();
-        this.plugin.getStatsManager().addPlayed(uUID);
-        this.plugin.getStatsManager().addPlayed((UUID)object);
+        this.plugin.getStatsManager().addPlayed(duel.getPlayer1());
+        this.plugin.getStatsManager().addPlayed(duel.getPlayer2());
+        Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.finishEndMatch(duel, winner, reason), 2L);
     }
 
     private static void ground(Player player) {
@@ -840,6 +835,11 @@ public class DuelManager {
         return this.arenasInUse.contains(string.toLowerCase()) || this.plugin.getArenaManager().isRegenerating(string);
     }
 
+    private void giveSpawnItemsTo(UUID playerId) {
+        Player player = Bukkit.getPlayer(playerId);
+        if (player != null && player.isOnline()) this.plugin.giveSpawnItems(player);
+    }
+
     public void markArenaInUse(String string) {
         Arena arena = this.plugin.getArenaManager().get(string);
         if (arena != null && arena.isConfigured() && !this.plugin.getArenaManager().hasSnapshot(arena)) {
@@ -863,7 +863,7 @@ public class DuelManager {
         }
         HashSet<String> hashSet = new HashSet<String>();
         for (ActiveDuel object2 : this.playerDuels.values()) {
-            if (object2 == null || object2.isFinished() || object2.getArena() == null) continue;
+            if (object2 == null || object2.getArena() == null) continue;
             hashSet.add(object2.getArena().getName().toLowerCase());
         }
         Arena arena = this.plugin.getEventManager().getArena();
@@ -918,10 +918,11 @@ public class DuelManager {
         while (iterator.hasNext()) {
             Map.Entry<UUID, ActiveDuel> entry = iterator.next();
             ActiveDuel activeDuel = entry.getValue();
-            if (activeDuel == null || activeDuel.isFinished() || Bukkit.getPlayer((UUID)entry.getKey()) == null) {
+            if (activeDuel == null) {
                 iterator.remove();
                 continue;
             }
+            if (activeDuel.isFinished() || Bukkit.getPlayer((UUID)entry.getKey()) == null) continue;
             ++n;
             set.add(activeDuel);
         }
@@ -956,13 +957,6 @@ public class DuelManager {
         return arena2 != null && this.plugin.getEventManager().isRunning() && arena.overlaps(arena2);
     }
 
-    private void giveSpawnItemsTo(UUID uUID) {
-        Player player = Bukkit.getPlayer((UUID)uUID);
-        if (player != null) {
-            this.plugin.giveSpawnItems(player);
-        }
-    }
-
     private static String mmc(String string) {
         return Colors.toSection(string);
     }
@@ -982,18 +976,6 @@ public class DuelManager {
         }
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer((UUID)uUID);
         return offlinePlayer.getName() == null ? "Opponent" : offlinePlayer.getName();
-    }
-
-    private void openSummary(ActiveDuel activeDuel, UUID uUID, UUID uUID2) {
-        Player player = Bukkit.getPlayer((UUID)uUID2);
-        if (player != null) {
-            try {
-                new MatchSummaryMenu(this.plugin, activeDuel, uUID, uUID2).open(player);
-            }
-            catch (Throwable throwable) {
-                // empty catch block
-            }
-        }
     }
 
     public void requestRematch(Player player) {
@@ -1428,8 +1410,12 @@ public class DuelManager {
         Runnable completed = () -> {
             if (pendingReturns.decrementAndGet() != 0) return;
             this.sendEndMessages(activeDuel, uUID, endReason);
-            this.openSummary(activeDuel, uUID, activeDuel.getPlayer1());
-            this.openSummary(activeDuel, uUID, activeDuel.getPlayer2());
+            for (UUID id : new UUID[]{activeDuel.getPlayer1(), activeDuel.getPlayer2()}) {
+                Player player = Bukkit.getPlayer(id);
+                if (player == null || !player.isOnline()) continue;
+                this.plugin.giveSpawnItems(player);
+                this.addRematchItem(id);
+            }
         };
         this.returnToSpawn(activeDuel.getPlayer1(), center, firstSpawn, flightCeiling, completed);
         this.returnToSpawn(activeDuel.getPlayer2(), center, secondSpawn, flightCeiling, completed);

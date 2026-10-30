@@ -10,6 +10,7 @@ public final class TabHook {
     private Method getPlayer;
     private Object tablistManager;
     private Method tablistSetPrefix;
+    private Method tablistSetSuffix;
     private Object nametagManager;
     private Method nametagSetPrefix;
     private Method nametagSetSuffix;
@@ -24,6 +25,7 @@ public final class TabHook {
             if (this.api != null) {
                 this.tablistManager = this.tryGet(clazz, "getTabListFormatManager");
                 this.tablistSetPrefix = this.resolveMethod(this.tablistManager, "setPrefix", clazz2);
+                this.tablistSetSuffix = this.resolveMethod(this.tablistManager, "setSuffix", clazz2);
                 this.nametagManager = this.tryGet(clazz, "getNameTagManager");
                 this.nametagSetPrefix = this.resolveMethod(this.nametagManager, "setPrefix", clazz2);
                 this.nametagSetSuffix = this.resolveMethod(this.nametagManager, "setSuffix", clazz2);
@@ -110,11 +112,13 @@ public final class TabHook {
 
     public void applyDuel(Player player, String string, String string2) {
         this.setPrefix(player, string);
+        this.setTablistSuffix(player, string2);
         this.setNametagSuffix(player, string2);
     }
 
     public void clearDuel(Player player) {
         this.setPrefix(player, null);
+        this.setTablistSuffix(player, null);
         this.setNametagSuffix(player, null);
     }
 
@@ -161,6 +165,16 @@ public final class TabHook {
         }
         catch (Throwable throwable) {
             // empty catch block
+        }
+    }
+
+    private void setTablistSuffix(Player player, String suffix) {
+        if (!this.available || this.tablistSetSuffix == null || player == null) return;
+        Object tabPlayer = this.tabPlayer(player);
+        if (tabPlayer == null) return;
+        try {
+            this.tablistSetSuffix.invoke(this.tablistManager, tabPlayer, suffix);
+        } catch (Throwable ignored) {
         }
     }
 }

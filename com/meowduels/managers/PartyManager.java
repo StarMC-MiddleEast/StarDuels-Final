@@ -83,7 +83,7 @@ public class PartyManager {
     public Set<String> claimedArenas() {
         HashSet<String> hashSet = new HashSet<String>();
         for (Party party : this.byPlayer.values()) {
-            if (!party.isFighting() || party.isFinished() || party.getArena() == null) continue;
+            if (!party.isFighting() || party.getArena() == null) continue;
             hashSet.add(party.getArena().getName().toLowerCase(Locale.ROOT));
         }
         return hashSet;
@@ -1142,7 +1142,6 @@ public class PartyManager {
             for (UUID uUID : party.teamMembers(team)) {
                 Player player = Bukkit.getPlayer((UUID)uUID);
                 if (player == null) continue;
-                this.showTitle(player, this.msg("party.win-title", new String[0]), this.msg("party.win-subtitle-split", new String[0]), 5, 40, 10);
                 Sounds.victory(player);
             }
         }
@@ -1184,16 +1183,28 @@ public class PartyManager {
                 this.broadcastMatch(party2, this.msg("party.winner", "winner", this.nameOf(uUID)));
                 Player player = Bukkit.getPlayer((UUID)uUID);
                 if (player != null) {
-                    this.showTitle(player, this.msg("party.win-title", new String[0]), this.msg("party.win-subtitle", new String[0]), 5, 40, 10);
                     Sounds.victory(player);
                 }
             } else {
                 this.broadcastMatch(party2, this.msg("party.no-winner", new String[0]));
             }
         }
-        double d = this.plugin.getConfig().getDouble("party.end-seconds", 3.0);
-        long l = Math.max(1L, Math.round(d * 20.0));
-        Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.finishMatch(party2), l);
+        double seconds = this.plugin.getConfig().getDouble("party.end-seconds", 3.0);
+        int delay = (int)Math.round(Math.max(2.0, Math.min(3.0, seconds)));
+        this.showClosingArenaCountdown(party2, delay);
+    }
+
+    private void showClosingArenaCountdown(Party party, int seconds) {
+        if (party == null || !this.pendingFinish.contains(party)) return;
+        String subtitle = "<gray>Returning to the lobby in <white>" + seconds + "</white>...";
+        for (UUID id : party.involved()) {
+            Player player = Bukkit.getPlayer(id);
+            if (player != null) this.showTitle(player, "<yellow>Closing the arena...", subtitle, 0, 25, 0);
+        }
+        Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> {
+            if (seconds <= 1) this.finishMatch(party);
+            else this.showClosingArenaCountdown(party, seconds - 1);
+        }, 20L);
     }
 
     private void finishMatch(Party party) {
@@ -1201,7 +1212,8 @@ public class PartyManager {
             return;
         }
         Arena arena = party.getArena();
-        for (UUID uUID : new ArrayList<UUID>(party.involved())) {
+        Set<UUID> participants = new HashSet<UUID>(party.involved());
+        for (UUID uUID : participants) {
             this.pullOut(party, uUID);
         }
         if (arena != null) {
@@ -1223,6 +1235,10 @@ public class PartyManager {
         this.plugin.getTabService().attachParty(party);
         if (party2 != null) {
             this.plugin.getTabService().attachParty(party2);
+        }
+        for (UUID id : participants) {
+            Player player = Bukkit.getPlayer(id);
+            if (player != null && player.isOnline()) this.plugin.giveSpawnItems(player);
         }
     }
 

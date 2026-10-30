@@ -58,7 +58,9 @@ implements Listener {
         if (!this.plugin.getEventManager().isPlaying(uUID) || !this.plugin.getEventManager().isRunning()) {
             return;
         }
-        playerDeathEvent.setKeepInventory(false);
+        playerDeathEvent.setKeepInventory(true);
+        playerDeathEvent.getDrops().clear();
+        playerDeathEvent.setDroppedExp(0);
         playerDeathEvent.setDeathMessage(null);
         Player player2 = player.getKiller();
         UUID uUID2 = player2 != null ? player2.getUniqueId() : null;

@@ -21,6 +21,7 @@ public class TabService {
     private final MeowDuels plugin;
     private final boolean external;
     private final Map<UUID, Object> memberGroup = new HashMap<UUID, Object>();
+    private final Map<UUID, Object> rankGroup = new HashMap<UUID, Object>();
 
     public TabService(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -39,6 +40,8 @@ public class TabService {
         }
         this.memberGroup.put(activeDuel.getPlayer1(), activeDuel);
         this.memberGroup.put(activeDuel.getPlayer2(), activeDuel);
+        this.hideRank(player, activeDuel);
+        this.hideRank(player2, activeDuel);
         this.applyTeams(player, activeDuel);
         this.applyTeams(player2, activeDuel);
         this.reconcileAll();
@@ -46,6 +49,7 @@ public class TabService {
 
     public void attachSpectator(Player player, ActiveDuel activeDuel) {
         this.memberGroup.put(player.getUniqueId(), activeDuel);
+        this.hideRank(player, activeDuel);
         this.applyTeams(player, activeDuel);
         this.reconcileAll();
     }
@@ -68,6 +72,10 @@ public class TabService {
         }
         if (!this.plugin.getConfig().getBoolean("party.separate-tab", true)) {
             this.detachParty(party);
+            for (UUID id : party.getMembers()) {
+                Player player = Bukkit.getPlayer(id);
+                if (player != null) this.hideRank(player, party);
+            }
             return;
         }
         for (Map.Entry<UUID, Object> object : new HashMap<UUID, Object>(this.memberGroup).entrySet()) {
@@ -75,8 +83,10 @@ public class TabService {
             this.release(object.getKey());
         }
         for (UUID uUID : party.getMembers()) {
-            if (Bukkit.getPlayer((UUID)uUID) == null) continue;
+            Player player = Bukkit.getPlayer(uUID);
+            if (player == null) continue;
             this.memberGroup.put(uUID, party);
+            this.hideRank(player, party);
         }
         this.reconcileAll();
     }
@@ -91,6 +101,13 @@ public class TabService {
     public void attachMatch(Party party, Party party2) {
         if (party == null || party2 == null) {
             return;
+        }
+        Party host = this.hostOf(party);
+        for (Party side : new Party[]{party, party2}) {
+            for (UUID id : side.getMembers()) {
+                Player player = Bukkit.getPlayer(id);
+                if (player != null) this.hideRank(player, host);
+            }
         }
         if (!this.plugin.getConfig().getBoolean("party.separate-tab", true)) {
             return;
@@ -111,6 +128,7 @@ public class TabService {
             if (entry.getValue() != party) continue;
             this.release(entry.getKey());
         }
+        for (UUID id : party.getMembers()) this.restoreRank(id);
         this.reconcileAll();
     }
 
@@ -129,10 +147,9 @@ public class TabService {
 
     private void release(UUID uUID) {
         Object object = this.memberGroup.remove(uUID);
-        if (object == null) {
-            return;
-        }
         Player player = Bukkit.getPlayer((UUID)uUID);
+        this.restoreRank(uUID);
+        if (object == null) return;
         if (player == null) {
             return;
         }
@@ -191,6 +208,21 @@ public class TabService {
         }
     }
 
+    private void hideRank(Player player, Object group) {
+        if (player != null) {
+            this.rankGroup.put(player.getUniqueId(), group);
+        }
+        if (player != null && this.plugin.getTabHook() != null) {
+            this.plugin.getTabHook().applyDuel(player, "", "");
+        }
+    }
+
+    private void restoreRank(UUID id) {
+        if (this.rankGroup.remove(id) == null) return;
+        Player player = Bukkit.getPlayer(id);
+        if (player != null && this.plugin.getTabHook() != null) this.plugin.getTabHook().clearDuel(player);
+    }
+
     private void applyTeams(Player player, ActiveDuel activeDuel) {
         if (this.external) {
             return;
@@ -215,6 +247,7 @@ public class TabService {
         }
         team.setColor(chatColor);
         team.setPrefix(string2);
+        team.setSuffix("");
         return team;
     }
 
