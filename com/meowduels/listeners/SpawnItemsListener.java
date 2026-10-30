@@ -14,6 +14,7 @@ import com.meowduels.util.Items;
 import com.meowduels.util.SpawnItems;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.event.EventHandler;
@@ -21,6 +22,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -35,6 +38,8 @@ import org.bukkit.plugin.Plugin;
 public class SpawnItemsListener
 implements Listener {
     private final MeowDuels plugin;
+    private final ConcurrentHashMap<UUID, UUID> windChargeOwners = new ConcurrentHashMap<>();
+    private final Set<UUID> pendingWindChargeResets = ConcurrentHashMap.newKeySet();
 
     public SpawnItemsListener(MeowDuels meowDuels) {
         this.plugin = meowDuels;
@@ -214,18 +219,60 @@ implements Listener {
     }
 
     @EventHandler(ignoreCancelled=true)
-    public void onMaceWindChargeImpact(EntityExplodeEvent event) {
+    public void onMaceWindChargeLaunch(ProjectileLaunchEvent event) {
         if (!(event.getEntity() instanceof AbstractWindCharge charge)
                 || !(charge.getShooter() instanceof Player player)
-                || !this.isMaceMode(player)
-                || !player.isOnline()
-                || player.getWorld() != event.getLocation().getWorld()
-                || player.getLocation().distanceSquared(event.getLocation()) > 36.0) {
+                || !this.isMaceMode(player)) {
             return;
         }
-        // Only clear accumulated fall damage when this player's charge actually
-        // detonates close enough to connect. Keep all velocity handling vanilla.
-        player.setFallDistance(0.0f);
+        this.windChargeOwners.put(charge.getUniqueId(), player.getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onMaceWindChargeHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof AbstractWindCharge charge)) {
+            return;
+        }
+        this.resetFromWindCharge(charge, charge.getLocation());
+    }
+
+    @EventHandler(ignoreCancelled=true)
+    public void onMaceWindChargeImpact(EntityExplodeEvent event) {
+        if (event.getEntity() instanceof AbstractWindCharge charge) {
+            this.resetFromWindCharge(charge, event.getLocation());
+        }
+    }
+
+    private void resetFromWindCharge(AbstractWindCharge charge, org.bukkit.Location impact) {
+        UUID chargeId = charge.getUniqueId();
+        UUID ownerId = this.windChargeOwners.remove(chargeId);
+        if (ownerId == null && charge.getShooter() instanceof Player shooter) {
+            ownerId = shooter.getUniqueId();
+        }
+        if (ownerId == null || !this.pendingWindChargeResets.add(chargeId)) {
+            return;
+        }
+        UUID playerId = ownerId;
+        this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+            try {
+                Player player = this.plugin.getServer().getPlayer(playerId);
+                if (player == null || !player.isOnline() || !this.isMaceMode(player)
+                        || player.getWorld() != impact.getWorld()
+                        || player.getLocation().distanceSquared(impact) > 36.0) {
+                    return;
+                }
+
+                // Let vanilla apply its explosion first. Then guarantee the reset
+                // with a small upward impulse while retaining all horizontal
+                // momentum, so the charge still carries the player forward.
+                player.setFallDistance(0.0f);
+                org.bukkit.util.Vector velocity = player.getVelocity();
+                velocity.setY(Math.max(velocity.getY(), 0.55));
+                player.setVelocity(velocity);
+            } finally {
+                this.pendingWindChargeResets.remove(chargeId);
+            }
+        });
     }
 
     private boolean isMaceMode(Player player) {
