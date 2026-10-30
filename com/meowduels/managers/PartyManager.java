@@ -457,12 +457,7 @@ public class PartyManager {
         }
         int n = (location2.getBlockX() + location3.getBlockX()) / 2;
         int n2 = (location2.getBlockZ() + location3.getBlockZ()) / 2;
-        int n3 = Math.min(location2.getBlockY(), location3.getBlockY());
-        for (int i = Math.max(location2.getBlockY(), location3.getBlockY()); i >= n3; --i) {
-            if (world.getBlockAt(n, i, n2).getType() == Material.AIR) continue;
-            return new Location(world, (double)n + 0.5, (double)(i + 1), (double)n2 + 0.5);
-        }
-        return new Location(world, (double)n + 0.5, (double)(n3 + 1), (double)n2 + 0.5);
+        return this.findArenaFloorSpawn(arena, n, n2, null);
     }
 
     private Location partyFfaSpawn(Arena arena) {
@@ -473,19 +468,30 @@ public class PartyManager {
         int x = (min.getBlockX() + max.getBlockX()) / 2;
         int z = (min.getBlockZ() + max.getBlockZ()) / 2;
         Location configured = arena.getEventSpawn();
-        int floorY = Math.min(min.getBlockY(), max.getBlockY());
-        for (int y = Math.max(min.getBlockY(), max.getBlockY()); y >= floorY; y--) {
-            if (world.getBlockAt(x, y, z).getType() == Material.AIR) continue;
-            Location center = new Location(world, x + 0.5, y + 1.0, z + 0.5);
-            if (configured != null) {
-                center.setYaw(configured.getYaw());
-                center.setPitch(configured.getPitch());
-            }
-            return center;
+        Location center = this.findArenaFloorSpawn(arena, x, z, configured);
+        // If the center is obstructed or has no floor, prefer a configured
+        // side spawn over placing the whole FFA on the arena roof.
+        return center != null ? center : arena.getSpawn1();
+    }
+
+    /** Finds the lowest safe floor at the requested column inside the arena. */
+    private Location findArenaFloorSpawn(Arena arena, int x, int z, Location facing) {
+        World world = arena.getWorld();
+        Location min = arena.getMin();
+        Location max = arena.getMax();
+        if (world == null || min == null || max == null) return null;
+        int low = Math.min(min.getBlockY(), max.getBlockY());
+        int high = Math.min(Math.max(min.getBlockY(), max.getBlockY()), world.getMaxHeight() - 3);
+        for (int y = low; y <= high; y++) {
+            org.bukkit.block.Block floor = world.getBlockAt(x, y, z);
+            if (!floor.getType().isSolid()) continue;
+            if (!world.getBlockAt(x, y + 1, z).isPassable()
+                    || !world.getBlockAt(x, y + 2, z).isPassable()) continue;
+            return new Location(world, x + 0.5, y + 1.0, z + 0.5,
+                    facing == null ? 0.0f : facing.getYaw(),
+                    facing == null ? 0.0f : facing.getPitch());
         }
-        return new Location(world, x + 0.5, floorY + 1.0, z + 0.5,
-                configured == null ? 0.0f : configured.getYaw(),
-                configured == null ? 0.0f : configured.getPitch());
+        return null;
     }
 
     private void sendIn(Party party, Player player, Kit kit, Arena arena) {
