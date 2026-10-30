@@ -274,6 +274,45 @@ public class Arena {
     }
 
     /**
+     * Resolves a configured spawn to a safe player standing position. Older
+     * arena configs often record the floor block's Y as the spawn Y, which
+     * places the player inside the floor and lets vanilla collision push them
+     * onto the arena roof. Keep the configured X/Z and facing, correcting Y
+     * only when the exact location has no solid floor and two clear blocks.
+     */
+    public Location safeSpawn(Location configured) {
+        if (configured == null || configured.getWorld() == null || !this.hasCorners()) {
+            return configured == null ? null : configured.clone();
+        }
+        World world = this.getWorld();
+        if (world == null || !world.equals(configured.getWorld())) {
+            return configured.clone();
+        }
+        int x = configured.getBlockX();
+        int z = configured.getBlockZ();
+        int lowY = Math.min(this.corner1.getBlockY(), this.corner2.getBlockY());
+        int highY = Math.min(Math.max(this.corner1.getBlockY(), this.corner2.getBlockY()), world.getMaxHeight() - 3);
+        int feetY = configured.getBlockY();
+        if (isSafeStandingColumn(world, x, feetY, z)) {
+            return configured.clone();
+        }
+        for (int floorY = lowY; floorY <= highY; floorY++) {
+            if (!isSafeStandingColumn(world, x, floorY + 1, z)) continue;
+            Location safe = configured.clone();
+            safe.setY(floorY + 1.0);
+            return safe;
+        }
+        return configured.clone();
+    }
+
+    private static boolean isSafeStandingColumn(World world, int x, int feetY, int z) {
+        if (feetY <= world.getMinHeight() || feetY + 1 >= world.getMaxHeight()) return false;
+        return world.getBlockAt(x, feetY - 1, z).getType().isSolid()
+                && world.getBlockAt(x, feetY, z).isPassable()
+                && world.getBlockAt(x, feetY + 1, z).isPassable();
+    }
+
+    /**
      * Whether a location is inside this arena's box.
      *
      * <p>Called for every arena on every block break, place, burn and - most

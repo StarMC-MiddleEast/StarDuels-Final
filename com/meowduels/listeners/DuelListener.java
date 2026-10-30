@@ -104,7 +104,9 @@ implements Listener {
         }
         if (entityDamageEvent.getCause() == EntityDamageEvent.DamageCause.VOID) {
             entityDamageEvent.setCancelled(true);
-            Location location = player.getUniqueId().equals(activeDuel.getPlayer1()) ? activeDuel.getArena().getSpawn1() : activeDuel.getArena().getSpawn2();
+            Location location = player.getUniqueId().equals(activeDuel.getPlayer1())
+                    ? activeDuel.getArena().safeSpawn(activeDuel.getArena().getSpawn1())
+                    : activeDuel.getArena().safeSpawn(activeDuel.getArena().getSpawn2());
             Location location2 = location;
             if (location != null) {
                 player.setFallDistance(0.0f);
@@ -168,7 +170,9 @@ implements Listener {
         if (activeDuel != null) {
             Location location = this.plugin.getDuelManager().consumePendingRoundRespawn(player.getUniqueId());
             if (location == null) {
-                location = player.getUniqueId().equals(activeDuel.getPlayer1()) ? activeDuel.getArena().getSpawn1() : activeDuel.getArena().getSpawn2();
+                location = player.getUniqueId().equals(activeDuel.getPlayer1())
+                        ? activeDuel.getArena().safeSpawn(activeDuel.getArena().getSpawn1())
+                        : activeDuel.getArena().safeSpawn(activeDuel.getArena().getSpawn2());
             }
             if (location != null) {
                 playerRespawnEvent.setRespawnLocation(location);

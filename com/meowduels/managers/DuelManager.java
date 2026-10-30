@@ -344,8 +344,8 @@ public class DuelManager {
             return;
         }
         Arena arena = activeDuel.getArena();
-        Location location2 = arena == null ? null : arena.getSpawn1();
-        Location location3 = location = arena == null ? null : arena.getSpawn2();
+        Location location2 = arena == null ? null : arena.safeSpawn(arena.getSpawn1());
+        Location location3 = location = arena == null ? null : arena.safeSpawn(arena.getSpawn2());
         if (arena == null || !arena.isConfigured() || location2 == null || location == null || location2.getWorld() == null || location.getWorld() == null) {
             String string = arena == null ? "?" : arena.getName();
             this.plugin.getLogger().warning("Cancelled duel start: arena '" + string + "' has a missing or unloaded world on a spawn. Check its world name and both spawn points.");
@@ -594,8 +594,8 @@ public class DuelManager {
                 Player teamOne = Bukkit.getPlayer(activeDuel.getPlayer1());
                 Player teamTwo = Bukkit.getPlayer(activeDuel.getPlayer2());
                 long flightTicks = 0L;
-                if (teamOne != null) flightTicks = Math.max(flightTicks, this.launchPlayerToTarget(teamOne, roundArena.getSpawn1()));
-                if (teamTwo != null) flightTicks = Math.max(flightTicks, this.launchPlayerToTarget(teamTwo, roundArena.getSpawn2()));
+                if (teamOne != null) flightTicks = Math.max(flightTicks, this.launchPlayerToTarget(teamOne, roundArena.safeSpawn(roundArena.getSpawn1())));
+                if (teamTwo != null) flightTicks = Math.max(flightTicks, this.launchPlayerToTarget(teamTwo, roundArena.safeSpawn(roundArena.getSpawn2())));
                 long nextRoundDelay = Math.max(Math.max(this.deathSpectateTicks, 22L), flightTicks + 2L);
                 Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> {
                     if (this.isStill(activeDuel)) this.startRound(activeDuel);
@@ -1423,8 +1423,8 @@ public class DuelManager {
 
     private Location arenaTransitionCenter(Arena arena) {
         if (arena == null || arena.getSpawn1() == null || arena.getSpawn2() == null) return null;
-        Location first = arena.getSpawn1();
-        Location second = arena.getSpawn2();
+        Location first = arena.safeSpawn(arena.getSpawn1());
+        Location second = arena.safeSpawn(arena.getSpawn2());
         if (first.getWorld() == null || !first.getWorld().equals(second.getWorld())) return null;
         double x = (first.getX() + second.getX()) / 2.0;
         double z = (first.getZ() + second.getZ()) / 2.0;
@@ -1436,8 +1436,8 @@ public class DuelManager {
 
     private double arenaTransitionCeiling(Arena arena) {
         Location max = arena == null ? null : arena.getMax();
-        Location first = arena == null ? null : arena.getSpawn1();
-        Location second = arena == null ? null : arena.getSpawn2();
+        Location first = arena == null ? null : arena.safeSpawn(arena.getSpawn1());
+        Location second = arena == null ? null : arena.safeSpawn(arena.getSpawn2());
         double fallback = first == null || second == null ? 0.0 : Math.max(first.getY(), second.getY()) + 5.0;
         return max == null ? fallback : max.getY() + 1.0;
     }
