@@ -295,7 +295,7 @@ TabCompleter {
             commandSender.sendMessage(this.plugin.messages().get("notice.admin.no-configured-arena-named-2", "arenaname", string));
             return;
         }
-        this.plugin.getArenaManager().snapshotArena(arena);
+        this.plugin.getArenaManager().replaceSnapshotArena(arena);
         commandSender.sendMessage(this.plugin.messages().get("notice.admin.snapshot-saved-now-regen", "arenaname", string));
     }
 

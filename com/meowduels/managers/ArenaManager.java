@@ -259,7 +259,15 @@ public class ArenaManager {
     public void delete(String string) {
         this.arenas.remove(string.toLowerCase(Locale.ROOT));
         this.snapshots.remove(string.toLowerCase(Locale.ROOT));
-        this.snapshotFile(string).delete();
+        // Keep snapshot deletion ordered behind already queued writes. Deleting
+        // immediately allowed a pending async save to recreate a deleted
+        // arena's file, which could later be mistaken for a current baseline.
+        File snapshot = this.snapshotFile(string);
+        this.io.execute(() -> {
+            if (snapshot.exists() && !snapshot.delete()) {
+                this.plugin.getLogger().warning("Could not delete snapshot for arena " + string);
+            }
+        });
         this.save();
     }
 
@@ -300,11 +308,26 @@ public class ArenaManager {
     }
 
     public boolean snapshotArena(Arena arena) {
+        return this.snapshotArena(arena, false);
+    }
+
+    /** Explicitly replaces the baseline after an administrator requests it. */
+    public boolean replaceSnapshotArena(Arena arena) {
+        return this.snapshotArena(arena, true);
+    }
+
+    private synchronized boolean snapshotArena(Arena arena, boolean replace) {
         if (!arena.isConfigured() || arena.getWorld() == null) {
             return false;
         }
+        String key = arena.getName().toLowerCase(Locale.ROOT);
+        // Automatic setup and match paths must not replace a saved baseline
+        // with a live arena that may already have been altered.
+        if (!replace && (this.snapshots.containsKey(key) || this.snapshotFile(arena.getName()).exists())) {
+            return false;
+        }
         RegionClipboard regionClipboard = RegionClipboard.capture(arena.getWorld(), arena.getMin(), arena.getMax());
-        this.snapshots.put(arena.getName().toLowerCase(Locale.ROOT), regionClipboard);
+        this.snapshots.put(key, regionClipboard);
         // The capture has to read blocks, so it stays on the main thread; the
         // gzip write does not, and used to be the slow half.
         String name = arena.getName();

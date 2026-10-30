@@ -161,7 +161,7 @@ extends Menu {
                 return;
             }
             case 12: {
-                this.plugin.getArenaManager().snapshotArena(this.arena);
+                this.plugin.getArenaManager().replaceSnapshotArena(this.arena);
                 player.sendMessage(this.plugin.messages().get("notice.arena.snapshot-saved", MENU, this.arena.getName()));
                 return;
             }
