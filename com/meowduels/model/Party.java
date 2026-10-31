@@ -37,6 +37,9 @@ public class Party {
     private int scoreRed;
     private State state = State.IDLE;
     private String kit;
+    private String hungerGamesArena;
+    private String hungerGamesKit;
+    private String kitBeforeHungerGames;
     private Arena arena;
     private long startedAt;
     private long fightStartsAt;
@@ -123,6 +126,16 @@ public class Party {
     public void setKit(String string) {
         this.kit = string;
     }
+
+    public String getHungerGamesArena() { return this.hungerGamesArena; }
+
+    public void setHungerGamesArena(String name) { this.hungerGamesArena = name; }
+
+    public String getHungerGamesKit() { return this.hungerGamesKit; }
+
+    public void setHungerGamesKit(String name) { this.hungerGamesKit = name; }
+
+    public void setKitBeforeHungerGames(String name) { this.kitBeforeHungerGames = name; }
 
     public Arena getArena() {
         return this.arena;
@@ -329,6 +342,10 @@ public class Party {
     }
 
     public void resetMatch() {
+        if (this.mode == PartyMode.HUNGERGAMES) {
+            this.kit = this.kitBeforeHungerGames;
+            this.kitBeforeHungerGames = null;
+        }
         this.state = State.IDLE;
         this.finished = false;
         this.alive.clear();
@@ -341,6 +358,7 @@ public class Party {
         this.changedBlocks.clear();
         this.teams.clear();
         this.mode = PartyMode.FFA;
+        this.hungerGamesArena = null;
         this.duelTarget = null;
         this.opponent = null;
         this.matchHost = false;

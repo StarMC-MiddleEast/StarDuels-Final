@@ -249,6 +249,10 @@ public class Arena {
         return Math.max(this.corner1.getBlockX(), this.corner2.getBlockX());
     }
 
+    public int minY() { return Math.min(this.corner1.getBlockY(), this.corner2.getBlockY()); }
+
+    public int maxY() { return Math.max(this.corner1.getBlockY(), this.corner2.getBlockY()); }
+
     public int minZ() {
         return Math.min(this.corner1.getBlockZ(), this.corner2.getBlockZ());
     }

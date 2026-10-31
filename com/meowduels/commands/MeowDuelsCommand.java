@@ -183,6 +183,17 @@ TabCompleter {
         if (!this.requireAdmin(commandSender)) {
             return;
         }
+        if (stringArray.length > 0 && stringArray[0].equalsIgnoreCase("hungergames")) {
+            if (!this.requirePlayer(commandSender)) return;
+            String arenaName = stringArray.length >= 2 ? stringArray[1] : "HungerGames";
+            if (stringArray.length < 2 && this.plugin.getArenaManager().exists(arenaName)) {
+                int suffix = 2;
+                while (this.plugin.getArenaManager().exists(arenaName + suffix)) suffix++;
+                arenaName += suffix;
+            }
+            this.plugin.getHungerGamesManager().beginSetup((Player)commandSender, arenaName);
+            return;
+        }
         if (stringArray.length < 1) {
             commandSender.sendMessage(this.plugin.messages().get("notice.admin.usage-createarena-name", new String[0]));
             return;
@@ -358,6 +369,7 @@ TabCompleter {
             return;
         }
         this.plugin.getArenaManager().delete(stringArray[0]);
+        this.plugin.getHungerGamesManager().removeArena(stringArray[0]);
         commandSender.sendMessage(this.plugin.messages().get("notice.admin.arena-deleted", "name", stringArray[0]));
     }
 
@@ -803,6 +815,10 @@ TabCompleter {
         }
         Player player = (Player)commandSender;
         String string2 = string = stringArray.length > 0 ? stringArray[0].toLowerCase(Locale.ROOT) : "";
+        if (string.equals("hungergames") || string.equals("hg")) {
+            this.plugin.getHungerGamesManager().openHostMenu(player);
+            return;
+        }
         if (string.equals("create")) {
             this.plugin.getPartyManager().create(player);
             return;

@@ -67,7 +67,6 @@ public class DuelManager {
     private final long requestTtlMs;
     private final int countdownSeconds;
     private final long transitionTicks;
-    private final long matchEndTicks;
     private final long deathSpectateTicks;
     private final long winEndTicks;
     private final long matchFoundTicks;
@@ -89,7 +88,6 @@ public class DuelManager {
         this.requestTtlMs = (long)Math.max(1, meowDuels.getConfig().getInt("duel.request-expiry-seconds", 60)) * 1000L;
         this.countdownSeconds = Math.max(1, meowDuels.getConfig().getInt("rounds.countdown-seconds", 5));
         this.transitionTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.transition-seconds", 3.5) * 20.0);
-        this.matchEndTicks = (long)(Math.max(2.0, Math.min(3.0, meowDuels.getConfig().getDouble("rounds.end-seconds", 3.0))) * 20.0);
         this.deathSpectateTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.death-spectate-seconds", 2.0) * 20.0);
         this.winEndTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.win-teleport-seconds", 2.0) * 20.0);
         this.matchFoundTicks = (long)Math.max(0.0, meowDuels.getConfig().getDouble("rounds.match-found-seconds", 4.0) * 20.0);
@@ -701,21 +699,7 @@ public class DuelManager {
         }
         activeDuel.setFinished(true);
         activeDuel.setState(ActiveDuel.State.ENDING);
-        this.showClosingArenaCountdown(activeDuel, uUID, endReason, (int)(this.matchEndTicks / 20L));
-    }
-
-    private void showClosingArenaCountdown(ActiveDuel duel, UUID winner, EndReason reason, int seconds) {
-        for (UUID id : new UUID[]{duel.getPlayer1(), duel.getPlayer2()}) {
-            Player player = Bukkit.getPlayer(id);
-            if (player == null || !player.isOnline()) continue;
-            player.setInvulnerable(true);
-            this.sendTitle(player, "<yellow>Closing the arena...", "<gray>Returning to the lobby in <white>" + seconds + "</white>...", 0, 25, 0);
-        }
-        if (seconds <= 1) {
-            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.closeDuelArena(duel, winner, reason), 20L);
-        } else {
-            Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> this.showClosingArenaCountdown(duel, winner, reason, seconds - 1), 20L);
-        }
+        this.closeDuelArena(activeDuel, uUID, endReason);
     }
 
     private void closeDuelArena(ActiveDuel duel, UUID winner, EndReason reason) {

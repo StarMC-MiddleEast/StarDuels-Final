@@ -22,6 +22,7 @@ import com.meowduels.managers.CategoryManager;
 import com.meowduels.managers.DuelManager;
 import com.meowduels.managers.EventManager;
 import com.meowduels.managers.GuiConfigManager;
+import com.meowduels.managers.HungerGamesManager;
 import com.meowduels.managers.GuiLayoutManager;
 import com.meowduels.managers.KitLayoutManager;
 import com.meowduels.managers.KitManager;
@@ -95,6 +96,7 @@ extends JavaPlugin {
     private TipService tipService;
     private TabHook tabHook;
     private PartyManager partyManager;
+    private HungerGamesManager hungerGamesManager;
     private NamespacedKey keyKit;
     private NamespacedKey keyButton;
     private NamespacedKey keyArena;
@@ -137,6 +139,7 @@ extends JavaPlugin {
         this.duelManager = new DuelManager(this);
         this.queueManager = new QueueManager(this);
         this.partyManager = new PartyManager(this);
+        this.hungerGamesManager = new HungerGamesManager(this);
         this.tabService = new TabService(this);
         this.spectateManager = new SpectateManager(this);
         this.statsManager = new StatsManager(this);
@@ -238,6 +241,7 @@ extends JavaPlugin {
         if (this.statsManager != null) {
             this.statsManager.save();
         }
+        if (this.hungerGamesManager != null) this.hungerGamesManager.saveKits();
     }
 
     private void registerCommands() {
@@ -567,6 +571,8 @@ extends JavaPlugin {
     public PartyManager getPartyManager() {
         return this.partyManager;
     }
+
+    public HungerGamesManager getHungerGamesManager() { return this.hungerGamesManager; }
 
     public NamespacedKey keyKit() {
         return this.keyKit;

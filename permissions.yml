@@ -6,6 +6,12 @@
 # Grant starduels.elytra.true for both lobby elytra and wind charge.
 # Add starduels.elytra.false to explicitly deny both lobby items.
 permissions:
+  hg.host.party:
+    description: Allow party leaders to host Hunger Games.
+    default: op
+  starduels.hungergames.host:
+    description: Alias permission for hosting party Hunger Games.
+    default: op
   starduels.vip:
     description: Standard VIP bundle.
     children:

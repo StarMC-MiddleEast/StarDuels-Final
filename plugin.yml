@@ -16,7 +16,7 @@ commands:
     aliases: [sd, md, meowduels]
   createarena:
     description: Create a new arena.
-    usage: /createarena <name>
+    usage: /createarena <name> | /createarena hungergames [name]
     permission: meowduels.admin
   arena:
     description: Open the arena setup/settings GUI, or clone/regen/snapshot it.
@@ -73,8 +73,8 @@ commands:
     description: Challenge a player to a duel.
     usage: /duel <player> [kit] [rounds]
   party:
-    description: Create or manage a party, and start a private party match.
-    usage: /party | create | invite <player> | join [leader] | decline <player> | duel <accept|decline> <leader> | spectate | force_end | leave
+    description: Create or manage parties and host party modes.
+    usage: /party hungergames | create | invite <player> | join [leader] | decline <player> | duel <accept|decline> <leader> | spectate | force_end | leave
     aliases: [p]
   leave:
     description: Leave your current duel, spectate session, or queues.
@@ -123,6 +123,12 @@ commands:
     permission: meowduels.trims
     aliases: [trims, mdtrims]
 permissions:
+  hg.host.party:
+    description: Allow a party leader to host Hunger Games.
+    default: op
+  starduels.hungergames.host:
+    description: Alias permission for hosting party Hunger Games.
+    default: op
   starduels.admin:
     description: Access to StarDuels administration.
     default: op

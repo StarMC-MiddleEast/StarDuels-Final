@@ -28,6 +28,11 @@ implements Listener {
             Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> this.plugin.getSpectateManager().stop(player));
             return;
         }
+        if (this.plugin.getHungerGamesManager().inSetup(player.getUniqueId())) {
+            asyncPlayerChatEvent.setCancelled(true);
+            Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> this.plugin.getHungerGamesManager().handleSetupInput(player, string));
+            return;
+        }
         if (this.plugin.getSetupManager().inEventSpawn(player.getUniqueId())) {
             asyncPlayerChatEvent.setCancelled(true);
             Bukkit.getScheduler().runTask((Plugin)this.plugin, () -> {

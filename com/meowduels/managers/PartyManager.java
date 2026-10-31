@@ -444,6 +444,65 @@ public class PartyManager {
         this.countdownTick(party, n, n * 20);
     }
 
+    public void startHungerGames(Player player, Arena arena, Kit kit, HungerGamesManager.HgArena hgArena) {
+        Party party = this.partyOf(player.getUniqueId());
+        if (party == null || !party.isLeader(player.getUniqueId())) {
+            player.sendMessage("§cOnly your party leader can start Hunger Games.");
+            return;
+        }
+        if (!this.plugin.getHungerGamesManager().hasHostPermission(player)) {
+            player.sendMessage("§cYou need permission hg.host.party to host Hunger Games.");
+            return;
+        }
+        if (party.isFighting() || party.size() < 2 || arena == null || kit == null || hgArena == null
+                || !arena.isConfigured() || !arena.isEnabled()
+                || !arena.getName().equalsIgnoreCase(hgArena.name)
+                || this.plugin.getDuelManager().isArenaInUse(arena.getName())) {
+            player.sendMessage("§cHunger Games could not start. Check the selected arena, kit, party, and arena availability.");
+            return;
+        }
+        ArrayList<Player> online = new ArrayList<>();
+        for (UUID member : party.getMembers()) {
+            Player current = Bukkit.getPlayer(member);
+            if (current != null && current.isOnline()) online.add(current);
+        }
+        if (online.size() < 2 || online.size() != party.size()) {
+            player.sendMessage("§cAll party members must be online, with at least two players, to start Hunger Games.");
+            return;
+        }
+        for (Player member : online) {
+            if (this.plugin.getDuelManager().isInDuel(member.getUniqueId())
+                    || this.plugin.getEventManager().isInvolved(member.getUniqueId())
+                    || this.plugin.getQueueManager().isQueued(member.getUniqueId())) {
+                player.sendMessage("§cEvery party member must leave queues, duels, and events before Hunger Games can start.");
+                return;
+            }
+        }
+        party.setMode(PartyMode.HUNGERGAMES);
+        party.setArena(arena);
+        party.setKitBeforeHungerGames(party.getKit());
+        party.setKit(kit.getName());
+        party.setHungerGamesKit(kit.getName());
+        party.setHungerGamesArena(arena.getName());
+        party.setState(Party.State.FIGHTING);
+        party.setFinished(false);
+        party.setStartedAt(System.currentTimeMillis());
+        party.getAlive().clear();
+        party.getWatching().clear();
+        party.getSnapshots().clear();
+        party.getTeams().clear();
+        party.getChangedBlocks().clear();
+        this.plugin.getDuelManager().markArenaInUse(arena.getName());
+        this.plugin.getArenaManager().clearLooseEntities(arena);
+        for (Player current : online) this.sendIn(party, current, kit, arena);
+        this.plugin.getHungerGamesManager().generateChests(hgArena);
+        this.plugin.getTabService().refreshParty(party);
+        int seconds = Math.max(1, this.plugin.getConfig().getInt("party.countdown-seconds", 5));
+        party.setFightStartsAt(System.currentTimeMillis() + seconds * 1000L);
+        this.broadcast(party, "§6Hunger Games §7started for §f" + online.size() + "§7 players in §f" + arena.getName() + "§7.");
+        this.countdownTick(party, seconds, seconds * 20);
+    }
+
     private Location partySpawn(Arena arena) {
         Location location = arena.getEventSpawn();
         if (location != null) {
@@ -491,6 +550,8 @@ public class PartyManager {
         Party.Team team2 = team = party.isTeamMode() ? party.teamOf(player.getUniqueId()) : null;
         Location location = party.getMode() == PartyMode.FFA
                 ? this.partyFfaSpawn(arena)
+                : party.getMode() == PartyMode.HUNGERGAMES
+                ? arena.safeSpawn(arena.getSpawn1())
                 : arena.safeSpawn(team == null ? (n % 2 == 0 ? arena.getSpawn1() : arena.getSpawn2())
                 : (team == Party.Team.AQUA ? arena.getSpawn1() : arena.getSpawn2()));
         if (location == null) {
@@ -532,6 +593,7 @@ public class PartyManager {
         long l = party.getFightStartsAt();
         if (n2 <= 0) {
             Kit kit = party.getKit() == null ? null : this.plugin.getKitManager().get(party.getKit());
+            if (kit == null && party.getMode() == PartyMode.HUNGERGAMES) kit = this.plugin.getHungerGamesManager().kit(party.getKit());
             for (UUID uUID : party.getAlive()) {
                 Player player = Bukkit.getPlayer((UUID)uUID);
                 if (player == null) continue;
@@ -1177,22 +1239,7 @@ public class PartyManager {
                 this.broadcastMatch(party2, this.msg("party.no-winner", new String[0]));
             }
         }
-        double seconds = this.plugin.getConfig().getDouble("party.end-seconds", 3.0);
-        int delay = (int)Math.round(Math.max(2.0, Math.min(3.0, seconds)));
-        this.showClosingArenaCountdown(party2, delay);
-    }
-
-    private void showClosingArenaCountdown(Party party, int seconds) {
-        if (party == null || !this.pendingFinish.contains(party)) return;
-        String subtitle = "<gray>Returning to the lobby in <white>" + seconds + "</white>...";
-        for (UUID id : party.involved()) {
-            Player player = Bukkit.getPlayer(id);
-            if (player != null) this.showTitle(player, "<yellow>Closing the arena...", subtitle, 0, 25, 0);
-        }
-        Bukkit.getScheduler().runTaskLater((Plugin)this.plugin, () -> {
-            if (seconds <= 1) this.finishMatch(party);
-            else this.showClosingArenaCountdown(party, seconds - 1);
-        }, 20L);
+        this.finishMatch(party2);
     }
 
     private void finishMatch(Party party) {

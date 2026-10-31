@@ -25,3 +25,9 @@ The command also accepts `/sd reload`, `/md reload`, and `/meowduels reload`.
 ## Buttons GUI
 
 Player-facing menus use Paper's native dialog layout by default, including the Settings menu. The Settings menu no longer offers a switch between dialogs and chest GUIs. Admin and arena setup menus remain chest GUIs.
+
+The per-player **Buttons GUI** setting controls other supported menus. Settings itself always opens as a Paper dialog on compatible clients. Client brand strings such as Fabric/Vulkan are not used to disable dialogs; when ViaVersion reports a client older than 1.21.6, the plugin falls back to an inventory menu.
+
+## Party Hunger Games
+
+Create a mode arena with `/createarena hungergames [name]`. Follow the chat prompts to set one shared player spawn, two arena corners, and the two corners for each of the two chest-generation regions. The arena baseline is saved for regeneration. Players can host with `/party hungergames`; the host must be a party leader, belong to a party, and have `hg.host.party` (or `starduels.hungergames.host`). The host GUI lets the leader select an available arena, preview and select an HG kit, and start the match for the party. Default kits and generated chest spacing are stored in `hungergames-kits.yml` and `config.yml`; arena loot regions are stored in `hungergames.yml`. Loot is filled one tick after generated double chests are placed. The post-match arena closing countdown has been removed.

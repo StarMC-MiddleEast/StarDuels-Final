@@ -20,7 +20,6 @@ rounds:
   # to "ready" ends it early.
   countdown-seconds: 5
   transition-seconds: 3.5
-  end-seconds: 3.5
   # After you die, how long you spectate the spot you died before the next round
   # teleports you into the arena.
   death-spectate-seconds: 2.0
@@ -44,10 +43,6 @@ party:
   # Party Duels is played to a number of rounds. This is the pause between one
   # side being wiped and everyone being put back on their spawns for the next.
   round-seconds: 2.5
-  # Seconds everyone stays standing in the arena AFTER the match is decided,
-  # the way a duel does it, so the victory title lands somewhere that still
-  # looks like the fight. Nobody can be hurt during it either.
-  end-seconds: 3.0
   # true  - a party gets its own tab list, the way a duel does. The party sees
   #         the party; the rest of the server still sees them, with their real
   #         rank, because the hiding is one-directional.
@@ -55,6 +50,11 @@ party:
   #         party is just a group of people in it.
   # Takes effect on the next membership change, or /meowduels reload.
   separate-tab: true
+
+# ---- Party Hunger Games ----
+hungergames:
+  # World-space gap between generated double chests in each loot zone.
+  chest-spacing: 8
 
 # ---- Golden Head (modern-UHC healing head) ----
 golden-head:
