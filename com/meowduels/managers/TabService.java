@@ -3,7 +3,6 @@ package com.meowduels.managers;
 import com.meowduels.MeowDuels;
 import com.meowduels.model.ActiveDuel;
 import com.meowduels.model.Party;
-import com.meowduels.util.Marks;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -224,15 +223,15 @@ public class TabService {
     }
 
     private void applyTeams(Player player, ActiveDuel activeDuel) {
-        if (this.external) {
-            return;
-        }
         Scoreboard scoreboard = player.getScoreboard();
         if (scoreboard == null) {
             return;
         }
-        Team team = this.team(scoreboard, AQUA_TEAM, ChatColor.AQUA, Marks.tab(Marks.AQUA));
-        Team team2 = this.team(scoreboard, RED_TEAM, ChatColor.RED, Marks.tab('c'));
+        // These teams are written to each duelist's private scoreboard. This
+        // keeps the flags and name colors visible to the two match players,
+        // without changing the global TAB prefix seen by lobby players.
+        Team team = this.team(scoreboard, AQUA_TEAM, ChatColor.BLUE, ChatColor.BLUE + "⚑ ");
+        Team team2 = this.team(scoreboard, RED_TEAM, ChatColor.DARK_RED, ChatColor.DARK_RED + "⚑ ");
         for (UUID uUID : new UUID[]{activeDuel.getPlayer1(), activeDuel.getPlayer2()}) {
             Player player2 = Bukkit.getPlayer((UUID)uUID);
             if (player2 == null) continue;
