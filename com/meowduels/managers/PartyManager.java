@@ -561,6 +561,7 @@ public class PartyManager {
         AntiCheatBypass.grant(this.plugin, player, AntiCheatBypass.worldNodes(this.plugin, string));
         if (location != null) {
             player.teleport(location);
+            this.ensureAtDuelSpawn(uUID);
         }
         for (PotionEffect potionEffect : player.getActivePotionEffects()) {
             player.removePotionEffect(potionEffect.getType());
@@ -1073,6 +1074,21 @@ public class PartyManager {
         }
         this.refreshItems(player);
         this.plugin.giveSpawnItems(player);
+    }
+
+    private void ensureAtDuelSpawn(UUID playerId) {
+        Location configuredSpawn = this.plugin.getDuelSpawn();
+        if (configuredSpawn == null) return;
+        // A next-tick enforcement avoids other match teardown handlers or
+        // inventory/snapshot cleanup leaving a party member in the arena.
+        this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                player.teleport(configuredSpawn);
+                this.refreshItems(player);
+                this.plugin.giveSpawnItems(player);
+            }
+        });
     }
 
     private void checkWin(Party party) {

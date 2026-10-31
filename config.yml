@@ -53,8 +53,8 @@ party:
 
 # ---- Party Hunger Games ----
 hungergames:
-  # World-space gap between generated double chests in each loot zone.
-  chest-spacing: 8
+  # World-space gap between generated double chests in each loot zone (3-6).
+  chest-spacing: 3
 
 # ---- Golden Head (modern-UHC healing head) ----
 golden-head:

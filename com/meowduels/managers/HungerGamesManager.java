@@ -220,7 +220,9 @@ public final class HungerGamesManager {
 
     public void generateChests(HgArena arena) {
         if (arena == null) return;
-        int spacing = Math.max(3, Math.min(32, this.plugin.getConfig().getInt("hungergames.chest-spacing", 8)));
+        // Keep generated stores compact. Older configs defaulted to eight
+        // blocks, which commonly produced just one double chest per region.
+        int spacing = Math.max(3, Math.min(6, this.plugin.getConfig().getInt("hungergames.chest-spacing", 3)));
         ArrayList<ChestPair> placed = new ArrayList<>();
         Arena baseArena = this.plugin.getArenaManager().get(arena.name);
         if (baseArena == null || !baseArena.isConfigured()) return;
@@ -245,7 +247,7 @@ public final class HungerGamesManager {
         boolean alongX = maxX - minX >= 1;
         if (!alongX && maxZ - minZ < 1) return;
         int xStep = alongX ? spacing : 1;
-        int zStep = alongX ? spacing : spacing;
+        int zStep = spacing;
         int xLimit = alongX ? maxX - 1 : maxX;
         int zLimit = alongX ? maxZ : maxZ - 1;
         for (int x = minX; x <= xLimit; x += xStep) {
@@ -265,8 +267,8 @@ public final class HungerGamesManager {
                 right.setFacing(facing);
                 left.setType(org.bukkit.block.data.type.Chest.Type.LEFT);
                 right.setType(org.bukkit.block.data.type.Chest.Type.RIGHT);
-                one.setBlockData(left, false);
-                two.setBlockData(right, false);
+                one.setBlockData(left, true);
+                two.setBlockData(right, true);
                 placed.add(new ChestPair(world, x, y, z));
             }
         }

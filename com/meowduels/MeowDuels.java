@@ -607,7 +607,13 @@ extends JavaPlugin {
     }
 
     public Location getDuelSpawn() {
-        return this.duelSpawn;
+        // The configured world can be loaded after the plugin enables. Retry
+        // resolving the saved spawn lazily so match cleanup does not fall back
+        // to the server world spawn just because load order differed.
+        if (this.duelSpawn == null && this.getConfig().isSet("duel-spawn.world")) {
+            this.loadDuelSpawn();
+        }
+        return this.duelSpawn == null ? null : this.duelSpawn.clone();
     }
 
     public void setDuelSpawn(Location location) {

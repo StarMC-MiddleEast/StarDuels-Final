@@ -24,7 +24,7 @@ implements Listener {
     }
 
     // Apply the configured in-match PvP policy after region/protection handlers.
-    @EventHandler(priority=EventPriority.MONITOR)
+    @EventHandler(priority=EventPriority.HIGHEST)
     public void onPvp(EntityDamageByEntityEvent entityDamageByEntityEvent) {
         this.revive(entityDamageByEntityEvent);
     }
@@ -93,9 +93,16 @@ implements Listener {
         if (party.isCountingDown()) {
             return false;
         }
-        if (!party.getAlive().contains(uUID) || !party.getAlive().contains(uUID2)) {
+        if (!party.getAlive().contains(uUID2)) {
             return false;
         }
+        // Party-duel opponents are stored in two separate Party objects. They
+        // are valid combatants even though the attacker's UUID is not in the
+        // target party's alive set.
+        Party opponent = party.getOpponent();
+        if (opponent != null && opponent.isFighting() && !opponent.isFinished()
+                && opponent.getAlive().contains(uUID)) return true;
+        if (!party.getAlive().contains(uUID)) return false;
         if (!party.isTeamMode()) {
             return true;
         }
